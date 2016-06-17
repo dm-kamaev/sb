@@ -1,22 +1,25 @@
 # IDEs
-/.idea
+.idea/
 *.swp
 *.swo
 
 # generated files and static
-/public
+public/*
+!public/uploads
+/app/public/*
+!app/public/admin/
+/doc
 /build
-/tmp
-/.sass-cache
-/config/config.json
-/**/*.log
-
+runtime/
 # node modules
-/node_modules
+node_modules/
 
-# cordova
-/cordova/*
-/!cordova/config.xml
+# configs
+/app/config/local
+/app/config/config.*
+
+# logs
+*.log
 
 # jshint config
 .jshintrc
