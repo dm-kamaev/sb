@@ -1,0 +1,62 @@
+'use strict';
+
+const gulp = require('gulp');
+const eslint = require('gulp-eslint');
+const path = require('path');
+const config = require('./config/config');
+const args = require('yargs').argv;
+const exec = require('child_process').exec;
+
+//will change soon
+const frontDirName = 'sber-vmeste';
+
+//path relative to this project directory
+const gulpBinaryPath = `./node_modules/${frontDirName}/node_modules/.bin/gulp`;
+
+var environment = args.env || 'dev';
+
+gulp.task('lint', () =>
+    gulp.src('app/**/*.js')
+    .pipe(eslint({
+      config: path.join(__dirname, 'node_modules/nodules/.eslintrc')
+    }))
+    .pipe(eslint.format()));
+
+gulp.task('frontend', ['moveFrontend']);
+
+gulp.task('moveFrontend', ['buildFrontend'], () => {
+    gulp.src([`node_modules/${frontDirName}/public/**/*`])
+    .pipe(gulp.dest('public/frontend/'));
+});
+
+gulp.task('buildFrontend', () => {
+  var sberApiModules = path.join(__dirname, './node_modules');
+  var sberModules = path.join(__dirname, `./node_modules/${frontDirName}/node_modules`);
+
+  var gulpArgs = [
+    `--environment="${environment}"`,
+    `--modulesPath="${sberModules}"`,
+    `--apiAddress="${config.hostname}"`,
+    `--cwd ${sberModules}/../ build`
+  ]
+
+  return new Promise((resolve, reject) => {
+    exec(
+      path.join(__dirname, gulpBinaryPath) + ' ' + gulpArgs.join(' '),
+      {
+        cwd: path.join(sberApiModules, `/${frontDirName}/`)
+      },
+      (err, stdout, stderr) => {
+        if (err){
+          console.log(err);
+          console.log(stderr);
+          console.log(stdout);
+          reject(err.message);
+        } else {
+          console.log(stdout);
+          resolve();
+        }
+      }
+    )
+  })
+})

@@ -1,0 +1,36 @@
+{
+  "name": "sber-together-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app/app.js",
+  "scripts": {
+    "migrate": "node app/scripts/migrate.js",
+    "config": "node app/scripts/createConfig.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/c7s/sber-together-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/c7s/sber-together-api/issues"
+  },
+  "homepage": "https://github.com/c7s/sber-together-api#readme",
+  "dependencies": {
+    "asyncawait": "^1.0.3",
+    "body-parser": "^1.15.1",
+    "continuation-local-storage": "^3.1.7",
+    "express": "^4.13.4",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^2.0.0",
+    "morgan": "^1.7.0",
+    "nodules": "git+ssh://git@github.com/c7s/nodules.git#dev",
+    "pg": "^5.1.0",
+    "pg-hstore": "^2.3.2",
+    "q": "^1.4.1",
+    "sber-together": "git+ssh://git@github.com:c7s/sber-together.git#dev",
+    "sequelize": "^3.23.3",
+    "sequelize-cli": "^1.9.1"
+  }
+}
