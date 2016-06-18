@@ -31,18 +31,18 @@ gulp.task('moveFrontend', ['buildFrontend'], () => {
 
 gulp.task('buildFrontend', () => {
   var sberApiModules = path.join(__dirname, './node_modules');
-  var sberModules = path.join(__dirname, `./node_modules/${frontDirName}/node_modules`);
+  var sberModules = '../../node_modules'
 
   var gulpArgs = [
     `--environment="${environment}"`,
     `--modulesPath="${sberModules}"`,
     `--apiAddress="${config.hostname}"`,
-    `--cwd ${sberModules}/../ build`
+    `--cwd ${sberModules}/${frontDirName} build`
   ]
 
   return new Promise((resolve, reject) => {
     exec(
-      path.join(__dirname, gulpBinaryPath) + ' ' + gulpArgs.join(' '),
+      path.join(sberModules, '/.bin/gulp') + ' ' + gulpArgs.join(' '),
       {
         cwd: path.join(sberApiModules, `/${frontDirName}/`)
       },

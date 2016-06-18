@@ -2,8 +2,12 @@
 const express = require('express');
 const http = require('http');
 const logger = require('../logger').getLogger('main');
+
+const accesslog = require('./middleware/access-log');
 var app = express();
 
+app.use(accesslog.debug);
+app.use(accesslog.warning);
 
 app.use((req, res, next) => {
     res.status(404).json('Not found');
