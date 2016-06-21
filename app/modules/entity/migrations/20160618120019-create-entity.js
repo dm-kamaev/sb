@@ -19,9 +19,18 @@ module.exports = {
                 allowNull: false,
                 type: Sequelize.DATE
             },
+            type: {
+              type: Sequelize.STRING,
+              validate: {
+                isIn: ['Fund', 'Topic', 'Direction']
+              }
+            },
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
+            },
+            deletedAt: {
+              type: Sequelize.DATE
             }
         })
     },

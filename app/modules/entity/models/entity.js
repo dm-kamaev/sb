@@ -13,27 +13,26 @@ module.exports = function(sequelize, DataTypes) {
         },
         description: {
             type: DataTypes.TEXT
+        },
+        type: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                is: /^(topic|direction|fund)$/i
+            }
         }
     }, {
         tableName: 'entity',
         unserscored: true,
+        paranoid: true,
         classMethods: {
             associate: function(models) {
                 Entity.belongsToMany(Entity, {
-                    as: 'trend',
-                    through: 'entities_assosciations'
+                    as: 'Entity',
+                    through: 'entityId_otherEntityId',
+                    foreignKey: 'entity_id',
+                    otherKey: 'otherEntity_id'
                 });
-                Entity.belongsToMany(Entity, {
-                    as: 'category',
-                    through: 'entities_assosciations'
-                });
-                Entity.belongsToMany(Entity, {
-                    as: 'funds',
-                    through: 'entities_assosciations'
-                });
-                Entity.hasMany(models.UserFund, {
-                  as: 'user_fund_id'
-                })
             }
         }
     })

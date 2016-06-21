@@ -3,26 +3,34 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 
 const sequelize = require('../app/components/sequelize');
-// sequelize.sync({force: true});
-// console.log(sequelize.sequelize_)
+const entityService = require('../app/modules/fund/services/entityService');
 
 
 
 
-(async(function(){
-  sequelize.sequelize_.sync({force: true});
-  var entity1 = await(sequelize.models.Entity.findOrCreate({
-    where: {
-      title: '111',
-      description: '1111wwww'
-    }
-  }));
-  sequelize.sequelize_.sync({force: true});
-  var entity2 = await(sequelize.models.Entity.findOrCreate({
-    where: {
-      title: '222',
-      description: '2222wwww'
-    }
-  }));
-  // console.log(entity1);
+(async(function() {
+    var topic1 = await (sequelize.models.Entity.create({
+        title: 'super topic1',
+        type: 'Topic'
+    }));
+    var topic2 = await (sequelize.models.Entity.create({
+        title: 'super topic2',
+        type: 'Topic'
+    }));
+    var direction1 = await (sequelize.models.Entity.create({
+        title: 'rak',
+        type: 'Direction'
+    }));
+    var direction2 = await (sequelize.models.Entity.create({
+        title: 'priyut',
+        type: 'Direction'
+    }));
+    var fund = await (sequelize.models.Entity.create({
+        title: 'super fund',
+        type: 'Fund'
+    }));
+
+    await(direction1.setEntity(fund));
+    await(fund.setEntity(direction1));
+    console.log(await(direction1.getEntity()));
 }))();

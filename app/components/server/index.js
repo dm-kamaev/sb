@@ -2,12 +2,22 @@
 const express = require('express');
 const http = require('http');
 const logger = require('../logger').getLogger('main');
+const bodyparser = require('body-parser');
 
 const accesslog = require('./middleware/access-log');
 var app = express();
 
+const entityRoutes = require('../../modules/entity/router');
+
 app.use(accesslog.debug);
 app.use(accesslog.warning);
+
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({
+    extended: false
+}));
+
+app.use('/entity', entityRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json('Not found');
