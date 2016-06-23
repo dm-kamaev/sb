@@ -9,14 +9,22 @@ const errors = require('../../../components/errors');
 
 class EntityController extends Controller {
     actionCreateEntity(actionContext) {
-        var entity = await (entityService.createEntity(actionContext.request.body));
-        actionContext.response.statusCode = 201;
-        actionContext.response.set('Location', `/entity/${entity.id}`);
-        return entityView.renderEntity(entity);
+        try {
+            var entity = await(entityService.createEntity(actionContext.request.body));
+            actionContext.response.statusCode = 201;
+            actionContext.response.set('Location', `/entity/${entity.id}`);
+            return entityView.renderEntity(entity);
+        } catch (err) {
+            if (err.name == "SequelizeValidationError") {
+                throw new errors.ValidationError(err.errors);
+            } else {
+                throw err;
+            }
+        }
     }
 
     actionEntities(actionContext, type) {
-        var entities = await (entityService.getAllEntities(type));
+        var entities = await (entityService.getEntitiesByType(type));
         return entityView.renderEntities(entities);
     }
 
@@ -30,8 +38,11 @@ class EntityController extends Controller {
     }
 
     actionDeleteEntity(actionContext, id) {
-        await (entityService.deleteEntity(actionContext.id));
-        return {};
+        var deleted = await (entityService.deleteEntity(id));
+        if (!deleted) throw new errors.NotFoundError();
+        return {
+            message: "Success"
+        }
     }
 
     actionUpdateEntity(actionContext, id) {
@@ -40,10 +51,9 @@ class EntityController extends Controller {
         } catch (err) {
           if (err.name == "SequelizeValidationError") {
               throw new errors.ValidationError(err.errors);
+          } else {
+              throw err;
           }
-
-
-            //throw new errors.NotFoundError();
         }
         if (!entity[0]) throw new errors.NotFoundError();
         return {
@@ -52,7 +62,24 @@ class EntityController extends Controller {
     }
 
     actionGetEntityByAssociatedId(actionContext, id, type) {
-        await (entityService.getEntityByAssociatedId(id, type));
+        try {
+            return await(entityService.getEntityByAssociatedId(id, type));
+        } catch (err) {
+            if (err.message = "Not found") throw new errors.NotFoundError();
+            throw err;
+        }
+    }
+
+    actionAssociate(actionContext, id, type, otherId){
+        await(entityService.associateEntity(id, type, otherId));
+        return {
+            message: "success"
+        }
+    }
+
+    actionAllEntities(actionContext) {
+        var entities = await(entityService.getAllEntities());
+        return entityView.renderEntities(entities);
     }
 }
 
