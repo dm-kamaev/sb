@@ -22,19 +22,19 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     }, {
-        tableName: 'entity',
+        tableName: 'Entity',
         unserscored: true,
         paranoid: true,
         classMethods: {
             associate: function(models) {
                 Entity.belongsToMany(Entity, {
-                    as: 'Entity',
-                    through: 'entityId_otherEntityId',
-                    foreignKey: 'entity_id',
-                    otherKey: 'otherEntity_id'
+                    as: 'childEntity',
+                    through: 'EntityIdOtherEntityId',
+                    foreignKey: 'entityId',
+                    otherKey: 'otherEntityId'
                 });
             }
         }
-    })
+    });
     return Entity;
-}
+};

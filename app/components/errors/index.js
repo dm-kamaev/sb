@@ -1,6 +1,6 @@
 'use strict';
 
 module.exports = {
-  NotFoundError: require('./NotFoundError'),
-  ValidationError: require('./ValidationError')
-}
+    NotFoundError: require('./NotFoundError'),
+    ValidationError: require('./ValidationError')
+};

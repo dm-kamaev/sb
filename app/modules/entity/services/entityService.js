@@ -3,11 +3,9 @@
 const sequelize = require('../../../components/sequelize');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
-const logger = require('../../../components/logger').getLogger('main');
-const errors = require('../../../components/errors');
 
-exports.getAllEntities = function () {
-  return await(sequelize.models.Entity.findAll());  
+exports.getAllEntities = function() {
+    return await (sequelize.models.Entity.findAll());
 };
 
 exports.getEntity = function(id) {
@@ -25,18 +23,25 @@ exports.getEntitiesByType = function(type) {
                 $iLike: type
             }
         }
-    }))
-}
+    }));
+};
 
-/**
- * returns array of Topics associated with $id
- * @param  {id} id [identifier of associated entity]
- * @param  {String} type [type of entity we want to get. Can be 'Topic' or 'Direction' or 'Fund']
- * @return {Array<TYPE>}
- */
-
-exports.getEntityByAssociatedId = function(id, type) {
-    return getRelationEntities(id, type);
+exports.getEntitiesByOwnerId = function(id, type) {
+    var res = await (sequelize.models.Entity.findOne({
+        where: {
+            id: id
+        },
+        include: {
+            model: sequelize.models.Entity,
+            as: 'childEntity',
+            where: {
+                type: type
+            },
+            required: false
+        }
+    }));
+    if (!res) throw new Error('Not found');
+    return res.childEntity;
 };
 
 exports.createEntity = function(data) {
@@ -44,15 +49,20 @@ exports.createEntity = function(data) {
         title: data.title,
         description: data.description,
         type: data.type
-    }))
+    }));
 };
 
 exports.updateEntity = function(id, data) {
+  data.foo = 1222;
     return await (sequelize.models.Entity.update(
         data, {
             where: {
-                id: id
-            }
+                id: id,
+                deletedAt: {
+                    $ne: null
+                }
+            },
+            paranoid: false
         }
     ));
 };
@@ -64,30 +74,39 @@ exports.deleteEntity = function(id) {
         }
     }));
 };
-
-exports.associateEntity = function(id, type, otherId){
-    console.log(id);
-    console.log(otherId);
-    console.log(type);
-    sequelize.sequelize_.transaction(async((t1) => {
-        var entity = await(sequelize.models.Entity.findById(id));
-        var entity2 = await(sequelize.models.Entity.findById(otherId));
-        if (!entity || !entity2) throw new Error("Not found");
-        return entity.addEntity(entity2);
-    }));
+//TODO: make add/remove through raw sql
+exports.associateEntity = function(id, otherId) {
+    return await (sequelize.sequelize_.transaction(async((t1) => {
+        var entitySource = await (sequelize.models.Entity.findById(id));
+        var entityTarget = await (sequelize.models.Entity.findById(otherId));
+        if (!entitySource || !entityTarget) throw new Error('Not found');
+        return entitySource.addChildEntity(entityTarget);
+    })));
 };
 
-//is this okay?
-function getRelationEntities(id, type) {
+exports.removeAssociation = function(id, otherId) {
     return await (sequelize.sequelize_.transaction(async((t1) => {
-        var entity = await (sequelize.models.Entity.findById(id));
-        if (!entity) throw new Error("Not found");
-        return entity.getEntity({
-            where: {
-                type: {
-                    $iLike: type
-                }
-            }
-        });
+        var entitySource = await (sequelize.models.Entity.findById(id));
+        var entityTarget = await (sequelize.models.Entity.findById(otherId));
+        if (!entitySource || !entityTarget) throw new Error('Not found');
+        return entitySource.removeChildEntity(entityTarget);
     })));
-}
+};
+
+exports.getTodayFundsCount = function() {
+    var today = new Date(),
+        year = today.getFullYear(),
+        month = today.getMonth(),
+        date = today.getDate();
+    return await (sequelize.models.Entity.count({
+        where: {
+            createdAt: {
+                $lt: new Date(year, month, date + 1, 0, 0, 0, 0),
+                $gt: new Date(year, month, date, 0, 0, 0, 0)
+            },
+            type: {
+                $iLike: 'fund'
+            }
+        }
+    }));
+};

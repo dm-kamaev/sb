@@ -4,6 +4,7 @@ const gulp = require('gulp');
 const eslint = require('gulp-eslint');
 const path = require('path');
 const config = require('./config/config');
+const apidoc = require('gulp-apidoc');
 const args = require('yargs').argv;
 const exec = require('child_process').exec;
 
@@ -27,6 +28,13 @@ gulp.task('frontend', ['moveFrontend']);
 gulp.task('moveFrontend', ['buildFrontend'], () => {
     gulp.src([`node_modules/${frontDirName}/public/**/*`])
     .pipe(gulp.dest('public/frontend/'));
+});
+
+gulp.task('apidoc', done => {
+  apidoc({
+    src: path.join(__dirname, '/app/modules'),
+    dest: path.join(__dirname, '/public/doc')
+  },done);
 });
 
 gulp.task('buildFrontend', () => {
