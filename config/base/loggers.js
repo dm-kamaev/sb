@@ -6,5 +6,9 @@ module.exports = {
     'sequelize': {
         'handlers': ['terminal'],
         'level': 'VERBOSE'
+    },
+    'express': {
+        'handlers': ['fileRotate'],
+        'level': 'INFO',
     }
 }

@@ -4,6 +4,7 @@ const gulp = require('gulp');
 const eslint = require('gulp-eslint');
 const path = require('path');
 const config = require('./config/config');
+const apidoc = require('gulp-apidoc');
 const args = require('yargs').argv;
 const exec = require('child_process').exec;
 
@@ -29,20 +30,27 @@ gulp.task('moveFrontend', ['buildFrontend'], () => {
     .pipe(gulp.dest('public/frontend/'));
 });
 
+gulp.task('apidoc', done => {
+  apidoc({
+    src: path.join(__dirname, '/app/modules'),
+    dest: path.join(__dirname, '/public/doc')
+  },done);
+});
+
 gulp.task('buildFrontend', () => {
   var sberApiModules = path.join(__dirname, './node_modules');
-  var sberModules = path.join(__dirname, `./node_modules/${frontDirName}/node_modules`);
+  var sberModules = '../../node_modules'
 
   var gulpArgs = [
     `--environment="${environment}"`,
     `--modulesPath="${sberModules}"`,
     `--apiAddress="${config.hostname}"`,
-    `--cwd ${sberModules}/../ build`
+    `--cwd ${sberModules}/${frontDirName} build`
   ]
 
   return new Promise((resolve, reject) => {
     exec(
-      path.join(__dirname, gulpBinaryPath) + ' ' + gulpArgs.join(' '),
+      path.join(sberModules, '/.bin/gulp') + ' ' + gulpArgs.join(' '),
       {
         cwd: path.join(sberApiModules, `/${frontDirName}/`)
       },

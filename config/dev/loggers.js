@@ -1,10 +1,14 @@
 module.exports = {
     'main': {
         'handlers': ['terminal'],
-        'level': 'TRACE'
+        'level': 'DEBUG'
     },
     'sequelize': {
         'handlers': ['sequelize'],
-        'level': 'TRACE'
+        'level': 'DEBUG'
+    },
+    'express': {
+        'handlers': ['terminal'],
+        'level': 'DEBUG',
     }
 }
