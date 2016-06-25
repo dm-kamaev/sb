@@ -130,7 +130,7 @@ class EntityController extends Controller {
             var entity = await (entityService.getEntity(id));
             return entityView.renderEntity(entity);
         } catch (err) {
-            throw new errors.NotFoundError();
+            throw new errors.NotFoundError('Entity', id);
         }
     };
     /**
@@ -142,7 +142,7 @@ class EntityController extends Controller {
      */
     actionDeleteEntity(actionContext, id) {
         var deleted = await (entityService.deleteEntity(id));
-        if (!deleted) throw new errors.NotFoundError();
+        if (!deleted) throw new errors.NotFoundError('Entity', id);
         return {
             message: 'Success'
         }
@@ -178,7 +178,8 @@ class EntityController extends Controller {
                 throw err;
             }
         }
-        if (!entity[0]) throw new errors.NotFoundError();
+        console.log(entity);
+        if (!entity[0]) throw new errors.NotFoundError('Entity', id);
         return {
             message: 'success'
         }
@@ -201,7 +202,7 @@ class EntityController extends Controller {
             var entities = await(entityService.getEntitiesByOwnerId(id, type));
             return entityView.renderEntities(entities);
         } catch (err) {
-            if (err.message == 'Not found') throw new errors.NotFoundError();
+            if (err.message == 'Not found') throw new errors.NotFoundError('Entity', id);
             throw err;
         }
     };
@@ -221,13 +222,12 @@ class EntityController extends Controller {
      */
     actionAssociate(actionContext, id, otherId) {
         try {
-            var associated = await (entityService.associateEntity(id, otherId));
-            if (!associated[0]) {
-                throw new errors.ValidationError();
-            }
+             await (entityService.associateEntity(id, otherId));
+
         } catch (err) {
-            if (err.message == 'Not found') throw new errors.NotFoundError();
-            throw err;
+            if (err.message == 'Relation exists')
+                throw new errors.HttpError('Relation exists', 400);
+            throw new errors.NotFoundError('Entity', [id, otherId].join(' OR '));
         }
         return {
             message: 'success'
@@ -245,7 +245,7 @@ class EntityController extends Controller {
         return entityView.renderEntities(entities);
     };
     /**
-     * @api {post} /entity/:id/:otherId remove entities association
+     * @api {delete} /entity/:id/:otherId remove entities association
      * @apiName remove association
      * @apiGroup Entity
      *
@@ -258,12 +258,9 @@ class EntityController extends Controller {
      */
     actionRemoveAssociation(actionContext, id, otherId) {
         try {
-            var unassociated = await (entityService.removeAssociation(id, otherId));
-            if (!unassociated[0]) {
-                throw new errors.ValidationError();
-            }
+            await (entityService.removeAssociation(id, otherId));
         } catch (err) {
-            if (err.message == 'Not found') throw new errors.NotFoundError();
+            if (err.message == 'Not found') throw new errors.NotFoundError('Entity', [id, otherId].join(' OR '));
             throw err;
         }
         return {

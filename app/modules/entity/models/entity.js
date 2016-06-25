@@ -29,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 Entity.belongsToMany(Entity, {
                     as: 'childEntity',
-                    through: 'EntityIdOtherEntityId',
+                    through: 'EntityOtherEntity',
                     foreignKey: 'entityId',
                     otherKey: 'otherEntityId'
                 });

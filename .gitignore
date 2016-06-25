@@ -23,3 +23,5 @@ node_modules/
 
 # jshint config
 .jshintrc
+
+deployment-config.json

@@ -4,11 +4,11 @@ class NotFoundError extends Error {
   /**
    * @constructor
    */
-    constructor(modelName, id) {
-        super(`Can't find ${modelName} with id ${id}`);
+    constructor(message, statusCode) {
+        super(message);
 
-        this.name = 'NotFoundError';
-        this.statusCode = 404;
+        this.name = 'HttpError';
+        this.statusCode = statusCode;
         Error.captureStackTrace(this, this.constructor);
     }
 }
