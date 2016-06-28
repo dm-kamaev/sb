@@ -33,6 +33,12 @@ module.exports = function(sequelize, DataTypes) {
                     foreignKey: 'entityId',
                     otherKey: 'otherEntityId'
                 });
+                Entity.belongsToMany(models.UserFund, {
+                    as: 'userFund',
+                    through: 'UserFundEntity',
+                    foreignKey: 'entityId',
+                    otherKey: 'userFundId'
+                });
             }
         }
     });
