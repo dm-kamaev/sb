@@ -12,5 +12,5 @@ exports.renderEntity = function(entity) {
 };
 
 exports.renderEntities = function(entities) {
-    return entities.map(entity => exports.renderEntity(entity));
+    return entities.map(exports.renderEntity);
 };

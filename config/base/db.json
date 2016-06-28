@@ -1,5 +1,5 @@
 {
-  "username": "postgres",
+  "username": "gorod",
   "database": "sber-together-api",
   "host": "localhost",
   "dialect": "postgres",
