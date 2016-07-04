@@ -11,4 +11,4 @@ module.exports = {
         'handlers': ['fileRotate'],
         'level': 'INFO',
     }
-}
+};

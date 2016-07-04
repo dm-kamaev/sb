@@ -12,6 +12,7 @@ var app = express();
 
 const entityRoutes = require('../../modules/entity/router');
 const userFundRoutes = require('../../modules/userFund/router');
+const userRouter = require('../../modules/user/router');
 const headers = require('./middleware/headers');
 
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
@@ -31,6 +32,7 @@ app.use(headers);
 
 app.use('/entity', entityRoutes);
 app.use('/user-fund', userFundRoutes);
+app.use('/user', userRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{

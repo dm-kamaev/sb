@@ -9,34 +9,44 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
         },
         title: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            validate: {
+                max: 50
+            }
         },
         description: {
-            type: DataTypes.TEXT
+            type: DataTypes.TEXT,
+            validate: {
+                max: 2000
+            }
+        },
+        creatorId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'SberUser',
+                key: 'id'
+            },
+            allowNull: true
         }
-        // creatorId: {
-        //   type: Sequelize.INTEGER,
-        //   references: {
-        //       model: 'User',
-        //       key: 'id'
-        //   }
-        // },
     }, {
         tableName: 'UserFund',
         unserscored: true,
         paranoid: true,
         classMethods: {
             associate: function(models) {
-                // UserFund.hasMany(models.User, {
-                //     as: 'member',
-                //     through: 'UserFundUser',
-                //     foreignKey: 'memberId'
-                // });
                 UserFund.belongsToMany(models.Entity, {
                     as: 'entity',
                     through: 'UserFundEntity',
                     foreignKey: 'userFundId',
                     otherKey: 'entityId'
+                });
+                UserFund.hasMany(models.SberUser, {
+                    as: 'members',
+                    foreignKey: 'userFundId'
+                });
+                UserFund.belongsTo(models.SberUser, {
+                    as: 'owner',
+                    foreignKey: 'creatorId'
                 });
             }
         }

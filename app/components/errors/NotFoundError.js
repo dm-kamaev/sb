@@ -3,6 +3,8 @@
 class NotFoundError extends Error {
   /**
    * @constructor
+   * @param {String} modelName
+   * @param {Integer} id identifier of not found model
    */
     constructor(modelName, id) {
         super(`Can't find ${modelName} with id ${id}`);

@@ -4,8 +4,10 @@
   "description": "",
   "main": "app/app.js",
   "scripts": {
-    "migrate": "node app/scripts/migrate.js",
-    "config": "node app/scripts/createConfig.js"
+    "migrate": "ant -f node_modules/user-service/build.xml user.migrate -Duser.path=$(pwd)/node_modules/user-service -Duser.sequelize=$(pwd)/node_modules/.bin/sequelize -Duser.config-path=$(pwd)/config && node app/scripts/migrate.js",
+    "config": "node app/scripts/createConfig.js",
+    "start-users": "node app/scripts/startUserService.js",
+    "lint-fix": "eslint -c node_modules/nodules/.eslintrc --ignore-path .gitignore --fix . || true"
   },
   "repository": {
     "type": "git",
@@ -19,19 +21,21 @@
   "homepage": "https://github.com/c7s/sber-together-api#readme",
   "dependencies": {
     "asyncawait": "^1.0.3",
+    "axios": "^0.12.0",
     "body-parser": "^1.15.1",
     "continuation-local-storage": "^3.1.7",
     "express": "^4.13.4",
     "gulp": "^3.9.1",
     "gulp-eslint": "^2.0.0",
     "morgan": "^1.7.0",
-    "nodules": "git+ssh://git@github.com/c7s/nodules.git#release-20160609",
+    "nodules": "git+ssh://git@github.com/c7s/nodules.git#dev",
     "pg": "^5.1.0",
     "pg-hstore": "^2.3.2",
     "q": "^1.4.1",
     "sber-together": "git+ssh://git@github.com:c7s/sber-together.git#dev",
     "sequelize": "^3.23.3",
-    "sequelize-cli": "^1.9.1"
+    "sequelize-cli": "^1.9.1",
+    "user-service": "git+ssh://git@github.com/c7s/user-service.git#dev"
   },
   "devDependencies": {
     "gulp-apidoc": "^0.2.4"
