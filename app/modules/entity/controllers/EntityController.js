@@ -39,11 +39,14 @@ class EntityController extends Controller {
      *     }
      *
      * @apiError (Error 400) ValidationError wrong type
+     *
+     * @param {actionContext} actionContext
+     * @return {Object} Entity
      */
     actionCreateEntity(actionContext) {
         try {
             var data = actionContext.request.body;
-            var entity = await (entityService.createEntity(data));
+            var entity = await(entityService.createEntity(data));
             actionContext.response.statusCode = 201;
             actionContext.response.set('Location', `/entity/${entity.id}`);
             return entityView.renderEntity(entity);
@@ -100,9 +103,12 @@ class EntityController extends Controller {
      *  }
      * ]
      *
+     * @param {Object} actionContext
+     * @param {String} type
+     * @return {Object} Entity
      */
     actionGetEntitiesByType(actionContext, type) {
-        var entities = await (entityService.getEntitiesByType(type));
+        var entities = await(entityService.getEntitiesByType(type));
         return entityView.renderEntities(entities);
     };
     /**
@@ -125,10 +131,15 @@ class EntityController extends Controller {
      *     }
      *
      * @apiError (Error 404) NotFoundError entity with this id not found
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id id of entity
+     * @return {Object} Entity
      */
     actionGetEntity(actionContext, id) {
-        var entity = await (entityService.getEntity(id));
-        if (!entity) throw new errors.NotFoundError('Entity', id);
+        var entity = await(entityService.getEntity(id));
+        if (!entity)
+            throw new errors.NotFoundError('Entity', id);
         return entityView.renderEntity(entity);
     };
     /**
@@ -136,14 +147,15 @@ class EntityController extends Controller {
      * @apiName delete Entity
      * @apiGroup Entity
      *
-     * @apiSuccess {String} success success message
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id
      */
     actionDeleteEntity(actionContext, id) {
-        var deleted = await (entityService.deleteEntity(id));
-        if (!deleted) throw new errors.NotFoundError('Entity', id);
-        return {
-            message: 'Success'
-        }
+        var deleted = await(entityService.deleteEntity(id));
+        if (!deleted)
+            throw new errors.NotFoundError('Entity', id);
+        return null;
     };
     /**
      * @api {put} /entity/:id update entity by id
@@ -162,17 +174,18 @@ class EntityController extends Controller {
      * @apiError (Error 404) NotFound entity with this id not found
      * @apiError (Error 400) ValidationError wrong type field
      *
-     * @apiSuccess {String} success success message
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id
      */
     actionUpdateEntity(actionContext, id) {
         try {
             var data = actionContext.request.body;
             delete data.id;
-            var entity = await (entityService.updateEntity(id, data));
-            if (!entity[0]) throw new errors.NotFoundError('Entity', id);
-            return {
-                message: 'success'
-            }
+            var entity = await(entityService.updateEntity(id, data));
+            if (!entity[0])
+                throw new errors.NotFoundError('Entity', id);
+            return null;
         } catch (err) {
             if (err.name == 'SequelizeValidationError') {
                 throw new errors.ValidationError(err.errors);
@@ -193,10 +206,15 @@ class EntityController extends Controller {
      * @apiSuccess {Object[]} Entities array of entities related to :id
      *
      * @apiError (Error 404) NotFoundError Entity not found
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id
+     * @param {String} type
+     * @return {Object[]} entities
      */
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
-            var entities = await (entityService.getEntitiesByOwnerId(id, type));
+            var entities = await(entityService.getEntitiesByOwnerId(id, type));
             return entityView.renderEntities(entities);
         } catch (err) {
             if (err.message == 'Not found') {
@@ -215,21 +233,23 @@ class EntityController extends Controller {
      * @apiParam {Number} otherId target Entity unique identifier
      * @apiParam {String="fund","topic","direction"} type Entity type we want to set
      *
-     * @apiSuccess {String} success message
      *
      * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id
+     * @param {Integer} otherId
+     *
      */
     actionAssociate(actionContext, id, otherId) {
         try {
-            await (entityService.associateEntity(id, otherId));
+            await(entityService.associateEntity(id, otherId));
         } catch (err) {
             if (err.message == 'Relation exists')
                 throw new errors.HttpError('Relation exists', 400);
             throw new errors.NotFoundError('Entity', [id, otherId].join(' OR '));
         }
-        return {
-            message: 'success'
-        }
+        return null;
     };
     /**
      * @api {get} /entity get all entities
@@ -237,9 +257,12 @@ class EntityController extends Controller {
      * @apiGroup Entity
      *
      * @apiSuccess {Object[]} Entities array of all entities
+     *
+     * @param {Object} actionContext
+     * @return {Object[]} entities
      */
     actionGetAllEntities(actionContext) {
-        var entities = await (entityService.getAllEntities());
+        var entities = await(entityService.getAllEntities());
         return entityView.renderEntities(entities);
     };
     /**
@@ -250,18 +273,19 @@ class EntityController extends Controller {
      * @apiParam {Number} id identifier of entity which OWNS relation
      * @apiParam {Number} otherId identifier of entity which OWNED by
      *
-     * @apiSuccess {String} success success message
      *
      * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id
+     * @param {Integer} otherId
      */
     actionRemoveAssociation(actionContext, id, otherId) {
-        var deletedCount = await (entityService.removeAssociation(id, otherId));
+        var deletedCount = await(entityService.removeAssociation(id, otherId));
         if (!deletedCount) {
             throw new errors.HttpError('Relation don\'t exists', 400);
         }
-        return {
-            message: 'success'
-        }
+        return null;
     };
     /**
      * @api {get} /entity/fund/today get today created Funds
@@ -269,12 +293,12 @@ class EntityController extends Controller {
      * @apiGroup Entity
      *
      * @apiSuccess {Number} count count of funds created today
+     *
+     * @param {Object} actionContext
      */
     actionGetTodayFundsCount(actionContext) {
-        var count = await (entityService.getTodayFundsCount());
-        return {
-            count: count
-        };
+        var count = await(entityService.getTodayFundsCount());
+        return {count: count};
     };
     /**
      * @api {get} /entity/:id/user-fund get user funds
@@ -284,10 +308,15 @@ class EntityController extends Controller {
      * @apiSuccess {Object[]} userFunds
      *
      * @apiError (Error 404) NotFoundError entity with :id not found
+     *
+     * @param {Object} actionContext
+     * @param {Integer} id
+     * @return {Object[]} UserFunds
      */
     actionGetUserFunds(actionContext, id) {
-        var entity = await (entityService.getUserFunds(id));
-        if (!entity) throw new errors.NotFoundError('Entity', id);
+        var entity = await(entityService.getUserFunds(id));
+        if (!entity)
+            throw new errors.NotFoundError('Entity', id);
         return userFundView.renderUserFunds(entity.userFund);
     };
 }

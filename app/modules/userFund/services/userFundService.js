@@ -4,14 +4,15 @@ const await = require('asyncawait/await');
 const sequelize = require('../../../components/sequelize');
 
 exports.createUserFund = function(data) {
-    return await (sequelize.models.UserFund.create({
+    return await(sequelize.models.UserFund.create({
         title: data.title,
-        description: data.description
+        description: data.description,
+        creatorId: data.creatorId
     }));
 };
 
 exports.deleteUserFund = function(id) {
-    return await (sequelize.models.UserFund.destroy({
+    return await(sequelize.models.UserFund.destroy({
         where: {
             id
         }
@@ -19,7 +20,7 @@ exports.deleteUserFund = function(id) {
 };
 
 exports.updateUserFund = function(id, data) {
-    return await (sequelize.models.UserFund.update(data, {
+    return await(sequelize.models.UserFund.update(data, {
         where: {
             id,
             deletedAt: null
@@ -28,7 +29,7 @@ exports.updateUserFund = function(id, data) {
 };
 
 exports.getUserFund = function(id) {
-    return await (sequelize.models.UserFund.findOne({
+    return await(sequelize.models.UserFund.findOne({
         where: {
             id
         }
@@ -36,7 +37,7 @@ exports.getUserFund = function(id) {
 };
 
 exports.getUserFunds = function() {
-    return await (sequelize.models.UserFund.findAll());
+    return await(sequelize.models.UserFund.findAll());
 };
 
 exports.getTodayCreatedUserFunds = function() {
@@ -44,7 +45,7 @@ exports.getTodayCreatedUserFunds = function() {
         year = today.getFullYear(),
         month = today.getMonth(),
         date = today.getDate();
-    return await (sequelize.models.UserFund.count({
+    return await(sequelize.models.UserFund.count({
         where: {
             createdAt: {
                 $lt: new Date(year, month, date + 1, 0, 0, 0, 0),
@@ -56,7 +57,7 @@ exports.getTodayCreatedUserFunds = function() {
 };
 
 exports.addEntity = function(id, entityId) {
-    var count = await (sequelize.models.UserFundEntity.count({
+    var count = await(sequelize.models.UserFundEntity.count({
         where: {
             entityId,
             userFundId: id
@@ -65,14 +66,14 @@ exports.addEntity = function(id, entityId) {
 
     if (count) throw new Error('Relation exists');
 
-    return await (sequelize.models.UserFundEntity.create({
+    return await(sequelize.models.UserFundEntity.create({
         entityId,
         userFundId: id
     }));
 };
 
 exports.removeEntity = function(id, entityId) {
-    return await (sequelize.models.UserFundEntity.destroy({
+    return await(sequelize.models.UserFundEntity.destroy({
         where: {
             entityId,
             userFundId: id
@@ -81,7 +82,7 @@ exports.removeEntity = function(id, entityId) {
 };
 
 exports.getEntities = function(id) {
-    var userFund = await (sequelize.models.UserFund.findOne({
+    var userFund = await(sequelize.models.UserFund.findOne({
         where: {
             id
         },
@@ -95,4 +96,8 @@ exports.getEntities = function(id) {
     if (!userFund) throw new Error('Not found');
 
     return userFund.entity;
+};
+
+exports.getUserFundsCount = function() {
+    return await(sequelize.models.UserFund.count());
 };

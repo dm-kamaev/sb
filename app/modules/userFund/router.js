@@ -14,5 +14,6 @@ userFundRouter.get('/today', userFundController.actionGetTodayUserFundsCount);
 userFundRouter.post('/:id(\\d+)/:entityId(\\d+)', userFundController.actionAddEntity);
 userFundRouter.delete('/:id(\\d+)/:entityId(\\d+)', userFundController.actionRemoveEntity);
 userFundRouter.get('/:id(\\d+)/entity', userFundController.actionGetEntities);
+userFundRouter.get('/count', userFundController.actionGetAllAndTodayUserFundsCount);
 
 module.exports = userFundRouter;

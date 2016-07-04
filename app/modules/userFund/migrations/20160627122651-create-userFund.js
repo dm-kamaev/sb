@@ -15,13 +15,6 @@ module.exports = {
             description: {
                 type: Sequelize.TEXT
             },
-            // creatorId: {
-            //   type: Sequelize.INTEGER,
-            //   references: {
-            //       model: 'Profile',
-            //       key: 'id'
-            //   }
-            // },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

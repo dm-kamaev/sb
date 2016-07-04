@@ -23,7 +23,7 @@ class UserFundController extends Controller {
      *     "title": "sample userfund",
      *     "description": "sample description",
      *     "entities": [1, 2, 3, 4],
-     *     "ownerId": 1
+     *     "creatorId": null
      * }
      *
      * @apiSuccess {Object} UserFund created userfund
@@ -32,9 +32,10 @@ class UserFundController extends Controller {
      */
     actionCreateUserFund(actionContext) {
         var data = actionContext.request.body;
-        //TODO: implement
+        // TODO: implement
         // data.ownerId = actionContext.request.session.user.id;
-        var userFund = await (userFundService.createUserFund(data));
+        data.creatorId = null;
+        var userFund = await(userFundService.createUserFund(data));
         actionContext.response.statusCode = 201;
         actionContext.response.set('Location', `/user-fund/${userFund.id}`);
         return userFundView.renderUserFund(userFund);
@@ -45,14 +46,11 @@ class UserFundController extends Controller {
      * @apiName delete user fund
      * @apiGroup UserFund
      *
-     * @apiSuccess {String} success success message
      */
     actionDeleteUserFund(actionContext, id) {
-        var deletedCount = await (userFundService.deleteUserFund(id));
+        var deletedCount = await(userFundService.deleteUserFund(id));
         if (!deletedCount) throw new errors.NotFoundError('UserFund', id);
-        return {
-            message: "success"
-        }
+        return null;
     };
 
     /**
@@ -66,18 +64,15 @@ class UserFundController extends Controller {
      *     "description": "sample description"
      * }
      *
-     * @apiSuccess {String} success success message
      *
      * @apiError (Error 404) NotFoundError user fund not found
      */
     actionUpdateUserFund(actionContext, id) {
         var data = actionContext.request.body;
         delete data.id;
-        var updatedCount = await (userFundService.updateUserFund(id, data));
+        var updatedCount = await(userFundService.updateUserFund(id, data));
         if (!updatedCount[0]) throw new errors.NotFoundError('UserFund', id);
-        return {
-            message: "success"
-        }
+        return null;
     };
 
     /**
@@ -90,7 +85,7 @@ class UserFundController extends Controller {
      * @apiError (Error 404) NotFoundError
      */
     actionGetUserFund(actionContext, id) {
-        var userFund = await (userFundService.getUserFund(id));
+        var userFund = await(userFundService.getUserFund(id));
         if (!userFund) throw new errors.NotFoundError('UserFund', id);
         return userFundView.renderUserFund(userFund);
     };
@@ -103,7 +98,7 @@ class UserFundController extends Controller {
      * @apiSuccess {Object[]} UserFunds
      */
     actionGetUserFunds(actionContext) {
-        var userFunds = await (userFundService.getUserFunds());
+        var userFunds = await(userFundService.getUserFunds());
         return userFundView.renderUserFunds(userFunds);
     };
 
@@ -115,10 +110,10 @@ class UserFundController extends Controller {
      * @apiSuccess {Object[]} UserFunds
      */
     actionGetTodayUserFundsCount(actionContext) {
-        var count = await (userFundService.getTodayCreatedUserFunds());
+        var count = await(userFundService.getTodayCreatedUserFunds());
         return {
             count
-        }
+        };
     };
 
     /**
@@ -126,17 +121,14 @@ class UserFundController extends Controller {
      * @apiName add entity
      * @apiGroup UserFund
      *
-     * @apiSuccess {String} success sucess message
      *
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation exists
      */
     actionAddEntity(actionContext, id, entityId) {
         try {
-            await (userFundService.addEntity(id, entityId));
-            return {
-                message: 'success'
-            };
+            await(userFundService.addEntity(id, entityId));
+            return null;
         } catch (err) {
             if (err.message == 'Not found') {
                 var ids = [id, entityId].join(' OR ');
@@ -151,17 +143,14 @@ class UserFundController extends Controller {
      * @apiName removeEntity
      * @apiGroup UserFund
      *
-     * @apiSuccess {String} success success message
      *
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
     actionRemoveEntity(actionContext, id, entityId) {
-        var res = await (userFundService.removeEntity(id, entityId));
+        var res = await(userFundService.removeEntity(id, entityId));
         if (!res) throw new errors.HttpError('Relation don\'t exists', 400);
-        return {
-            message: 'success'
-        }
+        return null;
     };
 
     /**
@@ -174,8 +163,27 @@ class UserFundController extends Controller {
      * @apiError (Error 404) NotFoundError userfund not found
      */
     actionGetEntities(actionContext, id) {
-        var entities = await (userFundService.getEntities(id));
+        var entities = await(userFundService.getEntities(id));
         return entityView.renderEntities(entities);
+    };
+    /**
+     * @api {get} /user-fund/count get today and all count
+     * @apiName count
+     * @apiGroup UserFund
+     *
+     * @apiSuccess {Object} today and all count
+     *
+     * @param  {[type]} actionContext [description]
+     * @param  {[type]} id            [description]
+     * @return {[type]}               [description]
+     */
+    actionGetAllAndTodayUserFundsCount(actionContext, id) {
+        var all = await(userFundService.getUserFundsCount());
+        var today = await(userFundService.getTodayCreatedUserFunds());
+        return {
+            all,
+            today
+        };
     };
 }
 

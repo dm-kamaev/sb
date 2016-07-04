@@ -15,6 +15,6 @@ entityRouter.get('/:id(\\d+)/:type(topic|direction|fund)', entityController.acti
 entityRouter.post('/:id(\\d+)/:otherId(\\d+)', entityController.actionAssociate);
 entityRouter.delete('/:id(\\d+)/:otherId(\\d+)', entityController.actionRemoveAssociation);
 entityRouter.get('/fund/today', entityController.actionGetTodayFundsCount);
-entityRouter.get('/:id/user-fund', entityController.actionGetUserFunds);
+entityRouter.get('/:id(\\d+)/user-fund', entityController.actionGetUserFunds);
 
 module.exports = entityRouter;
