@@ -14,6 +14,9 @@ const entityRoutes = require('../../modules/entity/router');
 const userFundRoutes = require('../../modules/userFund/router');
 const userRouter = require('../../modules/user/router');
 const headers = require('./middleware/headers');
+const cordovaSession = require('./middleware/session/cordova');
+const session = require('./middleware/session/session');
+const passport = require('./middleware/passport');
 
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
@@ -27,6 +30,11 @@ app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({
     extended: false
 }));
+
+app.use(cordovaSession);
+app.use(session);
+app.use(passport.init);
+app.use(passport.session);
 
 app.use(headers);
 
