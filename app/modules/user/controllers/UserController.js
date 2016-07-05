@@ -72,8 +72,10 @@ class UserController extends Controller {
 
         authUser = await(userService.createAuthUser(userData));
         var sberUser = await(userService.createSberUser(authUser.id));
-
-        return userView.renderUser(authUser, sberUser);
+        return await(actionContext.request.login(authUser, (err) => {
+            if (err) throw new errors.HttpError(err.message, 400);
+            return actionContext.response.redirect(`/user/${authUser.id}`);
+        }));
     };
     /**
      * @api {post} /user/:id/user-fund create user-fund for this user
