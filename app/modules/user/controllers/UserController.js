@@ -1,4 +1,3 @@
-
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
@@ -9,74 +8,6 @@ const userFundService = require('../../userFund/services/userFundService');
 const userView = require('../views/userView');
 
 class UserController extends Controller {
-    // TODO: maybe move this to auth module?
-    /**
-     * @api {post} /user find or create user
-     * @apiName find or create user
-     * @apiGroup User
-     *
-     * @apiParam {String} [firstName] title name of the entity
-     * @apiParam {String} [lastName] entity text decsription
-     * @apiParam {String} phone phone number
-     *
-     * @apiParamExample {json} Example request:
-     * {
-     *     "firstName": "max",
-     *     "lastName": "rylkin",
-     *     "phone": "123456789"
-     * }
-     * @apiSuccess {Object} User created user
-     *
-     * @apiError (Error 422) ValidationError
-     *
-     * @param {Object} actionContext
-     * @return {Ojbect} SberUser
-     */
-    actionFindOrCreateUser(actionContext) {
-        var userData = actionContext.request.body,
-            phone = userData.phone,
-            firstName = userData.firstName,
-            lastName = userData.lastName;
-
-
-        var authUser = await(userService.findAuthUserByPhone(phone));
-
-        if (authUser) {
-            var sberUser = await(userService.findSberUserByAuthId(authUser.id));
-            return userView.renderUser(authUser, sberUser);
-        }
-
-        if (!phone || !firstName || !lastName ||
-            firstName.length > 20 || lastName.length > 20) {
-            var valErrors = [];
-
-            firstName ? firstName.length > 20 ? valErrors.push({
-                fistName: 'Поле "Имя" содержит больше 20 символов'
-            }) : null : valErrors.push({
-                fistName: 'Поле "Имя" пустое'
-            });
-
-            lastName ? lastName.length > 20 ? valErrors.push({
-                lastName: 'Поле "Фамилия" содержит больше 20 символов'
-            }) : null : valErrors.push({
-                lastName: 'Поле "Фамилия" пустое'
-            });
-
-            // TODO: verify phone is accepted by SMS
-            !phone ? valErrors.push({
-                phone: 'Поле "Номер телефона" пустое'
-            }) : null;
-
-            throw new errors.ValidationError(valErrors);
-        }
-
-        authUser = await(userService.createAuthUser(userData));
-        var sberUser = await(userService.createSberUser(authUser.id));
-        return await(actionContext.request.login(authUser, (err) => {
-            if (err) throw new errors.HttpError(err.message, 400);
-            return actionContext.response.redirect(`/user/${authUser.id}`);
-        }));
-    };
     /**
      * @api {post} /user/:id/user-fund create user-fund for this user
      * @apiName create user-fund
@@ -98,17 +29,18 @@ class UserController extends Controller {
      * @param {Object} actionContext
      * @param {Integer} id
      */
-    actionCreateUserFund(actionContext, id) {
+    actionCreateUserFund(actionContext) {
+        if (!actionContext.request.isAuthenticated()){
+          throw new errors.HttpError('Unathorized', 401);
+        }
+
         try {
             var userfundData = actionContext.request.body;
-            // TODO: will be replaced by
-            // userfundData.creatorId = req.session.user.id
-            userfundData.creatorId = id;
+            userfundData.creatorId = actionContext.request.user.sberId;
             var userFund = await(userFundService.createUserFund(userfundData));
-            return await(userService.addUserFund(id, userFund.id));
+            return await(userService.addUserFund(userfundData.creatorId, userFund.id));
         } catch (err) {
-            throw new errors.HttpError('Userfund exists or user not found',
-                400);
+            throw new errors.HttpError('Userfund exists or user not found',400);
         }
     };
     /**

@@ -2,7 +2,7 @@
 
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
-const config = require('../../../../config/config');
+const config = require('../../../../config/user-config/config');
 const axios = require('axios').create({
     baseURL: `http://${config.host}:${config.port}`
 });
