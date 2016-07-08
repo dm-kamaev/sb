@@ -11,8 +11,8 @@ exports.createAuthUser = function(userData) {
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
-        password: "+"
+        password: '+'
     }));
 
     return response.data;
-}
+};

@@ -20,13 +20,17 @@ module.exports = function(sequelize, DataTypes) {
                 max: 2000
             }
         },
+        draft: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
+        },
         creatorId: {
             type: DataTypes.INTEGER,
             references: {
                 model: 'SberUser',
                 key: 'id'
             },
-            allowNull: true
+            allowNull: false
         }
     }, {
         tableName: 'UserFund',

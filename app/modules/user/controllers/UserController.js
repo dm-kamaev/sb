@@ -9,7 +9,7 @@ const userView = require('../views/userView');
 
 class UserController extends Controller {
     /**
-     * @api {post} /user/:id/user-fund create user-fund for this user
+     * @api {post} /user/user-fund create user-fund for this user
      * @apiName create user-fund
      * @apiGroup User
      *
@@ -30,18 +30,9 @@ class UserController extends Controller {
      * @param {Integer} id
      */
     actionCreateUserFund(actionContext) {
-        if (!actionContext.request.isAuthenticated()){
-          throw new errors.HttpError('Unathorized', 401);
-        }
-
-        try {
-            var userfundData = actionContext.request.body;
-            userfundData.creatorId = actionContext.request.user.sberId;
-            var userFund = await(userFundService.createUserFund(userfundData));
-            return await(userService.addUserFund(userfundData.creatorId, userFund.id));
-        } catch (err) {
-            throw new errors.HttpError('Userfund exists or user not found',400);
-        }
+        var id = actionContext.request.user.userFund.id;
+        var res = await(userFundService.toggleDraft(id, false));
+        if (!res[0]) throw new errors.HttpError('Userfund exists', 400);
     };
     /**
      * @api {get} /user/:id get user
@@ -55,9 +46,23 @@ class UserController extends Controller {
      */
     actionGetUserById(actionContext, id) {
         var sberUser = await(userService.findSberUserById(id));
-        if (!sberUser) throw new errors.NotFoundError('User', id);
+        if (!sberUser || !sberUser.authId) {
+            throw new errors.NotFoundError('User', id);
+        }
         var authUser = await(userService.findAuthUserByAuthId(sberUser.authId));
         return userView.renderUser(authUser, sberUser);
+    };
+    /**
+     * @api {delete} /user/user-fund delete user-fund
+     * @apiName deleted user-fund
+     * @apiGroup User
+     *
+     * @apiError (Error 404) NotFoundError Userfund don't exists
+     */
+    actionDeleteUserFund(actionContext) {
+        var id = actionContext.request.user.userFund.id;
+        var res = await(userFundService.toggleDraft(id, true));
+        if (!res[0]) throw new errors.NotFoundError('Userfund', id);
     };
 };
 

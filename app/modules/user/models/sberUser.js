@@ -39,6 +39,10 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'userFund',
                     foreignKey: 'userFundId'
                 });
+                SberUser.hasOne(models.UserFund, {
+                    as: 'userFund',
+                    foreignKey: 'creatorId'
+                });
             }
         }
     });

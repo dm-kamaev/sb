@@ -7,5 +7,6 @@ const authController = new AuthController();
 
 authRouter.post('/', authController.actionFindOrCreateUser);
 authRouter.post('/logout', authController.actionLogout);
+authRouter.get('/test', authController.actionTest);
 
 module.exports = authRouter;

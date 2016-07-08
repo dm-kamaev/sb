@@ -11,14 +11,6 @@ exports.createUserFund = function(data) {
     }));
 };
 
-exports.deleteUserFund = function(id) {
-    return await(sequelize.models.UserFund.destroy({
-        where: {
-            id
-        }
-    }));
-};
-
 exports.updateUserFund = function(id, data) {
     return await(sequelize.models.UserFund.update(data, {
         where: {
@@ -50,8 +42,7 @@ exports.getTodayCreatedUserFunds = function() {
             createdAt: {
                 $lt: new Date(year, month, date + 1, 0, 0, 0, 0),
                 $gt: new Date(year, month, date, 0, 0, 0, 0)
-            },
-            deletedAt: null
+            }
         }
     }));
 };
@@ -100,4 +91,17 @@ exports.getEntities = function(id) {
 
 exports.getUserFundsCount = function() {
     return await(sequelize.models.UserFund.count());
+};
+
+exports.toggleDraft = function(id, isDraft) {
+    return await(sequelize.models.UserFund.update({
+        draft: isDraft
+    }, {
+        where: {
+            $and: [
+              {draft: !isDraft},
+              {id: id}
+            ]
+        }
+    }));
 };

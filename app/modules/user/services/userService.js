@@ -43,16 +43,6 @@ exports.findAuthUserByPhone = function(phoneNumber) {
     return authUsers.data[0];
 };
 
-exports.addUserFund = function(id, userFundId) {
-    return await(sequelize.models.SberUser.update({
-        userFundId
-    }, {
-        where: {
-            id
-        }
-    }));
-};
-
 exports.createAuthUser = function(userData) {
     var response = await(axios.post('/user', {
         firstName: userData.firstName,
@@ -65,11 +55,29 @@ exports.createAuthUser = function(userData) {
 
 exports.createSberUser = function(authId) {
     return await(sequelize.models.SberUser.create({
-        authId
+        authId,
+        userFund: {
+            draft: true
+        }
+    }, {
+        include: [{
+            model: sequelize.models.UserFund,
+            as: 'userFund'
+        }]
     }));
 };
 
 exports.findAuthUserByAuthId = function(authId) {
     var response = await(axios.get(`/user/${authId}`));
     return response.data;
+};
+
+exports.setAuthId = function(id, authId) {
+    return await(sequelize.models.SberUser.update({
+        authId
+    }, {
+        where: {
+            id
+        }
+    }));
 };
