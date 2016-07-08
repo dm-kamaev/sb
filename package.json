@@ -4,10 +4,12 @@
   "description": "",
   "main": "app/app.js",
   "scripts": {
-    "migrate": "ant -f node_modules/user-service/build.xml user.migrate -Duser.path=$(pwd)/node_modules/user-service -Duser.sequelize=$(pwd)/node_modules/.bin/sequelize -Duser.config-path=$(pwd)/config && node app/scripts/migrate.js",
+    "migrate": "ant -f node_modules/user-service/build.xml user.migrate -Duser.path=$(pwd)/node_modules/user-service -Duser.sequelize=$(pwd)/node_modules/.bin/sequelize -Duser.config-path=$(pwd)/config/user-config && node app/scripts/migrate.js",
     "config": "node app/scripts/createConfig.js",
     "start-users": "node app/scripts/startUserService.js",
-    "lint-fix": "eslint -c node_modules/nodules/.eslintrc --ignore-path .gitignore --fix . || true"
+    "start-auth": "node app/scripts/startAuthService.js",
+    "lint-fix": "eslint -c node_modules/nodules/.eslintrc --ignore-path .gitignore --fix . || true",
+    "drop-all": "psql -d sber-together-api -c \"DROP SCHEMA IF EXISTS \"public\" CASCADE;CREATE SCHEMA \"public\";\""
   },
   "repository": {
     "type": "git",
@@ -39,7 +41,8 @@
     "sber-together": "git+ssh://git@github.com:c7s/sber-together.git#dev",
     "sequelize": "^3.23.3",
     "sequelize-cli": "^1.9.1",
-    "user-service": "git+ssh://git@github.com/c7s/user-service.git#dev"
+    "user-service": "git+ssh://git@github.com/c7s/user-service.git#dev",
+    "auth-service": "git+ssh://git@github.com:c7s/auth-service.git#dev"
   },
   "devDependencies": {
     "gulp-apidoc": "^0.2.4"

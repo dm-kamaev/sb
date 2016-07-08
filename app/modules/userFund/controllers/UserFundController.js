@@ -177,7 +177,7 @@ class UserFundController extends Controller {
      * @param  {[type]} id            [description]
      * @return {[type]}               [description]
      */
-    actionGetAllAndTodayUserFundsCount(actionContext, id) {
+    actionCountUserFunds(actionContext, id) {
         var all = await(userFundService.getUserFundsCount());
         var today = await(userFundService.getTodayCreatedUserFunds());
         return {

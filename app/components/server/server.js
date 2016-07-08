@@ -13,10 +13,13 @@ var app = express();
 const entityRoutes = require('../../modules/entity/router');
 const userFundRoutes = require('../../modules/userFund/router');
 const userRouter = require('../../modules/user/router');
+const authRouter = require('../../modules/auth/router');
+
 const headers = require('./middleware/headers');
 const cordovaSession = require('./middleware/session/cordova');
 const session = require('./middleware/session/session');
 const passport = require('./middleware/passport');
+const anonymous = require('./middleware/anonymous');
 
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
@@ -35,12 +38,14 @@ app.use(cordovaSession);
 app.use(session);
 app.use(passport.init);
 app.use(passport.session);
+app.use(anonymous);
 
 app.use(headers);
 
 app.use('/entity', entityRoutes);
 app.use('/user-fund', userFundRoutes);
 app.use('/user', userRouter);
+app.use('/auth', authRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{

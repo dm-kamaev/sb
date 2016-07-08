@@ -8,7 +8,7 @@ module.exports = {
                 model: 'SberUser',
                 key: 'id'
             },
-            allowNull: true,
+            allowNull: false,
             unique: true
         });
     },
