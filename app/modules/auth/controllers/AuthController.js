@@ -1,7 +1,6 @@
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
-const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userService = require('../../user/services/userService');
@@ -13,8 +12,8 @@ class AuthController extends Controller {
      * @apiName find or create user
      * @apiGroup Auth
      *
-     * @apiParam {String} [firstName] title name of the entity
-     * @apiParam {String} [lastName] entity text decsription
+     * @apiParam {String} [firstName] user fist name
+     * @apiParam {String} [lastName] user last name
      * @apiParam {String} phone phone number
      *
      * @apiParamExample {json} Example request:

@@ -15,7 +15,7 @@ passport.serializeUser(function(user, done) {
 passport.deserializeUser(async(function(id, done) {
     try {
         var sberUser = await(userService.findSberUserById(id));
-        done(null, sberUser.dataValues);
+        done(null, sberUser);
     } catch (e) {
         done(e, null);
     }

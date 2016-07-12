@@ -7,7 +7,8 @@ exports.renderEntity = function(entity) {
         title: entity.title,
         description: entity.description,
         createdAt: entity.createdAt,
-        updatedAt: entity.updatedAt
+        updatedAt: entity.updatedAt,
+        checked: entity.userFund && !!entity.userFund.length
     };
 };
 

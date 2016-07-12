@@ -117,7 +117,7 @@ class UserFundController extends Controller {
     };
 
     /**
-     * @api {post} /user-fund/:id/:entityId add entity
+     * @api {post} /user-fund/:entityId add entity
      * @apiName add entity
      * @apiGroup UserFund
      *
@@ -125,7 +125,8 @@ class UserFundController extends Controller {
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation exists
      */
-    actionAddEntity(actionContext, id, entityId) {
+    actionAddEntity(actionContext, entityId) {
+        var id = actionContext.request.user.userFund.id;
         try {
             await(userFundService.addEntity(id, entityId));
             return null;
@@ -139,7 +140,7 @@ class UserFundController extends Controller {
     };
 
     /**
-     * @api {delete} /user-fund/:id/:entityId
+     * @api {delete} /user-fund/:entityId
      * @apiName removeEntity
      * @apiGroup UserFund
      *
@@ -147,7 +148,8 @@ class UserFundController extends Controller {
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
-    actionRemoveEntity(actionContext, id, entityId) {
+    actionRemoveEntity(actionContext, entityId) {
+        var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.removeEntity(id, entityId));
         if (!res) throw new errors.HttpError('Relation don\'t exists', 400);
         return null;
