@@ -151,6 +151,10 @@ exports.getTodayFundsCount = function() {
     }));
 };
 
+exports.getFundsCount = function() {
+    return await(sequelize.models.Entity.count());
+};
+
 exports.getUserFunds = function(id) {
     return await(sequelize.models.Entity.findOne({
         where: {

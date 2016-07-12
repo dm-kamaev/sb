@@ -4,6 +4,7 @@ const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
+const entityService = require('../../entity/services/entityService');
 const userFundView = require('../views/userFundView');
 const entityView = require('../../entity/views/entityView');
 
@@ -180,8 +181,8 @@ class UserFundController extends Controller {
      * @return {[type]}               [description]
      */
     actionCountUserFunds(actionContext, id) {
-        var all = await(userFundService.getUserFundsCount());
-        var today = await(userFundService.getTodayCreatedUserFunds());
+        var all = await(entityService.getFundsCount());
+        var today = await(entityService.getTodayFundsCount());
         return {
             all,
             today
