@@ -3,29 +3,54 @@
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 
-exports.getAllEntities = function() {
-    return await(sequelize.models.Entity.findAll());
-};
-
-exports.getEntity = function(id) {
-    return await(sequelize.models.Entity.findOne({
-        where: {
-            id: id
+exports.getAllEntities = function(userFundId) {
+    return await(sequelize.models.Entity.findAll({
+        include: {
+            model: sequelize.models.UserFund,
+            as: 'userFund',
+            where: {
+                id: userFundId
+            },
+            required: false
         }
     }));
 };
 
-exports.getEntitiesByType = function(type) {
+exports.getEntity = function(id, userFundId) {
+    return await(sequelize.models.Entity.findOne({
+        where: {
+            id: id
+        },
+        include: {
+            model: sequelize.models.UserFund,
+            as: 'userFund',
+            where: {
+                id: userFundId
+            },
+            required: false
+        }
+    }));
+};
+
+exports.getEntitiesByType = function(type, userFundId) {
     return await(sequelize.models.Entity.findAll({
         where: {
             type: {
                 $iLike: type
             }
+        },
+        include: {
+            model: sequelize.models.UserFund,
+            as: 'userFund',
+            where: {
+                id: userFundId
+            },
+            required: false
         }
     }));
 };
 
-exports.getEntitiesByOwnerId = function(id, type) {
+exports.getEntitiesByOwnerId = function(id, type, userFundId) {
     var res = await(sequelize.models.Entity.findOne({
         where: {
             id: id
@@ -36,7 +61,15 @@ exports.getEntitiesByOwnerId = function(id, type) {
             where: {
                 type: type
             },
-            required: false
+            required: false,
+            include: {
+                model: sequelize.models.UserFund,
+                as: 'userFund',
+                where: {
+                    id: userFundId
+                },
+                required: false
+            }
         }
     }));
     if (!res) throw new Error('Not found');

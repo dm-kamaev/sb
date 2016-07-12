@@ -1,7 +1,5 @@
 'use strict';
 
-const sequelize = require('../../sequelize/sequelize');
-
 module.exports = {
     up: function(queryInterface, Sequelize) {
         queryInterface.createTable('Sessions', {
