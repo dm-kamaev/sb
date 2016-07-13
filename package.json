@@ -4,7 +4,7 @@
   "description": "",
   "main": "app/app.js",
   "scripts": {
-    "migrate": "ant -f node_modules/user-service/build.xml user.migrate -Duser.path=$PWD/node_modules/user-service -Duser.sequelize=$PWD/node_modules/.bin/sequelize -Duser.config-path=$PWD/config/user-config && node app/scripts/migrate.js",
+    "migrate": "cd node_modules/user-service && ant -f build.xml user.migrate -Duser.sequelize=../.bin/sequelize -Duser.config-path=../../config/user-config && cd ../.. && node app/scripts/migrate.js",
     "config": "node app/scripts/createConfig.js",
     "start-users": "node app/scripts/startUserService.js",
     "start-auth": "node app/scripts/startAuthService.js",
