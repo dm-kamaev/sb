@@ -21,8 +21,39 @@ class TimerError extends Error {
     }
 }
 
+class ValidationError extends Error {
+    constructor(validationErrors) {
+        super('ValidationError');
+
+        this.name = 'ValidationError';
+        this.validationErrors = validationErrors;
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
 exports.createAuthUser = function(userData) {
-    var response = await(axios.post('/user', {
+    var firstName = userData.firstName,
+        lastName = userData.lastName;
+    if (!firstName || !lastName ||
+        firstName.length > 20 || lastName.length > 20) {
+        var valErrors = [];
+
+        firstName ? firstName.length > 20 ? valErrors.push({
+            fistName: 'Поле "Имя" содержит больше 20 символов'
+        }) : null : valErrors.push({
+            fistName: 'Поле "Имя" пустое'
+        });
+
+        lastName ? lastName.length > 20 ? valErrors.push({
+            lastName: 'Поле "Фамилия" содержит больше 20 символов'
+        }) : null : valErrors.push({
+            lastName: 'Поле "Фамилия" пустое'
+        });
+
+        throw new ValidationError(valErrors);
+    }
+
+    var response = await (axios.post('/user', {
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
@@ -33,7 +64,7 @@ exports.createAuthUser = function(userData) {
 };
 
 exports.saveCode = function(phone, code, sberUserId) {
-    var send = await(sequelize.models.Phone.findOne({
+    var send = await (sequelize.models.Phone.findOne({
         where: {
             number: phone,
             updatedAt: {
@@ -44,13 +75,12 @@ exports.saveCode = function(phone, code, sberUserId) {
 
     if (send) throw new TimerError(send.updatedAt);
 
-    return await(sequelize.models.Phone.upsert({
+    return await (sequelize.models.Phone.upsert({
         number: phone,
         code,
         sberUserId,
         verified: false
-    }
-  ));
+    }));
 };
 
 exports.sendCode = function(phone, code) {
@@ -58,7 +88,7 @@ exports.sendCode = function(phone, code) {
 };
 
 exports.verifyCode = function(phone, code) {
-    return await(sequelize.models.Phone.update({
+    return await (sequelize.models.Phone.update({
         verified: true
     }, {
         where: {

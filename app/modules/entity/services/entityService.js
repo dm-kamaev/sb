@@ -152,7 +152,13 @@ exports.getTodayFundsCount = function() {
 };
 
 exports.getFundsCount = function() {
-    return await(sequelize.models.Entity.count());
+    return await(sequelize.models.Entity.count({
+        where: {
+            type: {
+                $iLike: 'fund'
+            }
+        }
+    }));
 };
 
 exports.getUserFunds = function(id) {
