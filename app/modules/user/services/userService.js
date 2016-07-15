@@ -12,11 +12,25 @@ exports.findSberUserById = function(id) {
         where: {
             id
         },
-        include: {
+        include: [{
             model: sequelize.models.UserFund,
             as: 'userFund',
             required: false
-        }
+        }, {
+            model: sequelize.models.Phone,
+            as: 'phone',
+            required: false
+        }],
+        order: [
+            [
+                {
+                    model: sequelize.models.Phone,
+                    as: 'phone'
+                },
+                'updatedAt',
+                'DESC'
+            ]
+        ]
     }));
 };
 

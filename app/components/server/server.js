@@ -1,4 +1,5 @@
 'use strict';
+
 const express = require('express');
 const http = require('http');
 const logger = require('../logger').getLogger('main');
@@ -34,7 +35,7 @@ app.use(bodyparser.urlencoded({
     extended: false
 }));
 
-app.use(cordovaSession);
+// app.use(cordovaSession);
 app.use(session);
 app.use(passport.init);
 app.use(passport.session);

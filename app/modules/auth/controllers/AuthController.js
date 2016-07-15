@@ -19,8 +19,7 @@ class AuthController extends Controller {
      * @apiParamExample {json} Example request:
      * {
      *     "firstName": "max",
-     *     "lastName": "rylkin",
-     *     "phone": "123456789"
+     *     "lastName": "rylkin"
      * }
      * @apiSuccess {Object} User created user
      *
@@ -31,17 +30,22 @@ class AuthController extends Controller {
      */
     actionFindOrCreateUser(actionContext) {
         var userData = actionContext.request.body,
-            phone = userData.phone,
+            sessionUser = actionContext.request.user,
+            phoneData = sessionUser.phone,
             firstName = userData.firstName,
             lastName = userData.lastName;
 
-        // TODO: phone isAcceptedBySms check here
-        var authUser = await(userService.findAuthUserByPhone(phone));
-        var sessionUser = actionContext.request.user;
+        if (!phoneData || !phoneData.verified) {
+            throw new errors.HttpError('Unathorized', 403);
+        }
+
+        userData.phone = phoneData.number;
+
+        var authUser = await(userService.findAuthUserByPhone(userData.phone));
         var sberUser;
 
         if (!authUser) {
-            if (!phone || !firstName || !lastName ||
+            if (!firstName || !lastName ||
                 firstName.length > 20 || lastName.length > 20) {
                 var valErrors = [];
 
@@ -56,11 +60,6 @@ class AuthController extends Controller {
                 }) : null : valErrors.push({
                     lastName: 'Поле "Фамилия" пустое'
                 });
-
-                // TODO: verify phone is accepted by SMS
-                !phone ? valErrors.push({
-                    phone: 'Поле "Номер телефона" пустое'
-                }) : null;
 
                 throw new errors.ValidationError(valErrors);
             }
@@ -99,6 +98,57 @@ class AuthController extends Controller {
     actionTest(actionContext) {
         return actionContext.request.user;
     };
+    /**
+     * @api {post} /auth/sms send sms
+     * @apiName send sms
+     * @apiGroup Auth
+     *
+     * @apiParamExample {json} example request:
+     * {
+     *    "phone": "123456789"
+     * }
+     *
+     * @apiError (Error 400) TimerError
+     */
+    actionSendSMS(actionContext) {
+        if (actionContext.request.user.authId) {
+            throw new errors.HttpError('Already logged in', 400);
+        }
+
+        var phone = actionContext.request.body.phone,
+            userId = actionContext.request.user.id,
+            code = ('000' + ~~(Math.random() * 990 + 1)).slice(-3);
+
+        try {
+            await(authService.saveCode(phone, code, userId));
+            await(authService.sendCode(phone, code));
+            // need for debug
+            return code;
+            return null;
+        } catch (err) {
+            throw new errors.HttpError(err.message, 400);
+        }
+    };
+    /**
+     * @api {post} /auth/verify
+     * @apiName verify code
+     * @apiGroup Auth
+     *
+     * @apiParamExample {json} example request:
+     * {
+     *    "code": "123"
+     * }
+     *
+     * @apiError (Error 400) wrong code
+     */
+    actionVerifyCode(actionContext) {
+        var phone = actionContext.request.user.phone.number,
+            code = actionContext.request.body.code;
+        var res = await(authService.verifyCode(phone, code));
+        if (!res[0]) throw new errors.HttpError('Wrong code', 400);
+        return null;
+    };
+
 }
 
 module.exports = AuthController;
