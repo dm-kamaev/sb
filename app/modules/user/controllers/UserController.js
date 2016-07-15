@@ -64,6 +64,21 @@ class UserController extends Controller {
         var res = await(userFundService.toggleDraft(id, true));
         if (!res[0]) throw new errors.NotFoundError('Userfund', id);
     };
+    /**
+     * @api {put} /user/ update user
+     * @apiName update user
+     * @apiGroup User
+     *
+     * @apiError (Error 403) HttpError Unathorized
+     */
+    actionUpdateUser(actionContext) {
+        var authId = actionContext.request.user.authId,
+            userData = actionContext.request.body;
+
+        if (!authId) throw new errors.HttpError('Unathorized', 403);
+        await(userService.updateAuthUser(authId, userData));
+        return null;
+    }
 };
 
 module.exports = UserController;
