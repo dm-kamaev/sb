@@ -30,8 +30,7 @@ class AuthController extends Controller {
      */
     actionFindOrCreateUser(actionContext) {
         var userData = actionContext.request.body,
-            sessionUser = actionContext.request.user,
-            phoneData = sessionUser.phone,
+            phoneData = actionContext.request.user.phone,
             firstName = userData.firstName,
             lastName = userData.lastName;
 
@@ -41,45 +40,24 @@ class AuthController extends Controller {
 
         userData.phone = phoneData.number;
 
-        var authUser = await(userService.findAuthUserByPhone(userData.phone));
-        var sberUser;
+        try {
+            var authUser = await (authService.createAuthUser(userData));
 
-        if (!authUser) {
-            if (!firstName || !lastName ||
-                firstName.length > 20 || lastName.length > 20) {
-                var valErrors = [];
+            var sberUser = actionContext.request.user;
+            await (userService.setAuthId(sberUser.id, authUser.id));
 
-                firstName ? firstName.length > 20 ? valErrors.push({
-                    fistName: 'Поле "Имя" содержит больше 20 символов'
-                }) : null : valErrors.push({
-                    fistName: 'Поле "Имя" пустое'
+            return await (new Promise((resolve, reject) => {
+                actionContext.request.login(sberUser, (err) => {
+                    if (err) reject(new errors.HttpError(err.message, 400));
+                    resolve(actionContext.request.sessionID);
                 });
-
-                lastName ? lastName.length > 20 ? valErrors.push({
-                    lastName: 'Поле "Фамилия" содержит больше 20 символов'
-                }) : null : valErrors.push({
-                    lastName: 'Поле "Фамилия" пустое'
-                });
-
-                throw new errors.ValidationError(valErrors);
+            }));
+        } catch (err) {
+            if (err.name == 'ValidationError') {
+                throw new errors.ValidationError(err.validationErrors)
             }
-            authUser = await(authService.createAuthUser(userData));
-        } else {
-            sberUser = await(userService.findSberUserByAuthId(authUser.id));
+            throw err;
         }
-
-        if (!sberUser) {
-            sberUser = sessionUser.authId ?
-                await(userService.createSberUser(authUser.id)) : sessionUser;
-            await(userService.setAuthId(sberUser.id, authUser.id));
-        }
-
-        return await(new Promise((resolve, reject) => {
-            actionContext.request.login(sberUser, (err) => {
-                if (err) reject(new errors.HttpError(err.message, 400));
-                resolve(actionContext.request.sessionID);
-            });
-        }));
     };
     /**
      * @api {post} /auth/logout logout
@@ -111,17 +89,13 @@ class AuthController extends Controller {
      * @apiError (Error 400) TimerError
      */
     actionSendSMS(actionContext) {
-        if (actionContext.request.user.authId) {
-            throw new errors.HttpError('Already logged in', 400);
-        }
-
         var phone = actionContext.request.body.phone,
             userId = actionContext.request.user.id,
             code = ('000' + ~~(Math.random() * 990 + 1)).slice(-3);
 
         try {
-            await(authService.saveCode(phone, code, userId));
-            await(authService.sendCode(phone, code));
+            await (authService.saveCode(phone, code, userId));
+            await (authService.sendCode(phone, code));
             // need for debug
             return code;
             return null;
@@ -139,15 +113,40 @@ class AuthController extends Controller {
      *    "code": "123"
      * }
      *
-     * @apiError (Error 400) wrong code
+     * @apiError (Error 400) HttpError wrong code
+     * @apiError (Error 403) HttpError Unathorized sms not sent yet.
+     * @apiError (Error 400) HttpError Already logged in
      */
     actionVerifyCode(actionContext) {
+        var phoneData = actionContext.request.user.phone;
+
+        if (!phoneData) throw new errors.HttpError('Unathorized', 403);
+
         var phone = actionContext.request.user.phone.number,
-            code = actionContext.request.body.code;
-        var res = await(authService.verifyCode(phone, code));
+            code  = actionContext.request.body.code;
+
+        var res = await (authService.verifyCode(phone, code));
         if (!res[0]) throw new errors.HttpError('Wrong code', 400);
-        return null;
+
+        var authUser = await (userService.findAuthUserByPhone(phone));
+        if (!authUser) return {
+            data: 'need register'
+        }
+
+        var sberUser = await (userService.findSberUserByAuthId(authUser.id));
+
+        if (!sberUser) {
+            sberUser = actionContext.request.user;
+            await (userService.setAuthId(sberUser.id, authUser.id));
+        };
+        return await (new Promise((resolve, reject) => {
+            actionContext.request.login(sberUser, (err) => {
+                if (err) reject(new errors.HttpError(err.message, 400));
+                resolve(actionContext.request.sessionID);
+            });
+        }));
     };
+
 
 }
 
