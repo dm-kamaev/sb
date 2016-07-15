@@ -10,7 +10,8 @@ module.exports = session({
     saveUninitialized: true,
     resave: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 30
+        httpOnly: false,
+        maxAge: 1000 * 60 * 60 * 24 * 30 * 12 * 100
     },
     store: new SequelizeStore({
         db: sequelize

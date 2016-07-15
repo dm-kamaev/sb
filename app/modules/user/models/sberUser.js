@@ -43,6 +43,10 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'userFund',
                     foreignKey: 'creatorId'
                 });
+                SberUser.hasOne(models.Phone, {
+                    as: 'phone',
+                    foreignKey: 'sberUserId'
+                });
             }
         }
     });
