@@ -95,3 +95,12 @@ exports.setAuthId = function(id, authId) {
         }
     }));
 };
+
+exports.updateAuthUser = function(authId, userData) {
+    var response = await(axios.post(`/user/${authId}`, {
+        fistName: userData.fistName,
+        lastName: userData.lastName
+    }));
+
+    return response.data;
+};
