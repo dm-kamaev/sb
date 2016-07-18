@@ -9,7 +9,7 @@ const args = require('yargs').argv;
 const exec = require('child_process').exec;
 
 // will change soon
-const frontDirName = 'sber-vmeste';
+const frontDirName = 'sber-together';
 
 var environment = args.env || 'dev';
 
