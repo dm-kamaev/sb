@@ -36,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
                     foreignKey: 'authId'
                 });
                 SberUser.belongsTo(models.UserFund, {
-                    as: 'userFund',
+                    as: 'friendFund',
                     foreignKey: 'userFundId'
                 });
                 SberUser.hasOne(models.UserFund, {

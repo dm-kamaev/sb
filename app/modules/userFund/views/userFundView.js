@@ -4,9 +4,9 @@ exports.renderUserFund = function(userFund) {
     return {
         id: userFund.id,
         title: userFund.title,
-        description: userFund.escription,
-        members: userFund.members,
-        owner: userFund.owner,
+        description: userFund.description,
+        draft: userFund.draft,
+        creatorId: userFund.creatorId,
         createdAt: userFund.createdAt,
         updatedAt: userFund.updatedAt
     };
