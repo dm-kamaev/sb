@@ -35,7 +35,7 @@ class UserController extends Controller {
         if (!res[0]) throw new errors.HttpError('Userfund exists', 400);
     };
     /**
-     * @api {get} /user/:id get user
+     * @api {get} /user/:id get user by id
      * @apiName get user by id
      * @apiGroup User
      *
@@ -78,7 +78,35 @@ class UserController extends Controller {
         if (!authId) throw new errors.HttpError('Unathorized', 403);
         await(userService.updateAuthUser(authId, userData));
         return null;
-    }
+    };
+    /**
+     * @api {get} /user get user
+     * @apiName get current user
+     * @apiGroup User
+     *
+     * @apiSuccessExample {json} Example response:
+     * {
+     * 		 "id": 11,
+     *     "phone": "00",
+     *     "firstName": "00",
+     *     "lastName": "rylkin",
+     *     "userFund": {
+     *     		"id": 11,
+     *       	"title": null,
+     *        "description": null,
+     *        "draft": true,
+     *        "creatorId": 11,
+     *        "createdAt": "2016-07-15T11:57:13.909Z",
+     *        "updatedAt": "2016-07-15T11:57:13.909Z"
+     *     },
+     *     "loggedIn": true
+     * }
+     */
+    actionGetUser(actionContext, id) {
+        var sberUser = actionContext.request.user;
+        var authUser = await(userService.findAuthUserByAuthId(sberUser.authId));
+        return userView.renderUser(authUser, sberUser);
+    };
 };
 
 module.exports = UserController;

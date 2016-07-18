@@ -41,12 +41,12 @@ class AuthController extends Controller {
         userData.phone = phoneData.number;
 
         try {
-            var authUser = await (authService.createAuthUser(userData));
+            var authUser = await(authService.createAuthUser(userData));
 
             var sberUser = actionContext.request.user;
-            await (userService.setAuthId(sberUser.id, authUser.id));
+            await(userService.setAuthId(sberUser.id, authUser.id));
 
-            return await (new Promise((resolve, reject) => {
+            return await(new Promise((resolve, reject) => {
                 actionContext.request.login(sberUser, (err) => {
                     if (err) reject(new errors.HttpError(err.message, 400));
                     resolve(actionContext.request.sessionID);
@@ -54,7 +54,7 @@ class AuthController extends Controller {
             }));
         } catch (err) {
             if (err.name == 'ValidationError') {
-                throw new errors.ValidationError(err.validationErrors)
+                throw new errors.ValidationError(err.validationErrors);
             }
             throw err;
         }
@@ -94,8 +94,8 @@ class AuthController extends Controller {
             code = ('000' + ~~(Math.random() * 990 + 1)).slice(-3);
 
         try {
-            await (authService.saveCode(phone, code, userId));
-            await (authService.sendCode(phone, code));
+            await(authService.saveCode(phone, code, userId));
+            await(authService.sendCode(phone, code));
             // need for debug
             return code;
             return null;
@@ -123,23 +123,23 @@ class AuthController extends Controller {
         if (!phoneData) throw new errors.HttpError('Unathorized', 403);
 
         var phone = actionContext.request.user.phone.number,
-            code  = actionContext.request.body.code;
+            code = actionContext.request.body.code;
 
-        var res = await (authService.verifyCode(phone, code));
+        var res = await(authService.verifyCode(phone, code));
         if (!res[0]) throw new errors.HttpError('Wrong code', 400);
 
-        var authUser = await (userService.findAuthUserByPhone(phone));
+        var authUser = await(userService.findAuthUserByPhone(phone));
         if (!authUser) return {
             data: 'need register'
-        }
+        };
 
-        var sberUser = await (userService.findSberUserByAuthId(authUser.id));
+        var sberUser = await(userService.findSberUserByAuthId(authUser.id));
 
         if (!sberUser) {
             sberUser = actionContext.request.user;
-            await (userService.setAuthId(sberUser.id, authUser.id));
+            await(userService.setAuthId(sberUser.id, authUser.id));
         };
-        return await (new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             actionContext.request.login(sberUser, (err) => {
                 if (err) reject(new errors.HttpError(err.message, 400));
                 resolve(actionContext.request.sessionID);

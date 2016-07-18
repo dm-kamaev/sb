@@ -53,7 +53,7 @@ exports.createAuthUser = function(userData) {
         throw new ValidationError(valErrors);
     }
 
-    var response = await (axios.post('/user', {
+    var response = await(axios.post('/user', {
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
@@ -64,7 +64,7 @@ exports.createAuthUser = function(userData) {
 };
 
 exports.saveCode = function(phone, code, sberUserId) {
-    var send = await (sequelize.models.Phone.findOne({
+    var send = await(sequelize.models.Phone.findOne({
         where: {
             number: phone,
             updatedAt: {
@@ -75,7 +75,7 @@ exports.saveCode = function(phone, code, sberUserId) {
 
     if (send) throw new TimerError(send.updatedAt);
 
-    return await (sequelize.models.Phone.upsert({
+    return await(sequelize.models.Phone.upsert({
         number: phone,
         code,
         sberUserId,
@@ -88,7 +88,7 @@ exports.sendCode = function(phone, code) {
 };
 
 exports.verifyCode = function(phone, code) {
-    return await (sequelize.models.Phone.update({
+    return await(sequelize.models.Phone.update({
         verified: true
     }, {
         where: {

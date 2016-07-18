@@ -8,6 +8,7 @@ exports.renderUser = function(authUser, sberUser) {
         firstName: authUser.firstName,
         lastName: authUser.lastName,
         userFund: sberUser.userFund ?
-            userFundView.renderUserFund(sberUser.userFund) : null
+            userFundView.renderUserFund(sberUser.userFund) : null,
+        loggedIn: !!sberUser.authId
     };
 };

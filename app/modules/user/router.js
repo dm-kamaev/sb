@@ -9,5 +9,6 @@ var userController = new UserController();
 userRouter.post('/user-fund', userController.actionCreateUserFund);
 userRouter.delete('/user-fund', userController.actionDeleteUserFund);
 userRouter.get('/:id(\\d+)', userController.actionGetUserById);
+userRouter.get('/', userController.actionGetUser);
 
 module.exports = userRouter;

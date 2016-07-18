@@ -22,11 +22,10 @@ exports.findSberUserById = function(id) {
             required: false
         }],
         order: [
-            [
-                {
-                    model: sequelize.models.Phone,
-                    as: 'phone'
-                },
+            [{
+                model: sequelize.models.Phone,
+                as: 'phone'
+            },
                 'updatedAt',
                 'DESC'
             ]
