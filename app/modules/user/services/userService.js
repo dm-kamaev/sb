@@ -96,10 +96,10 @@ exports.setAuthId = function(id, authId) {
 };
 
 exports.updateAuthUser = function(authId, userData) {
-    var response = await(axios.post(`/user/${authId}`, {
-        fistName: userData.fistName,
+    var response = await(axios.patch(`/user/${authId}`, {
+        firstName: userData.firstName,
         lastName: userData.lastName
     }));
-
+    console.log(response.data);
     return response.data;
 };

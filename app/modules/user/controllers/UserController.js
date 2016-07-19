@@ -70,6 +70,12 @@ class UserController extends Controller {
      * @apiGroup User
      *
      * @apiError (Error 403) HttpError Unathorized
+     *
+     * @apiParamExample {json} example:
+     * {
+     * 		"firstName": "Max",
+     * 		"lastName": "Rylkin"
+     * }
      */
     actionUpdateUser(actionContext) {
         var authId = actionContext.request.user.authId,
@@ -88,8 +94,8 @@ class UserController extends Controller {
      * {
      * 		 "id": 11,
      *     "phone": "00",
-     *     "firstName": "00",
-     *     "lastName": "rylkin",
+     *     "firstName": "Max",
+     *     "lastName": "Rylkin",
      *     "userFund": {
      *     		"id": 11,
      *       	"title": null,
