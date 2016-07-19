@@ -10,5 +10,6 @@ userRouter.post('/user-fund', userController.actionCreateUserFund);
 userRouter.delete('/user-fund', userController.actionDeleteUserFund);
 userRouter.get('/:id(\\d+)', userController.actionGetUserById);
 userRouter.get('/', userController.actionGetUser);
+userRouter.put('/', userController.actionUpdateUser);
 
 module.exports = userRouter;
