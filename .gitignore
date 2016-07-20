@@ -6,6 +6,7 @@
 # generated files and static
 public/*
 !public/uploads
+!public/meta_templates
 /app/public/*
 !app/public/admin/
 /doc
@@ -25,3 +26,4 @@ node_modules/
 .jshintrc
 
 deployment-config.json
+.ftpconfig
