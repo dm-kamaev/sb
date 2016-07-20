@@ -6,7 +6,6 @@ const logger = require('../logger').getLogger('main');
 const bodyparser = require('body-parser');
 const path = require('path');
 
-const accesslog = require('./middleware/access-log');
 const debugForm = require('./middleware/debugForm');
 
 var app = express();
@@ -21,11 +20,13 @@ const cordovaSession = require('./middleware/session/cordova');
 const session = require('./middleware/session/session');
 const passport = require('./middleware/passport');
 const anonymous = require('./middleware/anonymous');
-
-app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
-app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
+const metaTags = require('./middleware/metaTags');
+const accesslog = require('./middleware/access-log');
 
 app.use('/', debugForm);
+
+app.set('views', path.join(__dirname + '../../../../public/meta_templates'));
+app.set('view engine', 'pug');
 
 app.use(accesslog.debug);
 app.use(accesslog.warning);
@@ -43,10 +44,15 @@ app.use(anonymous);
 
 app.use(headers);
 
+app.use(metaTags);
+
 app.use('/entity', entityRoutes);
 app.use('/user-fund', userFundRoutes);
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
+
+app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
+app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
 
 app.use((req, res, next) => {
     res.status(404).json([{

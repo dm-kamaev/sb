@@ -18,8 +18,8 @@ class AuthController extends Controller {
      *
      * @apiParamExample {json} Example request:
      * {
-     *     "firstName": "max",
-     *     "lastName": "rylkin"
+     *     "firstName": "Max",
+     *     "lastName": "Rylkin"
      * }
      * @apiSuccess {Object} User created user
      *
@@ -129,9 +129,7 @@ class AuthController extends Controller {
         if (!res[0]) throw new errors.HttpError('Wrong code', 400);
 
         var authUser = await(userService.findAuthUserByPhone(phone));
-        if (!authUser) return {
-            data: 'need register'
-        };
+        if (!authUser) return { data: 'need register' };
 
         var sberUser = await(userService.findSberUserByAuthId(authUser.id));
 

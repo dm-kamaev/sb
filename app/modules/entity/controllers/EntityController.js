@@ -229,11 +229,6 @@ class EntityController extends Controller {
      * @apiName associate Entity
      * @apiGroup Entity
      *
-     * @apiParam {Number} id source Entity unique identifier
-     * @apiParam {Number} otherId target Entity unique identifier
-     * @apiParam {String="fund","topic","direction"} type Entity type
-     *
-     *
      * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
      *
      * @param {Object} actionContext
