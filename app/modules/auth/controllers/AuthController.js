@@ -104,7 +104,7 @@ class AuthController extends Controller {
         }
     };
     /**
-     * @api {post} /auth/verify
+     * @api {post} /auth/verify verify code
      * @apiName verify code
      * @apiGroup Auth
      *

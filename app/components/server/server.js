@@ -53,6 +53,7 @@ app.use('/auth', authRouter);
 
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
+app.use('/', express.static(path.join(__dirname, '../../../public/uploads')));
 
 app.use((req, res, next) => {
     res.status(404).json([{

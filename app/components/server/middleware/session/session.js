@@ -13,6 +13,7 @@ module.exports = session({
         httpOnly: false,
         maxAge: 1000 * 60 * 60 * 24 * 30 * 12 * 100
     },
+    proxy: true,
     store: new SequelizeStore({
         db: sequelize
     })
