@@ -8,6 +8,7 @@ exports.renderEntity = function(entity) {
         description: entity.description,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
+        imgUrl: entity.imgUrl,
         checked: entity.userFund && !!entity.userFund.length
     };
 };

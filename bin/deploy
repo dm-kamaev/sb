@@ -1,0 +1,28 @@
+#!/bin/bash
+# run on deploy-node4.lan
+
+set -e
+
+lib_dir=node_modules/deployment
+
+scriptpath=$(dirname $0)
+gulp="./node_modules/.bin/gulp"
+cd $scriptpath/../
+
+echo "Prepare for packaging"
+
+echo "Install npm dependencies"
+if [ -d node_modules/ ]; then
+    npm update
+    npm run update
+else
+    npm install
+fi
+npm run config $env
+
+echo "Build frontend"
+$gulp frontend
+$gulp apidoc
+
+echo "Run packaging"
+project=$project target_host=$target_host env=$env lib_dir=$lib_dir remote_user=gorod packaging_release_number=$packaging_release_number source $lib_dir/bin/deploy

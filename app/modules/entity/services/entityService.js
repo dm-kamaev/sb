@@ -80,7 +80,8 @@ exports.createEntity = function(data) {
     return await(sequelize.models.Entity.create({
         title: data.title,
         description: data.description,
-        type: data.type
+        type: data.type,
+        imgUrl: data.imgUrl
     }));
 };
 

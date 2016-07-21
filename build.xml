@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="sber-together-api" basedir=".">
+  <property name="initd_script" value="${ant.project.name}-node"/>
+    <property name="packaging.target.current-path" value="/opt/${ant.project.name}/current"/>
+    <property name="packaging.source.frontend-app.path" value="${basedir}/app"/>
+    <property name="packaging.source.frontend-app.runtime.path" value="${basedir}/runtime"/>
+    <property name="packaging.source.shared.path" value="${basedir}/public/uploads"/>
+
+    <import file="${basedir}/node_modules/deployment/packaging.xml"/>
+    <import file="${basedir}/node_modules/deployment/node.xml"/>
+
+    <target name ="test">
+      <shellscript shell="bash">
+        echo 'sss'
+      </shellscript>
+    </target>
+
+    <target name="packaging.release.switch"
+        depends="packaging.release.folder.link,
+            packaging.rollback-script,
+            node.forever.restart"/>
+
+    <target name="packaging.release.clean"/>
+
+</project>
