@@ -11,6 +11,7 @@
     "lint-fix": "node_modules/.bin/eslint app/** --fix --config ./node_modules/nodules/.eslintrc || true",
     "drop-all": "psql -d sber-together-api -c \"DROP SCHEMA IF EXISTS \"public\" CASCADE;CREATE SCHEMA \"public\";\"",
     "update": "node node_modules/nodules/npmUpdate",
+    "erd": "node app/scripts/ERD.js",
     "start": "node app/app.js"
   },
   "repository": {
