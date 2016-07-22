@@ -1,5 +1,7 @@
 'use strict';
 
+const os = require('os');
+
 exports.renderEntity = function(entity) {
     return {
         id: entity.id,
@@ -8,7 +10,7 @@ exports.renderEntity = function(entity) {
         description: entity.description,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-        imgUrl: entity.imgUrl,
+        imgUrl: `http://${os.hostname()}:3000/${entity.imgUrl}`,
         checked: entity.userFund && !!entity.userFund.length
     };
 };
