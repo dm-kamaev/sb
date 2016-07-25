@@ -166,7 +166,8 @@ class UserFundController extends Controller {
      * @apiError (Error 404) NotFoundError userfund not found
      */
     actionGetEntities(actionContext, id) {
-        var entities = await(userFundService.getEntities(id));
+        var userFundId = actionContext.request.user.userFund.id;
+        var entities = await(userFundService.getEntities(userFundId));
         return entityView.renderEntities(entities);
     };
     /**
