@@ -73,7 +73,7 @@ exports.saveCode = function(phone, code, sberUserId) {
         }
     }));
 
-    if (send) throw new TimerError(send.updatedAt);
+    // if (send) throw new TimerError(send.updatedAt);
 
     return await(sequelize.models.Phone.upsert({
         number: phone,
@@ -94,6 +94,16 @@ exports.verifyCode = function(phone, code) {
         where: {
             number: phone,
             code
+        }
+    }));
+};
+
+exports.makeAdmin = function(id) {
+    return await(sequelize.models.SberUser.update({
+        role: 'backOffice'
+    }, {
+        where: {
+            id
         }
     }));
 };

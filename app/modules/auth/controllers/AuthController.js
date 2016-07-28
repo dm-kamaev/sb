@@ -144,8 +144,14 @@ class AuthController extends Controller {
             });
         }));
     };
-
-
+    /** @api {post} /auth/makemeadmin make me admin(for test)
+    * @apiName make me Admin
+    * @apiGroup Admin
+    **/
+    actionMakeMeAdmin(actionContext) {
+        var id = actionContext.request.user.id;
+        return await(authService.makeAdmin(id));
+    }
 }
 
 module.exports = AuthController;

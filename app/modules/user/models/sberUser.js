@@ -11,13 +11,9 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             onDelete: 'cascade'
         },
-        userFundId: {
-            allowNull: true,
-            references: {
-                model: 'UserFund',
-                key: 'id'
-            },
-            type: DataTypes.INTEGER
+        role: {
+            type: DataTypes.STRING,
+            defaultValue: 'user'
         },
         id: {
             allowNull: false,
@@ -35,10 +31,6 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'authUser',
                     foreignKey: 'authId'
                 });
-                SberUser.belongsTo(models.UserFund, {
-                    as: 'friendFund',
-                    foreignKey: 'userFundId'
-                });
                 SberUser.hasOne(models.UserFund, {
                     as: 'userFund',
                     foreignKey: 'creatorId'
@@ -46,6 +38,12 @@ module.exports = function(sequelize, DataTypes) {
                 SberUser.hasOne(models.Phone, {
                     as: 'phone',
                     foreignKey: 'sberUserId'
+                });
+                SberUser.belongsToMany(models.UserFund, {
+                    as: 'friendFund',
+                    through: 'UserFundUser',
+                    foreginKey: 'sberUserId',
+                    otherKey: 'userFundId'
                 });
             }
         }

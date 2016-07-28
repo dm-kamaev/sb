@@ -11,7 +11,8 @@ exports.renderEntity = function(entity) {
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
         imgUrl: `http://${os.hostname()}:3000/${entity.imgUrl}`,
-        checked: entity.userFund && !!entity.userFund.length
+        checked: entity.userFund && !!entity.userFund.length,
+        published: entity.published
     };
 };
 

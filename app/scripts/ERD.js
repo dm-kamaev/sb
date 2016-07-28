@@ -12,5 +12,5 @@ var builder = new Builder({
 });
 
 async(() => {
-  await(builder.run())
+    await(builder.run());
 })();

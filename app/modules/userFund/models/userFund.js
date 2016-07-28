@@ -44,13 +44,15 @@ module.exports = function(sequelize, DataTypes) {
                     foreignKey: 'userFundId',
                     otherKey: 'entityId'
                 });
-                UserFund.hasMany(models.SberUser, {
-                    as: 'members',
-                    foreignKey: 'userFundId'
-                });
                 UserFund.belongsTo(models.SberUser, {
                     as: 'owner',
                     foreignKey: 'creatorId'
+                });
+                UserFund.belongsToMany(models.SberUser, {
+                    as: 'users',
+                    through: 'UserFundUser',
+                    foreignKey: 'userFundId',
+                    otherKey: 'sberUserId'
                 });
             }
         }
