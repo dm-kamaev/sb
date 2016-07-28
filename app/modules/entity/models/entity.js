@@ -12,7 +12,13 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING
         },
         description: {
-            type: DataTypes.TEXT
+            type: DataTypes.TEXT,
+            validate: {
+                len: {
+                    args: [0, 500],
+                    msg: 'Длина описания должна быть до 500 символов.'
+                }
+            }
         },
         imgUrl: {
             type: DataTypes.STRING
@@ -21,8 +27,15 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
-                is: /^(topic|direction|fund)$/i
+                is: {
+                    args: /^(topic|direction|fund)$/i,
+                    msg: 'Тип может быть только "fund", "topic" или "direction"'
+                }
             }
+        },
+        published: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
     }, {
         tableName: 'Entity',
@@ -48,15 +61,15 @@ module.exports = function(sequelize, DataTypes) {
             beforeCreate: function(entity, opts, cb) {
                 if (entity.imgUrl) return cb(null, opts);
                 switch (entity.type.toLowerCase()) {
-                    case 'fund':
-                        entity.imgUrl = 'entity_pics/defaultFund.png'
-                        break;
-                    case 'topic':
-                        entity.imgUrl = 'entity_pics/defaultTopic.png'
-                        break;
-                    case 'direction':
-                        entity.imgUrl = 'entity_pics/defaultDirection.png'
-                        break;
+                case 'fund':
+                    entity.imgUrl = 'entity_pics/defaultFund.png';
+                    break;
+                case 'topic':
+                    entity.imgUrl = 'entity_pics/defaultTopic.png';
+                    break;
+                case 'direction':
+                    entity.imgUrl = 'entity_pics/defaultDirection.png';
+                    break;
                 }
                 cb(null, opts);
             }

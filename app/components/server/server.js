@@ -25,7 +25,6 @@ const accesslog = require('./middleware/access-log');
 
 app.use('/', debugForm);
 
-app.set('views', path.join(__dirname + '../../../../public/meta_templates'));
 app.set('view engine', 'pug');
 
 app.use(accesslog.debug);
@@ -36,6 +35,13 @@ app.use(bodyparser.urlencoded({
     extended: false
 }));
 
+app.use(metaTags);
+
+app.set('views', path.join(__dirname + '../../../../public/meta_templates'));
+app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
+app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
+app.use('/', express.static(path.join(__dirname, '../../../public/uploads')));
+
 // app.use(cordovaSession);
 app.use(session);
 app.use(passport.init);
@@ -44,16 +50,10 @@ app.use(anonymous);
 
 app.use(headers);
 
-app.use(metaTags);
-
 app.use('/entity', entityRoutes);
 app.use('/user-fund', userFundRoutes);
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
-
-app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
-app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
-app.use('/', express.static(path.join(__dirname, '../../../public/uploads')));
 
 app.use((req, res, next) => {
     res.status(404).json([{

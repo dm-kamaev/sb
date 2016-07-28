@@ -3,23 +3,10 @@
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 
-exports.getAllEntities = function(userFundId) {
+exports.getAllEntities = function(userFundId, published) {
     return await(sequelize.models.Entity.findAll({
-        include: {
-            model: sequelize.models.UserFund,
-            as: 'userFund',
-            where: {
-                id: userFundId
-            },
-            required: false
-        }
-    }));
-};
-
-exports.getEntity = function(id, userFundId) {
-    return await(sequelize.models.Entity.findOne({
         where: {
-            id: id
+            published
         },
         include: {
             model: sequelize.models.UserFund,
@@ -32,12 +19,30 @@ exports.getEntity = function(id, userFundId) {
     }));
 };
 
-exports.getEntitiesByType = function(type, userFundId) {
+exports.getEntity = function(id, userFundId, published) {
+    return await(sequelize.models.Entity.findOne({
+        where: {
+            id: id,
+            published
+        },
+        include: {
+            model: sequelize.models.UserFund,
+            as: 'userFund',
+            where: {
+                id: userFundId
+            },
+            required: false
+        }
+    }));
+};
+
+exports.getEntitiesByType = function(type, userFundId, published) {
     return await(sequelize.models.Entity.findAll({
         where: {
             type: {
                 $iLike: type
-            }
+            },
+            published
         },
         include: {
             model: sequelize.models.UserFund,
@@ -50,10 +55,11 @@ exports.getEntitiesByType = function(type, userFundId) {
     }));
 };
 
-exports.getEntitiesByOwnerId = function(id, type, userFundId) {
+exports.getEntitiesByOwnerId = function(id, type, userFundId, published) {
     var res = await(sequelize.models.Entity.findOne({
         where: {
-            id: id
+            id: id,
+            published
         },
         include: {
             model: sequelize.models.Entity,
@@ -81,6 +87,7 @@ exports.createEntity = function(data) {
         title: data.title,
         description: data.description,
         type: data.type,
+        published: data.published,
         imgUrl: data.imgUrl
     }));
 };
@@ -162,10 +169,11 @@ exports.getFundsCount = function() {
     }));
 };
 
-exports.getUserFunds = function(id) {
+exports.getUserFunds = function(id, published) {
     return await(sequelize.models.Entity.findOne({
         where: {
-            id
+            id,
+            published
         },
         include: {
             model: sequelize.models.UserFund,
@@ -173,4 +181,14 @@ exports.getUserFunds = function(id) {
             required: false
         }
     }));
+};
+
+exports.publishAll = function() {
+    return await(sequelize.models.Entity.update({
+      published: true
+    },{
+      where: {
+
+      }
+    }))
 };

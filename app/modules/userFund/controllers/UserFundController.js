@@ -157,7 +157,7 @@ class UserFundController extends Controller {
     };
 
     /**
-     * @api {get} /user-fund/:id/entity get entities
+     * @api {get} /user-fund/entity get entities
      * @apiName get entities associated with this userfund
      * @apiGroup UserFund
      *

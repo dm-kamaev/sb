@@ -100,6 +100,5 @@ exports.updateAuthUser = function(authId, userData) {
         firstName: userData.firstName,
         lastName: userData.lastName
     }));
-    console.log(response.data);
     return response.data;
 };
