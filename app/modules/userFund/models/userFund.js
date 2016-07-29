@@ -30,7 +30,7 @@ module.exports = function(sequelize, DataTypes) {
                 model: 'SberUser',
                 key: 'id'
             },
-            allowNull: false
+            allowNull: true
         }
     }, {
         tableName: 'UserFund',

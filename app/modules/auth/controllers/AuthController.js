@@ -5,6 +5,7 @@ const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userService = require('../../user/services/userService');
 const authService = require('../services/authService');
+const userFundService = require('../../userFund/services/userFundService');
 
 class AuthController extends Controller {
     /**
@@ -122,7 +123,8 @@ class AuthController extends Controller {
 
         if (!phoneData) throw new errors.HttpError('Unathorized', 403);
 
-        var phone = actionContext.request.user.phone.number,
+        var sessionUser = actionContext.request.user,
+            phone = sessionUser.phone.number,
             code = actionContext.request.body.code;
 
         var res = await(authService.verifyCode(phone, code));
@@ -134,9 +136,14 @@ class AuthController extends Controller {
         var sberUser = await(userService.findSberUserByAuthId(authUser.id));
 
         if (!sberUser) {
-            sberUser = actionContext.request.user;
+            sberUser = sessionUser;
             await(userService.setAuthId(sberUser.id, authUser.id));
-        };
+        } else if (sberUser.userFund.draft &&
+                await(userFundService.getEntities(sessionUser.id)).length) {
+            await(userService.setUserFund(sberUser.id, sessionUser.userFund.id));
+        }
+
+
         return await(new Promise((resolve, reject) => {
             actionContext.request.login(sberUser, (err) => {
                 if (err) reject(new errors.HttpError(err.message, 400));
@@ -144,14 +151,6 @@ class AuthController extends Controller {
             });
         }));
     };
-    /** @api {post} /auth/makemeadmin make me admin(for test)
-    * @apiName make me Admin
-    * @apiGroup Admin
-    **/
-    actionMakeMeAdmin(actionContext) {
-        var id = actionContext.request.user.id;
-        return await(authService.makeAdmin(id));
-    }
 }
 
 module.exports = AuthController;

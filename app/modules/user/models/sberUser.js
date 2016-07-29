@@ -11,10 +11,6 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             onDelete: 'cascade'
         },
-        role: {
-            type: DataTypes.STRING,
-            defaultValue: 'user'
-        },
         id: {
             allowNull: false,
             autoIncrement: true,

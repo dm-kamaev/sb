@@ -20,7 +20,8 @@ var EntityController = require('./controllers/EntityController');
 var entityController = new EntityController();
 
 entityRouter.use((req, res, next) => {
-    req.published = req.user.role == 'user' ? true : { $or: [true, false] };
+    // req.published = token ? true : { $or: [true, false] };
+    req.published = true;
     next();
 });
 entityRouter.get('/',
@@ -35,11 +36,13 @@ entityRouter.get('/fund/today',
     entityController.actionGetTodayFundsCount);
 entityRouter.get('/:id(\\d+)/user-fund',
     entityController.actionGetUserFunds);
+entityRouter.post('/publishall',
+    entityController.actionPublishAll);
 
 // admin routes
 entityRouter.use((req, res, next) => {
-    if (req.user.role == 'backOffice') return next();
-    throw new errors.HttpError('Unathorized', 403);
+    //check auth here
+    next();
 });
 entityRouter.post('/', upload.single('picture'),
     entityController.actionCreateEntity);
@@ -51,7 +54,6 @@ entityRouter.post('/:id(\\d+)/:otherId(\\d+)',
     entityController.actionAssociate);
 entityRouter.delete('/:id(\\d+)/:otherId(\\d+)',
     entityController.actionRemoveAssociation);
-entityRouter.post('/publish',
-    entityController.actionPublishAll);    
+
 
 module.exports = entityRouter;
