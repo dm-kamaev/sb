@@ -185,10 +185,10 @@ exports.getUserFunds = function(id, published) {
 
 exports.publishAll = function() {
     return await(sequelize.models.Entity.update({
-      published: true
-    },{
-      where: {
-
-      }
-    }))
+        published: true
+    }, {
+        where: {
+          published: false
+        }
+    }));
 };

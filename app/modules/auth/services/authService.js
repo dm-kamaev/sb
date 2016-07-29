@@ -97,13 +97,3 @@ exports.verifyCode = function(phone, code) {
         }
     }));
 };
-
-exports.makeAdmin = function(id) {
-    return await(sequelize.models.SberUser.update({
-        role: 'backOffice'
-    }, {
-        where: {
-            id
-        }
-    }));
-};

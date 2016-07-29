@@ -2,6 +2,7 @@
 
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
+const async = require('asyncawait/async');
 const config = require('../../../../config/user-config/config');
 const axios = require('axios').create({
     baseURL: `http://${config.host}:${config.port}`
@@ -101,4 +102,23 @@ exports.updateAuthUser = function(authId, userData) {
         lastName: userData.lastName
     }));
     return response.data;
+};
+
+exports.setUserFund = function(id, userFundId) {
+    await(sequelize.sequelize_.transaction(async((t) => {
+        await(sequelize.models.UserFund.update({
+            creatorId: null
+        }, {
+            where: {
+                creatorId: id
+            }
+        }));
+        await(sequelize.models.UserFund.update({
+            creatorId: id
+        }, {
+            where: {
+                id: userFundId
+            }
+        }));
+    })));
 };

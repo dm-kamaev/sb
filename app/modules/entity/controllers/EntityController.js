@@ -45,7 +45,7 @@ class EntityController extends Controller {
     actionCreateEntity(actionContext) {
         try {
             var data = actionContext.request.body;
-            var entity = await (entityService.createEntity(data));
+            var entity = await(entityService.createEntity(data));
             actionContext.response.statusCode = 201;
             actionContext.response.set('Location', `/entity/${entity.id}`);
             return entityView.renderEntity(entity);
@@ -107,9 +107,8 @@ class EntityController extends Controller {
      * @return {Object} Entity
      */
     actionGetEntitiesByType(actionContext, type) {
-        var userFundId = actionContext.request.user.userFund.id,
-            published = actionContext.request.published;
-        var entities = await (entityService.getEntitiesByType(type, userFundId, published));
+        var userFundId = actionContext.request.user.userFund.id;
+        var entities = await(entityService.getEntitiesByType(type, userFundId, published));
         return entityView.renderEntities(entities);
     };
     /**
@@ -140,7 +139,7 @@ class EntityController extends Controller {
     actionGetEntity(actionContext, id) {
         var userFundId = actionContext.request.user.userFund.id,
             published = actionContext.request.published;
-        var entity = await (entityService.getEntity(id, userFundId, published));
+        var entity = await(entityService.getEntity(id, userFundId, published));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return entityView.renderEntity(entity);
     };
@@ -154,7 +153,7 @@ class EntityController extends Controller {
      * @param {Integer} id
      */
     actionDeleteEntity(actionContext, id) {
-        var deleted = await (entityService.deleteEntity(id));
+        var deleted = await(entityService.deleteEntity(id));
         if (!deleted) throw new errors.NotFoundError('Entity', id);
         return null;
     };
@@ -183,7 +182,7 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body;
             delete data.id;
-            var entity = await (entityService.updateEntity(id, data));
+            var entity = await(entityService.updateEntity(id, data));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
             return null;
         } catch (err) {
@@ -217,7 +216,7 @@ class EntityController extends Controller {
             var userFundId = actionContext.request.user.userFund.id,
                 published = actionContext.request.published;
             var entities =
-                await (entityService.getEntitiesByOwnerId(id, type, userFundId, published));
+                await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
             return entityView.renderEntities(entities);
         } catch (err) {
             if (err.message == 'Not found') {
@@ -241,7 +240,7 @@ class EntityController extends Controller {
      */
     actionAssociate(actionContext, id, otherId) {
         try {
-            await (entityService.associateEntity(id, otherId));
+            await(entityService.associateEntity(id, otherId));
         } catch (err) {
             if (err.message == 'Relation exists') {
                 throw new errors.HttpError('Relation exists', 400);
@@ -264,7 +263,7 @@ class EntityController extends Controller {
     actionGetAllEntities(actionContext) {
         var userFundId = actionContext.request.user.userFund.id,
             published = actionContext.request.published;
-        var entities = await (entityService.getAllEntities(userFundId, published));
+        var entities = await(entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
     };
     /**
@@ -283,7 +282,7 @@ class EntityController extends Controller {
      * @param {Integer} otherId
      */
     actionRemoveAssociation(actionContext, id, otherId) {
-        var deletedCount = await (entityService.removeAssociation(id, otherId));
+        var deletedCount = await(entityService.removeAssociation(id, otherId));
         if (!deletedCount) {
             throw new errors.HttpError('Relation don\'t exists', 400);
         }
@@ -299,7 +298,7 @@ class EntityController extends Controller {
      * @param {Object} actionContext
      */
     actionGetTodayFundsCount(actionContext) {
-        var count = await (entityService.getTodayFundsCount());
+        var count = await(entityService.getTodayFundsCount());
         return {
             count: count
         };
@@ -319,7 +318,7 @@ class EntityController extends Controller {
      */
     actionGetUserFunds(actionContext, id) {
         var published = actionContext.request.published,
-            entity = await (entityService.getUserFunds(id, published));
+            entity = await(entityService.getUserFunds(id, published));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return userFundView.renderUserFunds(entity.userFund);
     };
