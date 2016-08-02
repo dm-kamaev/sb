@@ -20,11 +20,11 @@
     <target name="packaging.release.switch"
       depends="packaging.shared-folders,
                packaging.supervisor.link,
-               sber.ensure-local-config
-               sber.migrate-database
-               packaging.release.folder.link
-               packaging.rollback-script
-               packaging.supervisor.restart
+               sber.ensure-local-config,
+               sber.migrate-database,
+               packaging.release.folder.link,
+               packaging.rollback-script,
+               packaging.supervisor.restart,
                packaging.crontab.install"/>
 
     <target name="packaging.release.clean"
@@ -42,7 +42,7 @@
               depends="packaging.shared-folders.set-permissions.logs"/>
 
       <target name="packaging.shared-folders.unlink"
-              depends="packaging.shared-folders.unlink.logs"/>  
+              depends="packaging.shared-folders.unlink.logs"/>
 
     <target name="sber.ensure-local-config">
       <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
