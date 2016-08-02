@@ -30,6 +30,20 @@
     <target name="packaging.release.clean"
       depends="packaging.shared-folders.unlink"/>
 
+      <target name="packaging.shared-folders"
+              depends="packaging.shared-folders.create,
+                       packaging.shared-folders.set-permissions,
+                       packaging.shared-folders.link.logs"/>
+
+      <target name="packaging.shared-folders.create"
+              depends="packaging.shared-folders.create.logs"/>
+
+      <target name="packaging.shared-folders.set-permissions"
+              depends="packaging.shared-folders.set-permissions.logs"/>
+
+      <target name="packaging.shared-folders.unlink"
+              depends="packaging.shared-folders.unlink.logs"/>  
+
     <target name="sber.ensure-local-config">
       <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
         <arg line="createConfig ${env}"/>
