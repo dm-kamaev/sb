@@ -12,7 +12,10 @@ exports.renderEntity = function(entity) {
         updatedAt: entity.updatedAt,
         imgUrl: `http://${os.hostname()}:3000/${entity.imgUrl}`,
         checked: entity.userFund && !!entity.userFund.length,
-        published: entity.published
+        published: entity.published,
+        funds: entity.fund && exports.renderEntities(entity.fund),
+        directions: entity.direction && exports.renderEntities(entity.direction),
+        topics: entity.topic && exports.renderEntities(entity.topic)
     };
 };
 

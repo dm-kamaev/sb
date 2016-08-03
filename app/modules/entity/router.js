@@ -41,9 +41,11 @@ entityRouter.post('/publishall',
 
 // admin routes
 entityRouter.use((req, res, next) => {
-    //check auth here
+    // check auth here
     next();
 });
+entityRouter.get('/all',
+    entityController.actionGetEntitiesWithNested);
 entityRouter.post('/', upload.single('picture'),
     entityController.actionCreateEntity);
 entityRouter.put('/:id(\\d+)', upload.single('picture'),

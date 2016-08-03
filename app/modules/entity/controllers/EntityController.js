@@ -108,6 +108,7 @@ class EntityController extends Controller {
      */
     actionGetEntitiesByType(actionContext, type) {
         var userFundId = actionContext.request.user.userFund.id;
+        var published = actionContext.request.published;
         var entities = await(entityService.getEntitiesByType(type, userFundId, published));
         return entityView.renderEntities(entities);
     };
@@ -331,6 +332,21 @@ class EntityController extends Controller {
      */
     actionPublishAll(actionContext) {
         return await(entityService.publishAll());
+    }
+        /**
+         * @api {get} /entity/all get entities with include
+         * @apiNane get entities with include
+         * @apiGroup Admin
+         */
+    actionGetEntitiesWithNested(actionContext) {
+        var includes = actionContext.request.query.include || [];
+        if (!(includes instanceof Array)) includes = [includes];
+        try {
+            var entities = await(entityService.getAllWithNested(includes));
+        } catch (err) {
+            throw new errors.HttpError('Wrong include query param!', 400);
+        }
+        return entityView.renderEntities(entities);
     }
 }
 
