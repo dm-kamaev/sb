@@ -189,6 +189,34 @@ class UserFundController extends Controller {
             today
         };
     };
+    /**
+     * @api {post} /user-fund/amount set amount
+     * @apiName set amount
+     * @apiGroup UserFund
+     *
+     * @param  {[type]} actionContext [description]
+     * @return {[type]}               [description]
+     */
+    actionSetAmount(actionContext) {
+        var sberUserId = actionContext.request.user.id,
+            changer = 'user',
+            userFundId = actionContext.request.user.userFund.id,
+            amount = actionContext.data.amount;
+        return await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
+    };
+    /**
+     * @api {get} /user-fund/amount get amount
+     * @apiName get current amount
+     * @apiGroup UserFund
+     *
+     * @param  {[type]} actionContext [description]
+     * @return {[type]}               [description]
+     */
+    actionGetCurrentAmount(actionContext) {
+        var sberUserId = actionContext.request.user.id,
+            userFundId = actionContext.request.user.userFund.id;
+        return await(userFundService.getCurrentAmount(sberUserId, userFundId));
+    };
 }
 
 module.exports = UserFundController;

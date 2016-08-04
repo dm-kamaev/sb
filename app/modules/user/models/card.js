@@ -15,6 +15,10 @@ module.exports = function(sequelize, DataTypes) {
                 key: 'id'
             },
             allowNull: false
+        },
+        bindingId: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     }, {
         tableName: 'Card',

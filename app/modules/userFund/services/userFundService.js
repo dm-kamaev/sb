@@ -1,6 +1,7 @@
 'use strict';
 
 const await = require('asyncawait/await');
+const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
 
 exports.createUserFund = function(data) {
@@ -98,10 +99,59 @@ exports.toggleEnabled = function(id, isEnabled) {
         enabled: isEnabled
     }, {
         where: {
-            $and: [
-              {enabled: !isEnabled},
-              {id: id}
-            ]
+            $and: [{
+                enabled: !isEnabled
+            }, {
+                id: id
+            }]
         }
     }));
+};
+
+exports.setAmount = function(sberUserId, userFundId, changer, amount) {
+    return await(sequelize.sequelize_.transaction(t => {
+        return sequelize.models.SberUserUserFund.findOrCreate({
+            where: {
+                userFundId,
+                sberUserId
+            }
+        })
+            .spread(suuf => suuf)
+            .then(suuf => {
+                return sequelize.models.DesiredAmountHistory.create({
+                    SberUserUserFundId: suuf.id,
+                    payDate: Date.now(),
+                    changer,
+                    amount
+                });
+            })
+            .then(amount => {
+                return sequelize.models.SberUserUserFund.update({
+                    currentAmountId: amount.id
+                }, {
+                    where: {
+                        userFundId,
+                        sberUserId
+                    }
+                });
+            })
+            .catch(err => {
+                throw err;
+            });
+    }));
+};
+
+exports.getCurrentAmount = function(sberUserId, userFundId) {
+    var suuf = await(sequelize.models.SberUserUserFund.findOne({
+        where: {
+            sberUserId,
+            userFundId
+        },
+        include: [{
+            model: sequelize.models.DesiredAmountHistory,
+            as: 'currentAmount',
+            required: false
+        }]
+    }));
+    return suuf.currentAmount;
 };

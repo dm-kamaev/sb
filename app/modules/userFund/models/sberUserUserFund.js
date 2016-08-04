@@ -34,7 +34,7 @@ module.exports = function(sequelize, DataTypes) {
                 model: 'DesiredAmountHistory',
                 key: 'id'
             },
-            allowNull: false
+            allowNull: true
         },
         createdAt: {
             type: DataTypes.DATE

@@ -7,8 +7,7 @@ module.exports = {
             references: {
                 model: 'DesiredAmountHistory',
                 key: 'id'
-            },
-            allowNull: false
+            }
         })
             .then(() => {
                 return queryInterface.addColumn('SberUserUserFund', 'enabled', {
