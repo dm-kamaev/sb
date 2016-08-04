@@ -71,7 +71,7 @@ exports.createSberUser = function(authId) {
     return await(sequelize.models.SberUser.create({
         authId,
         userFund: {
-            draft: true
+            enabled: false
         }
     }, {
         include: [{

@@ -93,13 +93,13 @@ exports.getUserFundsCount = function() {
     return await(sequelize.models.UserFund.count());
 };
 
-exports.toggleDraft = function(id, isDraft) {
+exports.toggleEnabled = function(id, isEnabled) {
     return await(sequelize.models.UserFund.update({
-        draft: isDraft
+        enabled: isEnabled
     }, {
         where: {
             $and: [
-              {draft: !isDraft},
+              {enabled: !isEnabled},
               {id: id}
             ]
         }

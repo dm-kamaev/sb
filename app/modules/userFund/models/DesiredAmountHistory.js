@@ -1,28 +1,27 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-    var UserFundUser = sequelize.define('UserFundUser', {
+    var DesiredAmountHistory = sequelize.define('DesiredAmountHistory', {
         id: {
             allowNull: false,
             autoIncrement: true,
             primaryKey: true,
             type: DataTypes.INTEGER,
         },
-        UserFundId: {
+        sberUserUserFundId: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'UserFund',
+                model: 'SberUserUserFund',
                 key: 'id'
             },
-            field: 'userFundId'
+            allowNull: false
         },
-        SberUserId: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'SberUser',
-                key: 'id'
-            },
-            field: 'sberUserId'
+        payDate: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+        changer: {
+            type: DataTypes.STRING
         },
         createdAt: {
             type: DataTypes.DATE
@@ -31,13 +30,17 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE
         }
     }, {
-        tableName: 'UserFundUser',
+        tableName: 'DesiredAmountHistory',
         unserscored: true,
         classMethods: {
             associate: function(models) {
-
+                DesiredAmountHistory.belongsTo(models.SberUserUserFund, {
+                    as: 'suuf', // rename this
+                    foreginKey: 'userFundUserId'
+                });
             }
         }
     });
-    return UserFundUser;
+
+    return DesiredAmountHistory;
 };

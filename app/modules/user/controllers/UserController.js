@@ -31,7 +31,7 @@ class UserController extends Controller {
      */
     actionCreateUserFund(actionContext) {
         var id = actionContext.request.user.userFund.id;
-        var res = await(userFundService.toggleDraft(id, false));
+        var res = await(userFundService.toggleEnabled(id, true));
         if (!res[0]) throw new errors.HttpError('Userfund exists', 400);
     };
     /**
@@ -61,7 +61,7 @@ class UserController extends Controller {
      */
     actionDeleteUserFund(actionContext) {
         var id = actionContext.request.user.userFund.id;
-        var res = await(userFundService.toggleDraft(id, true));
+        var res = await(userFundService.toggleEnabled(id, false));
         if (!res[0]) throw new errors.NotFoundError('Userfund', id);
     };
     /**

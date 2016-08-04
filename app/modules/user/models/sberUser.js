@@ -16,6 +16,13 @@ module.exports = function(sequelize, DataTypes) {
             autoIncrement: true,
             primaryKey: true,
             type: DataTypes.INTEGER,
+        },
+        currentCardId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'Card',
+                key: 'id'
+            }
         }
     }, {
         tableName: 'SberUser',
@@ -37,9 +44,13 @@ module.exports = function(sequelize, DataTypes) {
                 });
                 SberUser.belongsToMany(models.UserFund, {
                     as: 'friendFund',
-                    through: 'UserFundUser',
+                    through: 'SberUserUserFund',
                     foreginKey: 'sberUserId',
                     otherKey: 'userFundId'
+                });
+                SberUser.belongsTo(models.Card, {
+                    as: 'currentCard',
+                    foreginKey: 'currentCardId'
                 });
             }
         }
