@@ -9,7 +9,6 @@ module.exports = {
     },
 
     down: function(queryInterface, Sequelize) {
-        console.log('rollback');
         return queryInterface.changeColumn('UserFund', 'creatorId', {
             type: Sequelize.INTEGER,
             allowNull: false
