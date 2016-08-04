@@ -193,18 +193,20 @@ exports.publishAll = function() {
     }));
 };
 
-exports.getAllWithNested = function(includes) {
-    var include = includes.map((e) => {
+exports.getEntitiesByTypeWithNested = function(type, includes) {
+    var include = includes.map(e => {
         return {
             model: sequelize.models.Entity,
             as: e,
-          // where: {
-          //   type: e
-          // },
             required: false
         };
     });
     return await(sequelize.models.Entity.findAll({
+        where: {
+            type: {
+                $or: type
+            }
+        },
         include
     }));
 };

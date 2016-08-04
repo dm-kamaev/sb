@@ -332,22 +332,61 @@ class EntityController extends Controller {
      */
     actionPublishAll(actionContext) {
         return await(entityService.publishAll());
+    };
+    /**
+     * @api {get} /entity/all get entities with include
+     * @apiNane get entities with include
+     * @apiGroup Admin
+     * @apiParam (Query Params) {String="fund","topic","direction"} type=["fund","direction","topic"] type of enties
+     * @apiParam (Query Params) {String="fund","topic","direction"} type of nested entities
+     *
+     * @apiSuccessExample {json} example:
+     *
+     * 			[    {
+        "id": 8,
+        "type": "direction",
+        "title": "sample title",
+        "description": "sample description",
+        "createdAt": "2016-08-04T10:11:26.585Z",
+        "updatedAt": "2016-08-04T10:11:26.585Z",
+        "imgUrl": "http://www58.lan:3000/entity_pics/defaultDirection.png",
+        "published": false,
+        "topics": [
+            {
+                "id": 1,
+                "type": "topic",
+                "title": "sample title",
+                "description": "sample description",
+                "createdAt": "2016-08-04T09:41:04.483Z",
+                "updatedAt": "2016-08-04T09:41:37.110Z",
+                "imgUrl": "http://www58.lan:3000/entity_pics/defaultTopic.png",
+                "published": true
+            },
+            {
+                "id": 2,
+                "type": "topic",
+                "title": "sample title",
+                "description": "sample description",
+                "createdAt": "2016-08-04T09:41:04.626Z",
+                "updatedAt": "2016-08-04T09:41:37.110Z",
+                "imgUrl": "http://www58.lan:3000/entity_pics/defaultTopic.png",
+                "published": true
+            }
+        ]
     }
-        /**
-         * @api {get} /entity/all get entities with include
-         * @apiNane get entities with include
-         * @apiGroup Admin
-         */
+]
+     *
+     */
     actionGetEntitiesWithNested(actionContext) {
-        var includes = actionContext.request.query.include || [];
-        if (!(includes instanceof Array)) includes = [includes];
+        var includes = actionContext.request.include;
+        var type = actionContext.request.type;
         try {
-            var entities = await(entityService.getAllWithNested(includes));
+            var entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
         } catch (err) {
-            throw new errors.HttpError('Wrong include query param!', 400);
+            throw new errors.HttpError('Wrong "include" or "type" query param!', 400);
         }
         return entityView.renderEntities(entities);
-    }
+    };
 }
 
 module.exports = EntityController;

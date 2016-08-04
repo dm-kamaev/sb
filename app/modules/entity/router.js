@@ -14,7 +14,9 @@ const storage = multer.diskStorage({
         cb(null, filename);
     }
 });
-const upload = multer({ storage });
+const upload = multer({
+    storage
+});
 
 var EntityController = require('./controllers/EntityController');
 var entityController = new EntityController();
@@ -24,6 +26,7 @@ entityRouter.use((req, res, next) => {
     req.published = true;
     next();
 });
+
 entityRouter.get('/',
     entityController.actionGetAllEntities);
 entityRouter.get('/:type(topic|direction|fund)',
@@ -42,6 +45,17 @@ entityRouter.post('/publishall',
 // admin routes
 entityRouter.use((req, res, next) => {
     // check auth here
+    next();
+});
+entityRouter.use((req, res, next) => {
+    var include = req.query.include || [];
+    var type = req.query.type || [];
+    if (!Array.isArray(include)) include = [include];
+    if (!Array.isArray(type)) type = [type];
+    req.include = include
+        .filter(e => e == 'fund' || e == 'topic' || e == 'direction');
+    req.type = type
+        .filter(e => e == 'fund' || e == 'topic' || e == 'direction');
     next();
 });
 entityRouter.get('/all',
