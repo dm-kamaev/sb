@@ -1,0 +1,29 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          @PACKAGENAME@-node
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Should-Start:      postgresql
+# Should-Stop:       postgresql
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: @PACKAGENAME@ node.js application
+# Description:       @PACKAGENAME@ node.js application
+### END INIT INFO
+
+base=/opt/@PACKAGENAME@/current
+
+case "$1" in
+  start)
+	cd $base && ant node-start
+    ;;
+  stop)
+	cd $base && ant node-stop
+    ;;
+  *)
+    echo "Usage: /etc/init.d/@PACKAGENAME@-node {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0

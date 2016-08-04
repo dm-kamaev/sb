@@ -1,26 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <project name="sber-together-api" basedir=".">
-  <property name="initd_script" value="${ant.project.name}-node"/>
-    <property name="packaging.target.current-path" value="/opt/${ant.project.name}/current"/>
+    <property name="initd_script" value="${ant.project.name}-node"/>
+    <property name="project.node-modules.path" value="${basedir}/node_modules"/>
     <property name="packaging.source.frontend-app.path" value="${basedir}/app"/>
     <property name="packaging.source.frontend-app.runtime.path" value="${basedir}/runtime"/>
     <property name="packaging.source.shared.path" value="${basedir}/public/uploads"/>
+    <property name="node" value="/usr/bin/node"/>
+    <property name="packaging.project" value="${ant.project.name}"/>
+    <property name="packaging.target.basedir" value="/opt/${packaging.project}"/>
+    <property name="packaging.target.current-path" value="${packaging.target.basedir}/current"/>
+
+    <property name="packaging.source.supervisor"
+            value="${packaging.target.current-path}/environment/supervisord/${packaging.project}.conf"/>
 
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>
 
-    <target name ="test">
-      <shellscript shell="bash">
-        echo 'sss'
-      </shellscript>
+    <target name="packaging.release.switch"
+      depends="packaging.shared-folders,
+               packaging.supervisor.link,
+               sber.ensure-local-config,
+               sber.migrate-database,
+               packaging.release.folder.link,
+               packaging.rollback-script,
+               packaging.supervisor.restart,
+               packaging.crontab.install,
+               sber.change-owner"/>
+
+    <target name="packaging.release.clean"
+      depends="packaging.shared-folders.unlink"/>
+
+      <target name="packaging.shared-folders"
+              depends="packaging.shared-folders.create,
+                       packaging.shared-folders.set-permissions,
+                       packaging.shared-folders.link.logs"/>
+
+      <target name="packaging.shared-folders.create"
+              depends="packaging.shared-folders.create.logs"/>
+
+      <target name="packaging.shared-folders.set-permissions"
+              depends="packaging.shared-folders.set-permissions.logs"/>
+
+      <target name="packaging.shared-folders.unlink"
+              depends="packaging.shared-folders.unlink.logs"/>
+
+    <target name="sber.ensure-local-config">
+      <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
+        <arg line="createConfig ${env}"/>
+      </exec>
     </target>
 
-    <target name="packaging.release.switch"
-        depends="packaging.release.folder.link,
-            packaging.rollback-script,
-            node.forever.restart"/>
+    <target name="sber.migrate-database">
+        <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
+            <arg line="migrate"/>
+        </exec>
+    </target>
 
-    <target name="packaging.release.clean"/>
+    <target name="sber.change-owner">
+        <exec executable="chown" dir="${basedir}">
+            <arg line="-R gorod ${basedir}"/>
+        </exec>
+    </target>
 
 </project>
