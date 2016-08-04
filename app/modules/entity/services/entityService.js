@@ -188,7 +188,25 @@ exports.publishAll = function() {
         published: true
     }, {
         where: {
-          published: false
+            published: false
         }
+    }));
+};
+
+exports.getEntitiesByTypeWithNested = function(type, includes) {
+    var include = includes.map(e => {
+        return {
+            model: sequelize.models.Entity,
+            as: e,
+            required: false
+        };
+    });
+    return await(sequelize.models.Entity.findAll({
+        where: {
+            type: {
+                $or: type
+            }
+        },
+        include
     }));
 };
