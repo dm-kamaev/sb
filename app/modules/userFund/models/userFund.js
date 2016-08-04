@@ -20,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
                 max: 2000
             }
         },
-        draft: {
+        enabled: {
             type: DataTypes.BOOLEAN,
             allowNull: false
         },
@@ -50,7 +50,7 @@ module.exports = function(sequelize, DataTypes) {
                 });
                 UserFund.belongsToMany(models.SberUser, {
                     as: 'users',
-                    through: 'UserFundUser',
+                    through: 'SberUserUserFund',
                     foreignKey: 'userFundId',
                     otherKey: 'sberUserId'
                 });

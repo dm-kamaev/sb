@@ -5,7 +5,7 @@ exports.renderUserFund = function(userFund) {
         id: userFund.id,
         title: userFund.title,
         description: userFund.description,
-        draft: userFund.draft,
+        enabled: userFund.enabled,
         creatorId: userFund.creatorId,
         createdAt: userFund.createdAt,
         updatedAt: userFund.updatedAt

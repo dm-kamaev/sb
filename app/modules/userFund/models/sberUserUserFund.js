@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-    var UserFundUser = sequelize.define('UserFundUser', {
+    var SberUserUserFund = sequelize.define('SberUserUserFund', {
         id: {
             allowNull: false,
             autoIncrement: true,
@@ -24,6 +24,18 @@ module.exports = function(sequelize, DataTypes) {
             },
             field: 'sberUserId'
         },
+        enabled: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        currentAmountId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'DesiredAmountHistory',
+                key: 'id'
+            },
+            allowNull: true
+        },
         createdAt: {
             type: DataTypes.DATE
         },
@@ -31,13 +43,20 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE
         }
     }, {
-        tableName: 'UserFundUser',
+        tableName: 'SberUserUserFund',
         unserscored: true,
         classMethods: {
             associate: function(models) {
-
+                SberUserUserFund.belongsTo(models.DesiredAmountHistory, {
+                    as: 'currentAmount',
+                    foreginKey: 'currentAmountId'
+                });
+                SberUserUserFund.hasMany(models.DesiredAmountHistory, {
+                    as: 'amountChangeHistory',
+                    foreginKey: 'sberUserUserFundId'
+                });
             }
         }
     });
-    return UserFundUser;
+    return SberUserUserFund;
 };

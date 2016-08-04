@@ -138,7 +138,7 @@ class AuthController extends Controller {
         if (!sberUser) {
             sberUser = sessionUser;
             await(userService.setAuthId(sberUser.id, authUser.id));
-        } else if (sberUser.userFund.draft &&
+        } else if (!sberUser.userFund.enabled &&
                 await(userFundService.getEntities(sessionUser.id)).length) {
             await(userService.setUserFund(sberUser.id, sessionUser.userFund.id));
         }
