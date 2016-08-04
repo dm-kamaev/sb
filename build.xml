@@ -25,7 +25,8 @@
                packaging.release.folder.link,
                packaging.rollback-script,
                packaging.supervisor.restart,
-               packaging.crontab.install"/>
+               packaging.crontab.install,
+               sber.change-owner"/>
 
     <target name="packaging.release.clean"
       depends="packaging.shared-folders.unlink"/>
@@ -53,6 +54,12 @@
     <target name="sber.migrate-database">
         <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
             <arg line="migrate"/>
+        </exec>
+    </target>
+
+    <target name="sber.change-owner">
+        <exec executable="chown" dir="${basedir}">
+            <arg line="-R gorod ${basedir}"/>
         </exec>
     </target>
 
