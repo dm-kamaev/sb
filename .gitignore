@@ -27,3 +27,6 @@ node_modules/
 
 deployment-config.json
 .ftpconfig
+
+# shell-scripts
+create_file.sh
