@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, DataTypes) {
     var Orders = sequelize.define('Orders', {
-        suufId: {
+        sberUserUserFundId: {
             allowNull: false,
             type: DataTypes.INTEGER,
             references: {
@@ -17,7 +17,10 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
         },
         orderId:      DataTypes.STRING,
-        amount:       DataTypes.INTEGER,
+        amount:       {
+            allowNull: false,
+            type: DataTypes.INTEGER,
+        },
         errorCode:    DataTypes.INTEGER,
         errorMessage: DataTypes.TEXT,
         actionCode:   DataTypes.INTEGER,

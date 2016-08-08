@@ -3,7 +3,7 @@
 module.exports = {
     up: function(queryInterface, Sequelize) {
         return queryInterface.createTable('Orders', {
-            suufId: {
+            sberUserUserFundId: {
                 allowNull: false,
                 type: Sequelize.INTEGER,
                 references: {
@@ -18,7 +18,10 @@ module.exports = {
                 type: Sequelize.INTEGER,
             },
             orderId:      Sequelize.STRING,
-            amount:       Sequelize.INTEGER,
+            amount:       {
+                allowNull: false,
+                type: Sequelize.INTEGER,
+            },
             errorCode:    Sequelize.INTEGER,
             errorMessage: Sequelize.TEXT,
             actionCode:   Sequelize.INTEGER,
