@@ -24,7 +24,7 @@ module.exports = (req, res, next) => {
 
 nonSPARouter.get('/', async((req, res) => {
     if (req.query.entity) {
-        var entity = await(entityService.getEntity(req.query.entity));
+        var entity = await(entityService.getEntity(req.query.entity, null, true));
         if (entity) {
             var renderedEntity = entityView.renderEntity(entity);
             var dimensions = sizeOf(path.join(__dirname,

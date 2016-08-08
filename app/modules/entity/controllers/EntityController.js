@@ -139,8 +139,9 @@ class EntityController extends Controller {
      */
     actionGetEntity(actionContext, id) {
         var userFundId = actionContext.request.user.userFund.id,
-            published = actionContext.request.published;
-        var entity = await(entityService.getEntity(id, userFundId, published));
+            published = actionContext.request.published,
+            include = actionContext.request.query.include;
+        var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return entityView.renderEntity(entity);
     };
@@ -378,8 +379,8 @@ class EntityController extends Controller {
      *
      */
     actionGetEntitiesWithNested(actionContext) {
-        var includes = actionContext.request.include;
-        var type = actionContext.request.type;
+        var includes = actionContext.request.query.include;
+        var type = actionContext.request.query.type;
         try {
             var entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
         } catch (err) {

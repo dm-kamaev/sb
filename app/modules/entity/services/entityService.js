@@ -4,7 +4,7 @@ const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 
 exports.getAllEntities = function(userFundId, published) {
-    return await(sequelize.models.Entity.findAll({
+    return await (sequelize.models.Entity.findAll({
         where: {
             published
         },
@@ -19,25 +19,33 @@ exports.getAllEntities = function(userFundId, published) {
     }));
 };
 
-exports.getEntity = function(id, userFundId, published) {
-    return await(sequelize.models.Entity.findOne({
+exports.getEntity = function(id, userFundId, published, includes) {
+    var include = includes.map(e => {
+        return {
+            model: sequelize.models.Entity,
+            as: e,
+            required: false
+        };
+    });
+    include.push({
+        model: sequelize.models.UserFund,
+        as: 'userFund',
+        where: {
+            id: userFundId
+        },
+        required: false
+    });
+    return await (sequelize.models.Entity.findOne({
         where: {
             id: id,
             published
         },
-        include: {
-            model: sequelize.models.UserFund,
-            as: 'userFund',
-            where: {
-                id: userFundId
-            },
-            required: false
-        }
+        include
     }));
 };
 
 exports.getEntitiesByType = function(type, userFundId, published) {
-    return await(sequelize.models.Entity.findAll({
+    return await (sequelize.models.Entity.findAll({
         where: {
             type: {
                 $iLike: type
@@ -56,7 +64,7 @@ exports.getEntitiesByType = function(type, userFundId, published) {
 };
 
 exports.getEntitiesByOwnerId = function(id, type, userFundId, published) {
-    var res = await(sequelize.models.Entity.findOne({
+    var res = await (sequelize.models.Entity.findOne({
         where: {
             id: id,
             published
@@ -83,7 +91,7 @@ exports.getEntitiesByOwnerId = function(id, type, userFundId, published) {
 };
 
 exports.createEntity = function(data) {
-    return await(sequelize.models.Entity.create({
+    return await (sequelize.models.Entity.create({
         title: data.title,
         description: data.description,
         type: data.type,
@@ -93,7 +101,7 @@ exports.createEntity = function(data) {
 };
 
 exports.updateEntity = function(id, data) {
-    return await(sequelize.models.Entity.update(data, {
+    return await (sequelize.models.Entity.update(data, {
         where: {
             id: id,
             deletedAt: null
@@ -102,7 +110,7 @@ exports.updateEntity = function(id, data) {
 };
 
 exports.deleteEntity = function(id) {
-    return await(sequelize.models.Entity.destroy({
+    return await (sequelize.models.Entity.destroy({
         where: {
             id: id
         }
@@ -110,7 +118,7 @@ exports.deleteEntity = function(id) {
 };
 
 exports.associateEntity = function(id, otherId) {
-    var relationsCount = await(sequelize.models.EntityOtherEntity.count({
+    var relationsCount = await (sequelize.models.EntityOtherEntity.count({
         where: {
             entityId: id,
             otherEntityId: otherId
@@ -119,7 +127,7 @@ exports.associateEntity = function(id, otherId) {
 
     if (relationsCount) throw new Error('Relation exists');
 
-    return await(sequelize.models.EntityOtherEntity.bulkCreate([{
+    return await (sequelize.models.EntityOtherEntity.bulkCreate([{
         entityId: id,
         otherEntityId: otherId
     }, {
@@ -129,7 +137,7 @@ exports.associateEntity = function(id, otherId) {
 };
 
 exports.removeAssociation = function(id, otherId) {
-    return await(sequelize.models.EntityOtherEntity.destroy({
+    return await (sequelize.models.EntityOtherEntity.destroy({
         where: {
             entityId: {
                 $in: [id, otherId]
@@ -146,7 +154,7 @@ exports.getTodayFundsCount = function() {
         year = today.getFullYear(),
         month = today.getMonth(),
         date = today.getDate();
-    return await(sequelize.models.Entity.count({
+    return await (sequelize.models.Entity.count({
         where: {
             createdAt: {
                 $lt: new Date(year, month, date + 1, 0, 0, 0, 0),
@@ -160,7 +168,7 @@ exports.getTodayFundsCount = function() {
 };
 
 exports.getFundsCount = function() {
-    return await(sequelize.models.Entity.count({
+    return await (sequelize.models.Entity.count({
         where: {
             type: {
                 $iLike: 'fund'
@@ -170,7 +178,7 @@ exports.getFundsCount = function() {
 };
 
 exports.getUserFunds = function(id, published) {
-    return await(sequelize.models.Entity.findOne({
+    return await (sequelize.models.Entity.findOne({
         where: {
             id,
             published
@@ -184,7 +192,7 @@ exports.getUserFunds = function(id, published) {
 };
 
 exports.publishAll = function() {
-    return await(sequelize.models.Entity.update({
+    return await (sequelize.models.Entity.update({
         published: true
     }, {
         where: {
@@ -201,7 +209,7 @@ exports.getEntitiesByTypeWithNested = function(type, includes) {
             required: false
         };
     });
-    return await(sequelize.models.Entity.findAll({
+    return await (sequelize.models.Entity.findAll({
         where: {
             type: {
                 $or: type

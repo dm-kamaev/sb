@@ -4,6 +4,7 @@ const entityRouter = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const errors = require('../../components/errors');
+const checkQuery = require('../../components/server/middleware/checkQuery')
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, path.join(__dirname, '../../../public/uploads/entity_pics'));
@@ -26,7 +27,7 @@ entityRouter.use((req, res, next) => {
     req.published = true;
     next();
 });
-
+entityRouter.use(checkQuery);
 entityRouter.get('/',
     entityController.actionGetAllEntities);
 entityRouter.get('/:type(topic|direction|fund)',
@@ -47,17 +48,7 @@ entityRouter.use((req, res, next) => {
     // check auth here
     next();
 });
-entityRouter.use((req, res, next) => {
-    var include = req.query.include || [];
-    var type = req.query.type || [];
-    if (!Array.isArray(include)) include = [include];
-    if (!Array.isArray(type)) type = [type];
-    req.include = include
-        .filter(e => e == 'fund' || e == 'topic' || e == 'direction');
-    req.type = type
-        .filter(e => e == 'fund' || e == 'topic' || e == 'direction');
-    next();
-});
+
 entityRouter.get('/all',
     entityController.actionGetEntitiesWithNested);
 entityRouter.post('/', upload.single('picture'),
