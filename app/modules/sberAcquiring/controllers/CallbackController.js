@@ -16,14 +16,15 @@ module.exports = class CallbackController extends Controller {
             operation   = ctx.request.query.operation,
             status      = ctx.request.query.status;
         //find order
-        var order       = await(orderService.getOrderWithInludes(orderNumber));
+        var order = await(orderService.getOrderWithInludes(orderNumber));
 
         if (!order) {
           //panic, order not found!!!
         }
 
-        var sberUserId = order.sberUserUserFund.sberUser.id,
-            paymentId  = order.sberUserUserFund.currentAmount.id;
+        var paymentId  = order.sberUserUserFund.currentAmount.id,
+            userFund   = order.sberUserUserFund.userFund,
+            sberUser   = order.sberUserUserFund.sberUser;
 
         //check order status
         var status = await(acquiringService.getStatusAndGetBind({
@@ -34,9 +35,9 @@ module.exports = class CallbackController extends Controller {
 
         //update order
         await(orderService.updateOrder(orderNumber, {
-          errorCode: status.errorCode,
-          errorMessage: status.errorMessage,
-          actionCode: status.actionCode
+            errorCode: status.errorCode,
+            errorMessage: status.errorMessage,
+            actionCode: status.actionCode
         }))
 
         if (status.actionCode != 0) {
@@ -44,9 +45,12 @@ module.exports = class CallbackController extends Controller {
         } else {
             //order paid successfully
             //create new card for user and set pay date
-            var card = await(userService.createCard(sberUserId, status.bindingId));
+            await(userService.createCard(sberUser.id, status.bindingId));
             await(userFundService.updateDesiredAmountHistory(paymentId, {
                 payDate: new Date().setMonth(new Date().getMonth() + 1)
+            }));
+            await(userFundService.updateSberUserUserFund(order.sberUserUserFund.id, {
+                enabled: true
             }));
         }
         return null;

@@ -81,7 +81,12 @@ exports.getEntities = function(id) {
         include: {
             model: sequelize.models.Entity,
             as: 'entity',
-            required: false
+            required: false,
+            include: {
+                model: sequelize.models.Entity,
+                as: 'fund',
+                required: false
+            }
         }
     }));
 
@@ -162,6 +167,22 @@ exports.getSberUserUserFundId = function (sberUserId, userFundId) {
         where: {
             sberUserId,
             userFundId
+        }
+    }));
+};
+
+exports.updateDesiredAmountHistory = function(id, data) {
+    return await(sequelize.models.DesiredAmountHistory.update(data, {
+        where: {
+            id
+        }
+    }));
+};
+
+exports.updateSberUserUserFund = function(id, data) {
+    return await(sequelize.models.SberUserUserFund.update(data, {
+        where: {
+            id
         }
     }));
 };

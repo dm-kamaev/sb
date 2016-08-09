@@ -22,3 +22,7 @@ exports.getOrderWithInludes = function(orderNumber) {
         }]
     }))
 };
+
+exports.updateInfo = function(data) {
+    
+}

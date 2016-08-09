@@ -211,6 +211,7 @@ class UserFundController extends Controller {
         // TODO: if first pay
         // TODO: error handlers
         var entities = await(userFundService.getEntities(userFundId));
+        console.log(entities);
         var listDirsTopicsFunds = [], listFunds = [];
         for (var i = 0, l = entities.length; i < l; i++) {
           var entity = entities[i].dataValues, type = entity.type;

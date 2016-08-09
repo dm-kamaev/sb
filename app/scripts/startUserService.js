@@ -8,5 +8,6 @@ fork(path.join(SERVICE_PATH, '/app.js'), [
     path.join(__dirname, '../../config/user-config'),
     path.join(__dirname, '../../user-service.log')
 ], {
-    cwd: SERVICE_PATH
+    cwd: SERVICE_PATH,
+    env: {CONFIG_PATH: path.join(__dirname, '../../config/user-config')}
 });
