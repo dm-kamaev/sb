@@ -4,7 +4,7 @@ const entityRouter = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const errors = require('../../components/errors');
-const checkQuery = require('../../components/server/middleware/checkQuery')
+const checkQuery = require('../../components/server/middleware/checkQuery');
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, path.join(__dirname, '../../../public/uploads/entity_pics'));

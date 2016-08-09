@@ -17,6 +17,11 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             type: DataTypes.INTEGER,
         },
+        verified: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
         currentCardId: {
             type: DataTypes.INTEGER,
             references: {

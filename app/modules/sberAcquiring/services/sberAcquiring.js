@@ -1,43 +1,43 @@
 "use strict";
 
-// const Controller = require('nodules/controller').Controller;
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
-const axios = require('axios').create({ baseURL: 'https://3dsec.sberbank.ru/' });
+const axios = require('axios').create({
+    baseURL: 'https://3dsec.sberbank.ru'
+});
 const configSberAcquiring = require('../../../../config/config_sberAcquiring.json');
 const errors = require('../../../components/errors');
-const log = console.log;
 
+const sberAcquiring = {};
 
-class sberAcquiring {
-    /*params –– {
-      userName: 'aventica-api',
-      password: 'aventica',
-      amount: '100',
-      clientId: '2', // The number (ID) of the customer in the shop system. Is used to implement the functionality of the ligaments. The store must have permission to use the ligaments.
-      orderNumber: '15', // The ID of the order in the shop system that is unique to each store within the system
-      returnUrl: 'http://sbervm.ru:3000/pay/paid/2/',
-      jsonParams: JSON.stringify({
-        "recurringFrequency": "10",
-        "recurringExpiry": "20161001"
-      }),
-    }*/
-    /* responce –– {
-       // number pay
-       orderId: '4ccf2517-66d4-404f-ad97-ae5497258737',
-       // where redirect
-       formUrl: 'https://3dsec.sberbank.ru/payment/merchants/aventica/payment_ru.html?mdOrder=4ccf2517-66d4-404f-ad97-ae5497258737'
-     } or {
-         errorCode: '1',
-         errorMessage: 'Заказ с таким номером уже обработан',
-        }
-     */
-    actionFirstPay (params) {
+/*params –– {
+  userName: 'aventica-api',
+  password: 'aventica',
+  amount: '100',
+  clientId: '2', // The number (ID) of the customer in the shop system. Is used to implement the functionality of the ligaments. The store must have permission to use the ligaments.
+  orderNumber: '15', // The ID of the order in the shop system that is unique to each store within the system
+  returnUrl: 'http://sbervm.ru:3000/pay/paid/2/',
+  jsonParams: JSON.stringify({
+    "recurringFrequency": "10",
+    "recurringExpiry": "20161001"
+  }),
+}*/
+/* responce –– {
+   // number pay
+   orderId: '4ccf2517-66d4-404f-ad97-ae5497258737',
+   // where redirect
+   formUrl: 'https://3dsec.sberbank.ru/payment/merchants/aventica/payment_ru.html?mdOrder=4ccf2517-66d4-404f-ad97-ae5497258737'
+ } or {
+     errorCode: '1',
+     errorMessage: 'Заказ с таким номером уже обработан',
+    }
+ */
+sberAcquiring.firstPay = function(params) {
         try {
-            return await(axios.get('/payment/rest/register.do?', {
+            return await (axios.get('/payment/rest/register.do?', {
                 params: {
-                    userName: params.userName,
-                    password: params.password,
+                    userName: params.userName || configSberAcquiring.userName,
+                    password: params.password || configSberAcquiring.password,
                     amount: params.amount,
                     orderNumber: params.orderNumber,
                     returnUrl: params.returnUrl,
@@ -45,11 +45,12 @@ class sberAcquiring {
                     clientId: params.clientId,
                     jsonParams: params.jsonParams,
                 }
-            }));
+            })).data;
         } catch (err) {
             throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
         }
-    }
+    };
+
     /*params –– {
         userName: 'aventica-api',
         password: 'aventica',
@@ -105,30 +106,30 @@ class sberAcquiring {
         "bankCountryName": "Россия"
       }
     }*/
-    actionGetStatusAndGetBind (params) {
-        try {
-            return await(axios.get('/payment/rest/getOrderStatusExtended.do?', {
-                params: {
-                    userName:    params.userName,
-                    password:    params.password,
-                    language:    'ru',
-                    orderNumber: params.orderNumber,
-                    orderId:     params.orderId,
-                    clientId:    params.clientId,
-                }
-            }));
-        } catch (e) {
-             throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
-        }
-
+sberAcquiring.getStatusAndGetBind = function(params) {
+    try {
+        return await (axios.get('/payment/rest/getOrderStatusExtended.do?', {
+            params: {
+                userName: params.userName || configSberAcquiring.userName,
+                password: params.password || configSberAcquiring.password,
+                language: 'ru',
+                orderNumber: params.orderNumber,
+                orderId: params.orderId,
+                clientId: params.clientId,
+            }
+        })).data;
+    } catch (e) {
+        throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
     }
 
-     // TODO: Create
-     actionCreatePayByBind () {}
-
-     // TODO: Create
-     actionPayByBind () {}
 }
+
+// TODO: Create
+sberAcquiring.actionCreatePayByBind = function() {}
+
+// TODO: Create
+sberAcquiring.actionPayByBind = function() {}
+
 module.exports = sberAcquiring;
 
 

@@ -6,7 +6,7 @@ module.exports = (req, res, next) => {
     req.query.include = parseTypes(req.query.include);
     req.query.type = parseTypes(req.query.type);
     next();
-}
+};
 
 function parseTypes(param) {
     var arr = _.castArray(param);

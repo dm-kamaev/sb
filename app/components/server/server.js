@@ -14,6 +14,7 @@ const entityRoutes = require('../../modules/entity/router');
 const userFundRoutes = require('../../modules/userFund/router');
 const userRouter = require('../../modules/user/router');
 const authRouter = require('../../modules/auth/router');
+const callbackRouter = require('../../modules/sberAcquiring/router');
 
 const headers = require('./middleware/headers');
 const cordovaSession = require('./middleware/session/cordova');
@@ -37,7 +38,7 @@ app.use(bodyparser.urlencoded({
 
 app.use(metaTags);
 
-app.set('views', path.join(__dirname + '../../../../public/meta_templates'));
+app.set('views', path.join(__dirname, '../../../../public/meta_templates'));
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
 app.use('/', express.static(path.join(__dirname, '../../../public/uploads')));
@@ -54,6 +55,7 @@ app.use('/entity', entityRoutes);
 app.use('/user-fund', userFundRoutes);
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
+app.use('/callback', callbackRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{
