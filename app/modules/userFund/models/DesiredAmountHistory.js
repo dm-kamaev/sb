@@ -46,10 +46,14 @@ module.exports = function(sequelize, DataTypes) {
         },
         updatedAt: {
             type: DataTypes.DATE
+        },
+        deletedAt: {
+            type: DataTypes.DATE
         }
     }, {
         tableName: 'DesiredAmountHistory',
         unserscored: true,
+        paranoid: true,
         classMethods: {
             associate: function(models) {
 

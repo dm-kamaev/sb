@@ -55,6 +55,14 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'amountChangeHistory',
                     foreginKey: 'sberUserUserFundId'
                 });
+                SberUserUserFund.hasMany(models.Order, {
+                    as: 'order',
+                    foreginKey: 'sberUserUserFundId'
+                });
+                SberUserUserFund.belongsTo(models.SberUser, {
+                    as: 'sberUser',
+                    foreginKey: 'sberUserId'
+                });
             }
         }
     });

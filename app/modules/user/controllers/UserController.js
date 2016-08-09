@@ -109,10 +109,30 @@ class UserController extends Controller {
      * }
      */
     actionGetUser(actionContext, id) {
-        var sberUser = actionContext.request.user;
-        var authUser = await(userService.findAuthUserByAuthId(sberUser.authId));
-        return userView.renderUser(authUser, sberUser);
+        var sberUser = actionContext.request.user,
+            email = actionContext.request.query.email;
+        if (email) {
+            var authUser = await(userService.findAuthUserByEmail(email));
+            if (!authUser || authUser.email != email) {
+                throw new errors.NotFoundError('User', email);
+            }
+        } else {
+            var authUser = await(userService.findAuthUserByAuthId(sberUser.authId));
+            return userView.renderUser(authUser, sberUser);
+        }
     };
+
+    actionEmailVerify(ctx) {
+        var token = ctx.query.token;
+
+        jwt.verify(token, JWT_SECRET, (err, decoded) => {
+            console.log(decoded);
+        });
+    }
+
+    actionSendVerification(ctx) {
+
+    }
 };
 
 module.exports = UserController;
