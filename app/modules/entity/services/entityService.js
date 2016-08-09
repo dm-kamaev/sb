@@ -117,6 +117,40 @@ exports.deleteEntity = function(id) {
     }));
 };
 
+
+
+/**
+ * @param  {[string]}  type       [ direction || topic || fund ]
+ * @param  {[boolean]} published
+ */
+function getEntitybyEntityId (id, type, published) {
+    return await(sequelize.models.Entity.findOne({
+        where: {
+            id,
+            type,
+            published,
+        }
+    }));
+}
+exports.getEntitybyEntityId = getEntitybyEntityId;
+
+
+// get list fund name
+exports.getFundsName = function (entityId) {
+    var res = [];
+    var listFunds = await(sequelize.models.EntityOtherEntity.findAll({
+        where: { entityId }
+    }));
+    for (var i = 0, l = listFunds.length; i < l; i++) {
+      var record        = listFunds[i].dataValues,
+          otherEntityId = record.otherEntityId;
+      var entity = await(getEntitybyEntityId(otherEntityId, 'fund', true));
+      if (entity) { res.push(entity.title); }
+    }
+    return res;
+};
+
+
 exports.associateEntity = function(id, otherId) {
     var relationsCount = await(sequelize.models.EntityOtherEntity.count({
         where: {
