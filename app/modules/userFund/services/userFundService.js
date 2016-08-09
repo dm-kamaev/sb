@@ -155,3 +155,13 @@ exports.getCurrentAmount = function(sberUserId, userFundId) {
     }));
     return suuf.currentAmount;
 };
+
+
+exports.getSberUserUserFundId = function (sberUserId, userFundId) {
+    return await(sequelize.models.SberUserUserFund.findOne({
+        where: {
+            sberUserId,
+            userFundId
+        }
+    }));
+};
