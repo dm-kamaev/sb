@@ -33,6 +33,12 @@ module.exports = function(sequelize, DataTypes) {
         actionCode: {
             type: DataTypes.INTEGER
         },
+        listFunds: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+        },
+        listDirTopicFunds: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+        },
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE,

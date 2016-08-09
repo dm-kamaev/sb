@@ -4,7 +4,7 @@ const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
-const orders          = require('../../orders/services/orders.js');
+const order           = require('../../orders/services/order.js');
 const entityService   = require('../../entity/services/entityService');
 const entityView      = require('../../entity/views/entityView');
 const userFundView    = require('../views/userFundView');
@@ -207,7 +207,7 @@ class UserFundController extends Controller {
             amount     = actionContext.data.amount;
         var res = await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
         var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
-        var SberUserUserFundId = SberUserUserFund.id
+        var SberUserUserFundId = SberUserUserFund.dataValues.id;
         // TODO: if first pay
         // TODO: error handlers
         var entities = await(userFundService.getEntities(userFundId));
@@ -215,10 +215,8 @@ class UserFundController extends Controller {
         var listDirsTopicsFunds = [], listFunds = [];
         for (var i = 0, l = entities.length; i < l; i++) {
           var entity = entities[i].dataValues, type = entity.type;
-          // log('entity.type= ', entity.type);
           listDirsTopicsFunds.push([type, entity.title]);
           if (type === 'direction' || type === 'topic') {
-            // log('entity.type ', entity.type);
             listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
           } else {
             listFunds.push(entity.title);
@@ -226,11 +224,10 @@ class UserFundController extends Controller {
         }
         log('listDirTopicFunds=', listDirsTopicsFunds);
         log('listFunds=',         listFunds);
-        // console.log('entities= ', entities);
-        // var resInsert   = await(orders.createPay(SberUserUserFundId, amount));
-        // var orderNumber = resInsert.dataValues.orderNumber;
-        // log('SberUserUserFundId=', SberUserUserFundId);
-        // log('orderNumber=',        orderNumber);
+        var resInsert   = await(order.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds));
+        var orderNumber = resInsert.dataValues.orderNumber;
+        log('SberUserUserFundId=', SberUserUserFundId);
+        log('orderNumber=',        orderNumber);
         return res;
     }
     /**
