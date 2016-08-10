@@ -17,6 +17,7 @@ service.generateEntities = function(number) {
         entity.description = faker.hacker.phrase();
         entity.type = service.getRandomType();
         entity.published = true;
+        entity.entities = [];
         result.push(entity);
     }
     return result;
