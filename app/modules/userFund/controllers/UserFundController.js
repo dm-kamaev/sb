@@ -211,17 +211,6 @@ class UserFundController extends Controller {
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
         // TODO: if first pay
         // TODO: error handlers
-        var entities = await(userFundService.getEntities(userFundId));
-        console.log(entities);
-        var listDirsTopicsFunds = [], listFunds = [];
-        for (var i = 0, l = entities.length; i < l; i++) {
-          var entity = entities[i].dataValues, type = entity.type;
-          listDirsTopicsFunds.push([type, entity.title]);
-          if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
-          } else {
-            listFunds.push(entity.title);
-          }
         var verified = await(userService.findSberUserById(sberUserId)).dataValues.verified;
         // if user with unconfirmed payment, then first pay
         if (!verified) {
