@@ -33,17 +33,6 @@ exports.getOrderWithInludes = function(orderNumber) {
     }))
 };
 
-<<<<<<< HEAD
-exports.createPay = function(SberUserUserFundId, amount, listDirTopicFunds, listFunds, entities) {
-    return await(sequelize.models.Order.create({
-        SberUserUserFundId,
-        amount,
-        listDirTopicFunds,
-        listFunds,
-        fundData: entities
-    }));
-};
-=======
 
 function updateInfo (orderNumber, data) {
     return await(sequelize.models.Order.update(data, {
@@ -68,4 +57,3 @@ exports.handlerResponceSberAcqu = function (orderNumber, responceSberAcqu) {
         return res;
     }
 };
->>>>>>> SV-171
