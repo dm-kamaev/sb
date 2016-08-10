@@ -16,12 +16,14 @@ class EntityController extends Controller {
      * @apiParam {String} [title] title name of the entity
      * @apiParam {String} [decsription] entity text decsription
      * @apiParam {String="fund","topic","direction"} type type of the entity
+     * @apiParam {Number[]} entityId id of entities need to associate
      *
      * @apiParamExample {json} Example request:
      * {
      *     "title": "sample title",
      *     "description": "sample description",
-     *     "type": "topic"
+     *     "type": "topic",
+     *     "entities": [1, 2, 3]
      * }
      *
      * @apiSuccess {Object} Entity created entity object
@@ -44,8 +46,10 @@ class EntityController extends Controller {
      */
     actionCreateEntity(actionContext) {
         try {
-            var data = actionContext.request.body;
+            var data     = actionContext.request.body,
+                entities = data.entities;
             var entity = await(entityService.createEntity(data));
+            await(entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
             actionContext.response.set('Location', `/entity/${entity.id}`);
             return entityView.renderEntity(entity);
@@ -170,7 +174,8 @@ class EntityController extends Controller {
      * {
      *     "title": "sample title",
      *     "description": "sample description",
-     *     "type": "topic"
+     *     "type": "topic",
+     *     "entities": [1, 2, 3]
      * }
      *
      * @apiError (Error 404) NotFound entity with this id not found
@@ -182,9 +187,12 @@ class EntityController extends Controller {
      */
     actionUpdateEntity(actionContext, id) {
         try {
-            var data = actionContext.request.body;
+            var data = actionContext.request.body,
+                entities = data.entities;
             delete data.id;
+            await(entityService.removeAssociations(id));
             var entity = await(entityService.updateEntity(id, data));
+            await(entityService.associateEntities(entity.id, entities));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
             return null;
         } catch (err) {

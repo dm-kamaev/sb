@@ -2,6 +2,7 @@
 
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
+const _ = require('lodash');
 
 exports.getAllEntities = function(userFundId, published) {
     return await(sequelize.models.Entity.findAll({
@@ -182,6 +183,34 @@ exports.removeAssociation = function(id, otherId) {
         }
     }));
 };
+
+exports.associateEntities = function(id, otherIds) {
+    var creating = otherIds.map(e => {
+        return [{
+            entityId: id,
+            otherEntityId: e
+        }, {
+            entityId: e,
+            otherEntityId: id
+        }]
+    });
+
+    var associations = _.flatten(creating);
+
+    return await(sequelize.models.EntityOtherEntity.bulkCreate(associations));
+};
+
+exports.removeAssociations = function(id) {
+    return await(sequelize.models.EntityOtherEntity.destroy({
+        where: {
+            $or: [{
+              entityId: id
+            },{
+              otherEntityId: id
+            }]
+        }
+    }))
+}
 
 exports.getTodayFundsCount = function() {
     var today = new Date(),
