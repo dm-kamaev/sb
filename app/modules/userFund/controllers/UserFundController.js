@@ -209,11 +209,10 @@ class UserFundController extends Controller {
         var res = await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
         var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
-        // TODO: if first pay
-        // TODO: error handlers
-        var verified = await(userService.findSberUserById(sberUserId)).dataValues.verified;
-        // if user with unconfirmed payment, then first pay
-        if (!verified) {
+
+        var currentCardId = await(userService.findSberUserById(sberUserId)).dataValues.currentCardId;
+        // if user with unconfirmed payment, then do first pay
+        if (!currentCardId) {
             // TODO: error handlers
             // TODO: call sberAcquiring
             // TODO: save orderId
@@ -237,7 +236,7 @@ class UserFundController extends Controller {
             // log('orderNumber=',        orderNumber);
             return res;
         } else {
-            return { message: 'Вы удачно изменили сумму ежемесячного платежа.'};
+            return { message: 'Вы изменили сумму ежемесячного платежа.'};
         }
     }
     /**
