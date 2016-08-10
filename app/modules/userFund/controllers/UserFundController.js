@@ -1,13 +1,22 @@
 'use strict';
 
+const config     = require('../../../../config/config.json');
 const Controller = require('nodules/controller').Controller;
-const await = require('asyncawait/await');
-const errors = require('../../../components/errors');
+const await      = require('asyncawait/await');
+const errors     = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
+<<<<<<< HEAD
 const orderService    = require('../../orders/services/orderService.js');
 const entityService   = require('../../entity/services/entityService');
 const entityView      = require('../../entity/views/entityView');
 const userService     = require('../../user/services/userService');
+=======
+const userService     = require('../../user/services/userService.js');
+const orderService    = require('../../orders/services/orderService.js');
+const entityService   = require('../../entity/services/entityService');
+const entityView      = require('../../entity/views/entityView');
+const sberAcquiring   = require('../../sberAcquiring/services/sberAcquiring.js');
+>>>>>>> SV-171
 const userFundView    = require('../views/userFundView');
 const log = console.log;
 
@@ -206,10 +215,11 @@ class UserFundController extends Controller {
             changer    = 'user',
             userFundId = actionContext.request.user.userFund.id,
             amount     = actionContext.data.amount;
-        var res = await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
+        await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
         var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
 
+<<<<<<< HEAD
          var currentCardId = await(userService.findSberUserById(sberUserId)).dataValues.currentCardId;
          // if user with unconfirmed payment, then do first pay
          if (!currentCardId) {
@@ -217,6 +227,11 @@ class UserFundController extends Controller {
             // TODO: call sberAcquiring
             // TODO: save orderId
             // TODO: redirect
+=======
+        var currentCardId = await(userService.findSberUserById(sberUserId)).dataValues.currentCardId;
+        // if user with unconfirmed payment, then do first pay
+        if (!currentCardId) {
+>>>>>>> SV-171
             var entities = await(userFundService.getEntities(userFundId));
             var listDirsTopicsFunds = [], listFunds = [];
             for (var i = 0, l = entities.length; i < l; i++) {
@@ -230,13 +245,35 @@ class UserFundController extends Controller {
             }
             // log('listDirTopicFunds=', listDirsTopicsFunds);
             // log('listFunds=',         listFunds);
+<<<<<<< HEAD
             var resInsert   = await(orderService.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds, entities));
             var orderNumber = resInsert.dataValues.orderNumber;
+=======
+>>>>>>> SV-171
             // log('SberUserUserFundId=', SberUserUserFundId);
             // log('orderNumber=',        orderNumber);
-            return res;
+            var resInsert   = await(orderService.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds));
+            var orderNumber = resInsert.dataValues.orderNumber;
+            // TODO: Test error for sber acqui
+            // !!! REMOVE ON PRODUCTION next line!!!
+            orderNumber = 13;
+            var responceSberAcqu = await(sberAcquiring.firstPay({
+                amount,
+                orderNumber,
+                returnUrl: config.hostname+'#success',
+                failUrl:   config.hostname+'#failed',
+                language: 'ru',
+                clientId: sberUserId,
+                jsonParams: JSON.stringify({
+                    recurringFrequency: '10',
+                    recurringExpiry: '21000101'
+                }),
+            }));
+            log('responceSberAcqu=', responceSberAcqu);
+            return orderService.handlerResponceSberAcqu(orderNumber, responceSberAcqu);
+            // return res;
         } else {
-            return { message: 'Вы изменили сумму ежемесячного платежа.'};
+            return { message: 'Вы изменили сумму ежемесячного платежа.' };
         }
     }
     /**
