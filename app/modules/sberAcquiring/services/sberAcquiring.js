@@ -16,7 +16,8 @@ const sberAcquiring = {};
   amount: '100',
   clientId: '2', // The number (ID) of the customer in the shop system. Is used to implement the functionality of the ligaments. The store must have permission to use the ligaments.
   orderNumber: '15', // The ID of the order in the shop system that is unique to each store within the system
-  returnUrl: 'http://sbervm.ru:3000/pay/paid/2/',
+  returnUrl: 'http://sbervm.ru:3000/pay/paid/2/', // The address to which you must redirect the user in case of successful payment
+  failUrl:   'http://sbervm.ru:3000/pay/failed/2/', // The address to which you must redirect the user in case of failed payment
   jsonParams: JSON.stringify({
     "recurringFrequency": "10",
     "recurringExpiry": "20161001"
@@ -41,6 +42,7 @@ sberAcquiring.firstPay = function(params) {
                     amount: params.amount,
                     orderNumber: params.orderNumber,
                     returnUrl: params.returnUrl,
+                    failUrl: params.failUrl,
                     language: 'ru',
                     clientId: params.clientId,
                     jsonParams: params.jsonParams,
