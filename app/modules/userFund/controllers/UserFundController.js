@@ -210,9 +210,9 @@ class UserFundController extends Controller {
         var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
 
-        var currentCardId = await(userService.findSberUserById(sberUserId)).dataValues.currentCardId;
-        // if user with unconfirmed payment, then do first pay
-        if (!currentCardId) {
+         var currentCardId = await(userService.findSberUserById(sberUserId)).dataValues.currentCardId;
+         // if user with unconfirmed payment, then do first pay
+         if (!currentCardId) {
             // TODO: error handlers
             // TODO: call sberAcquiring
             // TODO: save orderId
