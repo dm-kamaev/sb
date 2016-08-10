@@ -8,12 +8,13 @@ const authService = require('../services/authService');
 const userFundService = require('../../userFund/services/userFundService');
 const mailService = require('../services/mailService');
 const os = require('os');
+const VERIFY_LINK = `http://${os.hostname()}:3000/auth/verify?token=`;
 
 class AuthController extends Controller {
     /**
      * @api {post} /auth find or create user
      * @apiName find or create user
-     * @apiGroup Auth
+     * @apiGroup AuthOld
      *
      * @apiParam {String} [firstName] user fist name
      * @apiParam {String} [lastName] user last name
@@ -44,12 +45,12 @@ class AuthController extends Controller {
         userData.phone = phoneData.number;
 
         try {
-            var authUser = await(authService.createAuthUser(userData));
+            var authUser = await (authService.createAuthUser(userData));
 
             var sberUser = actionContext.request.user;
-            await(userService.setAuthId(sberUser.id, authUser.id));
+            await (userService.setAuthId(sberUser.id, authUser.id));
 
-            return await(new Promise((resolve, reject) => {
+            return await (new Promise((resolve, reject) => {
                 actionContext.request.login(sberUser, (err) => {
                     if (err) reject(new errors.HttpError(err.message, 400));
                     resolve(actionContext.request.sessionID);
@@ -82,7 +83,7 @@ class AuthController extends Controller {
     /**
      * @api {post} /auth/sms send sms
      * @apiName send sms
-     * @apiGroup Auth
+     * @apiGroup AuthOld
      *
      * @apiParamExample {json} example request:
      * {
@@ -97,8 +98,8 @@ class AuthController extends Controller {
             code = ('000' + ~~(Math.random() * 990 + 1)).slice(-3);
 
         try {
-            await(authService.saveCode(phone, code, userId));
-            await(authService.sendCode(phone, code));
+            await (authService.saveCode(phone, code, userId));
+            await (authService.sendCode(phone, code));
             // need for debug
             return code;
             return null;
@@ -109,7 +110,7 @@ class AuthController extends Controller {
     /**
      * @api {post} /auth/verify verify code
      * @apiName verify code
-     * @apiGroup Auth
+     * @apiGroup AuthOld
      *
      * @apiParamExample {json} example request:
      * {
@@ -129,38 +130,54 @@ class AuthController extends Controller {
             phone = sessionUser.phone.number,
             code = actionContext.request.body.code;
 
-        var res = await(authService.verifyCode(phone, code));
+        var res = await (authService.verifyCode(phone, code));
         if (!res[0]) throw new errors.HttpError('Wrong code', 400);
 
-        var authUser = await(userService.findAuthUserByPhone(phone));
-        if (!authUser) return { data: 'need register' };
+        var authUser = await (userService.findAuthUserByPhone(phone));
+        if (!authUser) return {
+            data: 'need register'
+        };
 
-        var sberUser = await(userService.findSberUserByAuthId(authUser.id));
+        var sberUser = await (userService.findSberUserByAuthId(authUser.id));
 
         if (!sberUser) {
             sberUser = sessionUser;
-            await(userService.setAuthId(sberUser.id, authUser.id));
+            await (userService.setAuthId(sberUser.id, authUser.id));
         } else if (!sberUser.userFund.enabled &&
-            await(userFundService.getEntities(sessionUser.id)).length) {
-            await(userService.setUserFund(sberUser.id, sessionUser.userFund.id));
+            await (userFundService.getEntities(sessionUser.id)).length) {
+            await (userService.setUserFund(sberUser.id, sessionUser.userFund.id));
         }
 
 
-        return await(new Promise((resolve, reject) => {
+        return await (new Promise((resolve, reject) => {
             actionContext.request.login(sberUser, (err) => {
                 if (err) reject(new errors.HttpError(err.message, 400));
                 resolve(actionContext.request.sessionID);
             });
         }));
     };
-
+    /**
+     * @api /auth/register register
+     * @apiName Register
+     * @apiGroup Auth
+     *
+     * @apiParamExample {json} example:
+     * {
+     *    "firstName": "max",
+     *    "lastName": "rylkin",
+     *    "password": "123456",
+     *    "email": "msrylkin@gmail.com"
+     * }
+     * @param  {[type]} ctx [description]
+     * @return {[type]}     [description]
+     */
     actionRegister(ctx) {
         var userData = ctx.data;
 
         try {
-            var authUser = await(authService.register(userData));
-            var token = await(authService.generateToken(userData.email));
-            console.log(await(mailService.sendMail(userData.email, `http://${os.hostname()}/auth/verify?token=${token}`)));
+            var authUser = await (authService.register(userData));
+            var token = await (authService.generateToken(userData.email));
+            await(mailService.sendMail(userData.email, VERIFY_LINK + token));
 
             var sberUser = ctx.request.user;
             await(userService.setAuthId(sberUser.id, authUser.id));
@@ -178,17 +195,29 @@ class AuthController extends Controller {
             throw err;
         }
     };
-
+    /**
+     * @api /auth/login login
+     * @apiName Login
+     * @apiGroup Auth
+     *
+     * @apiParamExample {json} example:
+     * {
+     *   "email": "msrylkin@gmail.com",
+     *   "password": "123456"
+     * }
+     * @param  {[type]} ctx [description]
+     * @return {[type]}     [description]
+     */
     actionLogin(ctx) {
         var email = ctx.data.email,
             password = ctx.data.password,
             sessionUser = ctx.request.user;
 
         try {
-            await(authService.login(email, password));
+            await (authService.login(email, password));
 
-            var authUser = await(userService.findAuthUserByEmail(email));
-            var sberUser = await(userService.findSberUserByAuthId(authUser.id));
+            var authUser = await (userService.findAuthUserByEmail(email));
+            var sberUser = await (userService.findSberUserByAuthId(authUser.id));
 
             if (!sberUser) {
                 sberUser = sessionUser;
@@ -198,7 +227,7 @@ class AuthController extends Controller {
                 await(userService.setUserFund(sberUser.id, sessionUser.userFund.id));
             }
 
-            return await(new Promise((resolve, reject) => {
+            return await (new Promise((resolve, reject) => {
                 ctx.request.login(sberUser, (err) => {
                     if (err) reject(new errors.HttpError(err.message, 400));
                     resolve(ctx.request.sessionID);
@@ -208,16 +237,56 @@ class AuthController extends Controller {
             throw new errors.NotFoundError('User');
         }
     };
-
+    /**
+     * @api /auth/verify verify email
+     * @apiName Verify email
+     * @apiGroup Auth
+     *
+     * @apiParam {String} token jwt token
+     * @param  {[type]} ctx [description]
+     * @return {[type]}     [description]
+     */
     actionVerifyEmail(ctx) {
         var token = ctx.request.query.token;
-        var email = await(authService.verifyToken(token)).email;
-        var authUser = await(userService.findAuthUserByEmail(email));
-        var sberUser = await(userService.findSberUserByAuthId(authUser.id));
-        var verified = await(authService.verifyUser(sberUser.id));
+        try {
+            var email = await (authService.verifyToken(token)).email;
+        } catch (err) {
+            if (err.name == 'TokenExpiredError') {
+                throw new errors.HttpError('Link expired', 410);
+            }
+            throw new errors.HttpError('Invalid token', 400);
+        }
+        var authUser = await (userService.findAuthUserByEmail(email));
+        var sberUser = await (userService.findSberUserByAuthId(authUser.id));
+        var verified = await (authService.verifyUser(sberUser.id));
 
-        if (!verified) throw new errors.HttpError(`User with id ${sberUser.id} already verifed his email`);
-    }
+        if (!verified[0]) {
+            var errMsg = `User with id ${sberUser.id} already verifed his email`;
+            throw new errors.HttpError(errMsg);
+        }
+    };
+    /**
+     * @api /auth/send send verification mail
+     * @apiName send verification mail
+     * @apiGroup Auth
+     *
+     * @param  {[type]} ctx [description]
+     * @return {[type]}     [description]
+     */
+    actionSendVerification(ctx) {
+        var sberUser = ctx.request.user;
+        if (!sberUser.authId) throw new errors.HttpError('Unathorized', 403);
+
+        var authUser = await (userService.findAuthUserByAuthId(sberUser.authId)),
+            email = authUser.email;
+
+        var token = await(authService.generateToken(email));
+        var letterText = await(mailService.sendMail(email,
+            VERIFY_LINK + token));
+        //need for debug
+        return letterText;
+        return null;
+    };
 }
 
 module.exports = AuthController;

@@ -23,6 +23,12 @@ exports.getOrderWithInludes = function(orderNumber) {
     }))
 };
 
-exports.updateInfo = function(data) {
-    
-}
+exports.createPay = function(SberUserUserFundId, amount, listDirTopicFunds, listFunds, entities) {
+    return await(sequelize.models.Order.create({
+        SberUserUserFundId,
+        amount,
+        listDirTopicFunds,
+        listFunds,
+        fundData: entities
+    }));
+};

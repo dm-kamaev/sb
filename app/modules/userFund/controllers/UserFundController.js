@@ -4,10 +4,10 @@ const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
-const userService     = require('../../user/services/userService.js');
-const order           = require('../../orders/services/order.js');
+const orderService    = require('../../orders/services/orderService.js');
 const entityService   = require('../../entity/services/entityService');
 const entityView      = require('../../entity/views/entityView');
+const userService     = require('../../user/services/userService');
 const userFundView    = require('../views/userFundView');
 const log = console.log;
 
@@ -231,7 +231,7 @@ class UserFundController extends Controller {
             }
             // log('listDirTopicFunds=', listDirsTopicsFunds);
             // log('listFunds=',         listFunds);
-            var resInsert   = await(order.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds));
+            var resInsert   = await(orderService.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds, entities));
             var orderNumber = resInsert.dataValues.orderNumber;
             // log('SberUserUserFundId=', SberUserUserFundId);
             // log('orderNumber=',        orderNumber);
