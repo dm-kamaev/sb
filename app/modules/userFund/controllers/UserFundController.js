@@ -4,6 +4,7 @@ const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
+const userService     = require('../../user/services/userService.js');
 const order           = require('../../orders/services/order.js');
 const entityService   = require('../../entity/services/entityService');
 const entityView      = require('../../entity/views/entityView');
@@ -208,26 +209,34 @@ class UserFundController extends Controller {
         var res = await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
         var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
-        // TODO: if first pay
-        // TODO: error handlers
-        var entities = await(userFundService.getEntities(userFundId));
-        var listDirsTopicsFunds = [], listFunds = [];
-        for (var i = 0, l = entities.length; i < l; i++) {
-          var entity = entities[i].dataValues, type = entity.type;
-          listDirsTopicsFunds.push([type, entity.title]);
-          if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
-          } else {
-            listFunds.push(entity.title);
-          }
+        var verified = await(userService.findSberUserById(sberUserId)).dataValues.verified;
+        // if user with unconfirmed payment, then first pay
+        if (!verified) {
+            // TODO: error handlers
+            // TODO: call sberAcquiring
+            // TODO: save orderId
+            // TODO: redirect
+            var entities = await(userFundService.getEntities(userFundId));
+            var listDirsTopicsFunds = [], listFunds = [];
+            for (var i = 0, l = entities.length; i < l; i++) {
+              var entity = entities[i].dataValues, type = entity.type;
+              listDirsTopicsFunds.push([type, entity.title]);
+              if (type === 'direction' || type === 'topic') {
+                listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
+              } else {
+                listFunds.push(entity.title);
+              }
+            }
+            // log('listDirTopicFunds=', listDirsTopicsFunds);
+            // log('listFunds=',         listFunds);
+            var resInsert   = await(order.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds));
+            var orderNumber = resInsert.dataValues.orderNumber;
+            // log('SberUserUserFundId=', SberUserUserFundId);
+            // log('orderNumber=',        orderNumber);
+            return res;
+        } else {
+            return { message: 'Вы удачно изменили сумму ежемесячного платежа.'};
         }
-        log('listDirTopicFunds=', listDirsTopicsFunds);
-        log('listFunds=',         listFunds);
-        var resInsert   = await(order.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds));
-        var orderNumber = resInsert.dataValues.orderNumber;
-        log('SberUserUserFundId=', SberUserUserFundId);
-        log('orderNumber=',        orderNumber);
-        return res;
     }
     /**
      * @api {get} /user-fund/amount get amount
