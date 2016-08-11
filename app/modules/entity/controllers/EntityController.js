@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc, valid-jsdoc*/
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
@@ -40,13 +41,10 @@ class EntityController extends Controller {
      *     }
      *
      * @apiError (Error 400) ValidationError wrong type
-     *
-     * @param {actionContext} actionContext
-     * @return {Object} Entity
      */
     actionCreateEntity(actionContext) {
         try {
-            var data     = actionContext.request.body,
+            var data = actionContext.request.body,
                 entities = data.entities;
             var entity = await(entityService.createEntity(data));
             await(entityService.associateEntities(entity.id, entities));
@@ -105,10 +103,6 @@ class EntityController extends Controller {
      *    "updatedAt": "2016-06-20T15:48:05.985Z"
      *  }
      * ]
-     *
-     * @param {Object} actionContext
-     * @param {String} type
-     * @return {Object} Entity
      */
     actionGetEntitiesByType(actionContext, type) {
         var userFundId = actionContext.request.user.userFund.id;
@@ -136,10 +130,6 @@ class EntityController extends Controller {
      *     }
      *
      * @apiError (Error 404) NotFoundError entity with this id not found
-     *
-     * @param {Object} actionContext
-     * @param {Integer} id id of entity
-     * @return {Object} Entity
      */
     actionGetEntity(actionContext, id) {
         var userFundId = actionContext.request.user.userFund.id,
@@ -155,8 +145,7 @@ class EntityController extends Controller {
      * @apiGroup Admin
      *
      *
-     * @param {Object} actionContext
-     * @param {Integer} id
+     *
      */
     actionDeleteEntity(actionContext, id) {
         var deleted = await(entityService.deleteEntity(id));
@@ -181,9 +170,6 @@ class EntityController extends Controller {
      * @apiError (Error 404) NotFound entity with this id not found
      * @apiError (Error 400) ValidationError wrong type field
      *
-     *
-     * @param {Object} actionContext
-     * @param {Integer} id
      */
     actionUpdateEntity(actionContext, id) {
         try {
@@ -192,8 +178,8 @@ class EntityController extends Controller {
             delete data.id;
             await(entityService.removeAssociations(id));
             var entity = await(entityService.updateEntity(id, data));
-            await(entityService.associateEntities(entity.id, entities));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
+            await(entityService.associateEntities(id, entities));
             return null;
         } catch (err) {
             if (err.name == 'SequelizeValidationError') {
@@ -215,11 +201,6 @@ class EntityController extends Controller {
      * @apiSuccess {Object[]} Entities array of entities related to :id
      *
      * @apiError (Error 404) NotFoundError Entity not found
-     *
-     * @param {Object} actionContext
-     * @param {Integer} id
-     * @param {String} type
-     * @return {Object[]} entities
      */
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
@@ -243,9 +224,6 @@ class EntityController extends Controller {
      *
      * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
      *
-     * @param {Object} actionContext
-     * @param {Integer} id
-     * @param {Integer} otherId
      *
      */
     actionAssociate(actionContext, id, otherId) {
@@ -267,8 +245,6 @@ class EntityController extends Controller {
      *
      * @apiSuccess {Object[]} Entities array of all entities
      *
-     * @param {Object} actionContext
-     * @return {Object[]} entities
      */
     actionGetAllEntities(actionContext) {
         var userFundId = actionContext.request.user.userFund.id,
@@ -287,9 +263,6 @@ class EntityController extends Controller {
      *
      * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
      *
-     * @param {Object} actionContext
-     * @param {Integer} id
-     * @param {Integer} otherId
      */
     actionRemoveAssociation(actionContext, id, otherId) {
         var deletedCount = await(entityService.removeAssociation(id, otherId));
@@ -305,7 +278,6 @@ class EntityController extends Controller {
      *
      * @apiSuccess {Number} count count of funds created today
      *
-     * @param {Object} actionContext
      */
     actionGetTodayFundsCount(actionContext) {
         var count = await(entityService.getTodayFundsCount());
@@ -321,10 +293,6 @@ class EntityController extends Controller {
      * @apiSuccess {Object[]} userFunds
      *
      * @apiError (Error 404) NotFoundError entity with :id not found
-     *
-     * @param {Object} actionContext
-     * @param {Integer} id
-     * @return {Object[]} UserFunds
      */
     actionGetUserFunds(actionContext, id) {
         var published = actionContext.request.published,
@@ -336,8 +304,6 @@ class EntityController extends Controller {
      * @api {post} /entity/publishall publish all (test)
      * @apiName publish all
      * @apiGroup Admin
-     * @param  {[type]} actionContext [description]
-     * @return {[type]}               [description]
      */
     actionPublishAll(actionContext) {
         return await(entityService.publishAll());

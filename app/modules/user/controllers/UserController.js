@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc, valid-jsdoc*/
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
@@ -26,8 +27,6 @@ class UserController extends Controller {
      *
      * @apiError (Error 400) HttpError user already have fund or user not found
      *
-     * @param {Object} actionContext
-     * @param {Integer} id
      */
     actionCreateUserFund(actionContext) {
         var id = actionContext.request.user.userFund.id;
@@ -41,15 +40,14 @@ class UserController extends Controller {
      *
      * @apiSuccess {Object} User
      *
-     * @param {Object} actionContext
-     * @param {Integer} id
      */
     actionGetUserById(actionContext, id) {
         var sberUser = await(userService.findSberUserById(id));
         if (!sberUser || !sberUser.authId) {
             throw new errors.NotFoundError('User', id);
         }
-        var authUser = await(userService.findAuthUserByAuthId(sberUser.authId));
+        var authId = sberUser.authId;
+        var authUser = await(userService.findAuthUserByAuthId(authId));
         return userView.renderUser(authUser, sberUser);
     };
     /**
@@ -117,7 +115,8 @@ class UserController extends Controller {
                 throw new errors.NotFoundError('User', email);
             }
         } else {
-            var authUser = await(userService.findAuthUserByAuthId(sberUser.authId));
+            var authId = sberUser.authId;
+            var authUser = await(userService.findAuthUserByAuthId(authId));
             return userView.renderUser(authUser, sberUser);
         }
     };

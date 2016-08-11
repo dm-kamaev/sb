@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 module.exports = function(sequelize, DataTypes) {
     var Order = sequelize.define('Order', {
@@ -59,10 +59,10 @@ module.exports = function(sequelize, DataTypes) {
         paranoid: true,
         classMethods: {
             associate: function(models) {
-              Order.belongsTo(models.SberUserUserFund, {
-                  as: 'sberUserUserFund',
-                  foreginKey: 'sberUserUserFundId'
-              });
+                Order.belongsTo(models.SberUserUserFund, {
+                    as: 'sberUserUserFund',
+                    foreginKey: 'sberUserUserFundId'
+                });
             }
         }
     });

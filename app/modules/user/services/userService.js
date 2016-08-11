@@ -9,7 +9,7 @@ const axios = require('axios').create({
 });
 
 exports.findSberUserById = function(id) {
-    return await (sequelize.models.SberUser.findOne({
+    return await(sequelize.models.SberUser.findOne({
         where: {
             id
         },
@@ -24,9 +24,9 @@ exports.findSberUserById = function(id) {
         }],
         order: [
             [{
-                    model: sequelize.models.Phone,
-                    as: 'phone'
-                },
+                model: sequelize.models.Phone,
+                as: 'phone'
+            },
                 'updatedAt',
                 'DESC'
             ]
@@ -35,7 +35,7 @@ exports.findSberUserById = function(id) {
 };
 
 exports.findSberUserByAuthId = function(authId) {
-    return await (sequelize.models.SberUser.findOne({
+    return await(sequelize.models.SberUser.findOne({
         where: {
             authId
         },
@@ -48,7 +48,7 @@ exports.findSberUserByAuthId = function(authId) {
 };
 
 exports.findAuthUserByPhone = function(phoneNumber) {
-    var authUsers = await (axios.get('/users', {
+    var authUsers = await(axios.get('/users', {
         params: {
             phone: phoneNumber
         }
@@ -58,7 +58,7 @@ exports.findAuthUserByPhone = function(phoneNumber) {
 };
 
 exports.createAuthUser = function(userData) {
-    var response = await (axios.post('/user', {
+    var response = await(axios.post('/user', {
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone
@@ -68,7 +68,7 @@ exports.createAuthUser = function(userData) {
 };
 
 exports.createSberUser = function(authId) {
-    return await (sequelize.models.SberUser.create({
+    return await(sequelize.models.SberUser.create({
         authId,
         userFund: {
             enabled: false
@@ -82,12 +82,12 @@ exports.createSberUser = function(authId) {
 };
 
 exports.findAuthUserByAuthId = function(authId) {
-    var response = await (axios.get(`/user/${authId}`));
+    var response = await(axios.get(`/user/${authId}`));
     return response.data;
 };
 
 exports.setAuthId = function(id, authId) {
-    return await (sequelize.models.SberUser.update({
+    return await(sequelize.models.SberUser.update({
         authId
     }, {
         where: {
@@ -97,7 +97,7 @@ exports.setAuthId = function(id, authId) {
 };
 
 exports.updateAuthUser = function(authId, userData) {
-    var response = await (axios.patch(`/user/${authId}`, {
+    var response = await(axios.patch(`/user/${authId}`, {
         firstName: userData.firstName,
         lastName: userData.lastName
     }));
@@ -105,14 +105,14 @@ exports.updateAuthUser = function(authId, userData) {
 };
 
 exports.setUserFund = function(id, userFundId) {
-    return await (sequelize.sequelize_.transaction(t => {
+    return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.UserFund.update({
-                creatorId: null
-            }, {
-                where: {
-                    creatorId: id
-                }
-            })
+            creatorId: null
+        }, {
+            where: {
+                creatorId: id
+            }
+        })
             .then(() => {
                 return sequelize.models.UserFund.update({
                     creatorId: id
@@ -126,7 +126,7 @@ exports.setUserFund = function(id, userFundId) {
 };
 
 exports.findAuthUserByEmail = function(email) {
-    var response = await (axios.get('/users', {
+    var response = await(axios.get('/users', {
         params: {
             email
         }
@@ -139,9 +139,9 @@ exports.findAuthUserByEmail = function(email) {
 exports.createCard = function(sberUserId, bindingId) {
     return await(sequelize.sequelize.transaction((t) => {
         return sequelize.models.Card.create({
-                sberUserId,
-                bindingId
-            })
+            sberUserId,
+            bindingId
+        })
             .then(card => {
                 return sequelize.models.SberUser.update({
                     currentCardId: card.id
@@ -149,7 +149,7 @@ exports.createCard = function(sberUserId, bindingId) {
                     where: {
                         id: sberUserId
                     }
-                })
-            })
-    }))
-}
+                });
+            });
+    }));
+};

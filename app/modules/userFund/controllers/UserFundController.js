@@ -1,16 +1,18 @@
+/* eslint-disable require-jsdoc, valid-jsdoc*/
 'use strict';
 
-const config     = require('../../../../config/config.json');
+const config = require('../../../../config/config.json');
 const Controller = require('nodules/controller').Controller;
-const await      = require('asyncawait/await');
-const errors     = require('../../../components/errors');
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
+const errors = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
-const orderService    = require('../../orders/services/orderService.js');
-const entityService   = require('../../entity/services/entityService');
-const entityView      = require('../../entity/views/entityView');
-const userService     = require('../../user/services/userService');
-const sberAcquiring   = require('../../sberAcquiring/services/sberAcquiring.js');
-const userFundView    = require('../views/userFundView');
+const orderService = require('../../orders/services/orderService.js');
+const entityService = require('../../entity/services/entityService');
+const entityView = require('../../entity/views/entityView');
+const userService = require('../../user/services/userService');
+const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
+const userFundView = require('../views/userFundView');
 const log = console.log;
 
 class UserFundController extends Controller {
@@ -182,9 +184,6 @@ class UserFundController extends Controller {
      *
      * @apiSuccess {Object} today and all count
      *
-     * @param  {[type]} actionContext [description]
-     * @param  {[type]} id            [description]
-     * @return {[type]}               [description]
      */
     actionCountUserFunds(actionContext, id) {
         var all = await(entityService.getFundsCount());
@@ -199,39 +198,37 @@ class UserFundController extends Controller {
      * @apiName set amount
      * @apiGroup UserFund
      *
-     * @param  {[type]} actionContext [description]
-     * @return {[type]}               [description]
      */
      // { "amount": 210 }
     actionSetAmount(actionContext) {
         var sberUserId = actionContext.request.user.id,
-            changer    = 'user',
+            changer = 'user',
             userFundId = actionContext.request.user.userFund.id,
-            amount     = actionContext.data.amount;
+            amount = actionContext.data.amount;
         await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
-        var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
+        var SberUserUserFund = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
 
-        var currentCardId = await(userService.findSberUserById(sberUserId)).dataValues.currentCardId;
+        var card = await(userService.findSberUserById(sberUserId));
+        var currentCardId = card.dataValues.currentCardId;
         // if user with unconfirmed payment, then do first pay
         if (!currentCardId) {
             var entities = await(userFundService.getEntities(userFundId));
             var listDirsTopicsFunds = [], listFunds = [];
             for (var i = 0, l = entities.length; i < l; i++) {
-              var entity = entities[i].dataValues, type = entity.type;
-              listDirsTopicsFunds.push([type, entity.title]);
-              if (type === 'direction' || type === 'topic') {
-                listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
-              } else {
-                listFunds.push(entity.title);
-              }
+                var entity = entities[i].dataValues, type = entity.type;
+                listDirsTopicsFunds.push([type, entity.title]);
+                if (type === 'direction' || type === 'topic') {
+                    listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
+                } else {
+                    listFunds.push(entity.title);
+                }
             }
             // log('SberUserUserFundId=', SberUserUserFundId);
             // log('orderNumber=',        orderNumber);
-            var fundInfo = { listDirsTopicsFunds, listFunds };
-            var resInsert   = await(
-                orderService.insertPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds, fundInfo)
-            );
+            // var fundInfo = { listDirsTopicsFunds, listFunds };
+            var fundInfo = entities;
+            var resInsert = await(orderService.insertPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds, fundInfo));
             var orderNumber = resInsert.dataValues.orderNumber;
             // TODO: Test error for sber acqui
             // !!! REMOVE ON PRODUCTION next line!!!
@@ -239,8 +236,8 @@ class UserFundController extends Controller {
             var responceSberAcqu = await(sberAcquiring.firstPay({
                 amount,
                 orderNumber,
-                returnUrl: config.hostname+'#success',
-                failUrl:   config.hostname+'#failed',
+                returnUrl: config.hostname + '#success',
+                failUrl: config.hostname + '#failed',
                 language: 'ru',
                 clientId: sberUserId,
                 jsonParams: JSON.stringify({
@@ -249,6 +246,9 @@ class UserFundController extends Controller {
                 }),
             }));
             log('responceSberAcqu=', responceSberAcqu);
+            await(orderService.updateInfo(orderNumber, {
+                orderId: responceSberAcqu.orderId
+            }));
             return orderService.handlerResponceSberAcqu(orderNumber, responceSberAcqu);
         } else {
             return { message: 'Вы изменили сумму ежемесячного платежа.' };
@@ -259,8 +259,6 @@ class UserFundController extends Controller {
      * @apiName get current amount
      * @apiGroup UserFund
      *
-     * @param  {[type]} actionContext [description]
-     * @return {[type]}               [description]
      */
     actionGetCurrentAmount(actionContext) {
         var sberUserId = actionContext.request.user.id,
