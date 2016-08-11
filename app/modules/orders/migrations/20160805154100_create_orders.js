@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 module.exports = {
     up: function(queryInterface, Sequelize) {
@@ -17,14 +17,14 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER,
             },
-            orderId:      Sequelize.STRING,
-            amount:       {
+            orderId: Sequelize.STRING,
+            amount: {
                 allowNull: false,
                 type: Sequelize.INTEGER,
             },
-            errorCode:    Sequelize.INTEGER,
+            errorCode: Sequelize.INTEGER,
             errorMessage: Sequelize.TEXT,
-            actionCode:   Sequelize.INTEGER,
+            actionCode: Sequelize.INTEGER,
             actionCodeDescription: Sequelize.TEXT,
             createdAt: {
                 allowNull: false,

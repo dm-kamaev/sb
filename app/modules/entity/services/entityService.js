@@ -124,7 +124,7 @@ exports.deleteEntity = function(id) {
  * @param  {[string]}  type       [ direction || topic || fund ]
  * @param  {[boolean]} published
  */
-function getEntitybyEntityId (id, type, published) {
+function getEntitybyEntityId(id, type, published) {
     return await(sequelize.models.Entity.findOne({
         where: {
             id,
@@ -137,16 +137,16 @@ exports.getEntitybyEntityId = getEntitybyEntityId;
 
 
 // get list fund name
-exports.getFundsName = function (entityId) {
+exports.getFundsName = function(entityId) {
     var res = [];
     var listFunds = await(sequelize.models.EntityOtherEntity.findAll({
         where: { entityId }
     }));
     for (var i = 0, l = listFunds.length; i < l; i++) {
-      var record        = listFunds[i].dataValues,
-          otherEntityId = record.otherEntityId;
-      var entity = await(getEntitybyEntityId(otherEntityId, 'fund', true));
-      if (entity) { res.push(entity.title); }
+        var record = listFunds[i].dataValues,
+            otherEntityId = record.otherEntityId;
+        var entity = await(getEntitybyEntityId(otherEntityId, 'fund', true));
+        if (entity) { res.push(entity.title); }
     }
     return res;
 };
@@ -192,7 +192,7 @@ exports.associateEntities = function(id, otherIds) {
         }, {
             entityId: e,
             otherEntityId: id
-        }]
+        }];
     });
 
     var associations = _.flatten(creating);
@@ -204,13 +204,13 @@ exports.removeAssociations = function(id) {
     return await(sequelize.models.EntityOtherEntity.destroy({
         where: {
             $or: [{
-              entityId: id
-            },{
-              otherEntityId: id
+                entityId: id
+            }, {
+                otherEntityId: id
             }]
         }
-    }))
-}
+    }));
+};
 
 exports.getTodayFundsCount = function() {
     var today = new Date(),

@@ -162,7 +162,7 @@ exports.getCurrentAmount = function(sberUserId, userFundId) {
 };
 
 
-exports.getSberUserUserFundId = function (sberUserId, userFundId) {
+exports.getSberUserUserFundId = function(sberUserId, userFundId) {
     return await(sequelize.models.SberUserUserFund.findOne({
         where: {
             sberUserId,

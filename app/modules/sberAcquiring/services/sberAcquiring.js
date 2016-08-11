@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
@@ -10,7 +10,7 @@ const errors = require('../../../components/errors');
 
 const sberAcquiring = {};
 
-/*params –– {
+/* params –– {
   userName: 'aventica-api',
   password: 'aventica',
   amount: '100',
@@ -34,26 +34,26 @@ const sberAcquiring = {};
     }
  */
 sberAcquiring.firstPay = function(params) {
-        try {
-            return await (axios.get('/payment/rest/register.do?', {
-                params: {
-                    userName: params.userName || configSberAcquiring.userName,
-                    password: params.password || configSberAcquiring.password,
-                    amount: params.amount,
-                    orderNumber: params.orderNumber,
-                    returnUrl: params.returnUrl,
-                    failUrl: params.failUrl,
-                    language: 'ru',
-                    clientId: params.clientId,
-                    jsonParams: params.jsonParams,
-                }
-            })).data;
-        } catch (err) {
-            throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
-        }
-    };
+    try {
+        return await(axios.get('/payment/rest/register.do?', {
+            params: {
+                userName: params.userName || configSberAcquiring.userName,
+                password: params.password || configSberAcquiring.password,
+                amount: params.amount,
+                orderNumber: params.orderNumber,
+                returnUrl: params.returnUrl,
+                failUrl: params.failUrl,
+                language: 'ru',
+                clientId: params.clientId,
+                jsonParams: params.jsonParams,
+            }
+        })).data;
+    } catch (err) {
+        throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
+    }
+};
 
-    /*params –– {
+    /* params –– {
         userName: 'aventica-api',
         password: 'aventica',
         clientId: '2', // The number (ID) of the customer in the shop system. Is used to implement the functionality of the ligaments. The store must have permission to use the ligaments.
@@ -110,7 +110,7 @@ sberAcquiring.firstPay = function(params) {
     }*/
 sberAcquiring.getStatusAndGetBind = function(params) {
     try {
-        return await (axios.get('/payment/rest/getOrderStatusExtended.do?', {
+        return await(axios.get('/payment/rest/getOrderStatusExtended.do?', {
             params: {
                 userName: params.userName || configSberAcquiring.userName,
                 password: params.password || configSberAcquiring.password,
@@ -123,14 +123,13 @@ sberAcquiring.getStatusAndGetBind = function(params) {
     } catch (e) {
         throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
     }
-
-}
-
-// TODO: Create
-sberAcquiring.actionCreatePayByBind = function() {}
+};
 
 // TODO: Create
-sberAcquiring.actionPayByBind = function() {}
+sberAcquiring.actionCreatePayByBind = function() {};
+
+// TODO: Create
+sberAcquiring.actionPayByBind = function() {};
 
 module.exports = sberAcquiring;
 
