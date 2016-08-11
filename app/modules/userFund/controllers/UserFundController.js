@@ -228,7 +228,10 @@ class UserFundController extends Controller {
             }
             // log('SberUserUserFundId=', SberUserUserFundId);
             // log('orderNumber=',        orderNumber);
-            var resInsert   = await(orderService.createPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds));
+            var fundInfo = { listDirsTopicsFunds, listFunds };
+            var resInsert   = await(
+                orderService.insertPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds, fundInfo)
+            );
             var orderNumber = resInsert.dataValues.orderNumber;
             // TODO: Test error for sber acqui
             // !!! REMOVE ON PRODUCTION next line!!!
@@ -247,7 +250,6 @@ class UserFundController extends Controller {
             }));
             log('responceSberAcqu=', responceSberAcqu);
             return orderService.handlerResponceSberAcqu(orderNumber, responceSberAcqu);
-            // return res;
         } else {
             return { message: 'Вы изменили сумму ежемесячного платежа.' };
         }

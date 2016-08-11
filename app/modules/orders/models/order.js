@@ -39,6 +39,9 @@ module.exports = function(sequelize, DataTypes) {
         listDirTopicFunds: {
             type: DataTypes.ARRAY(DataTypes.STRING),
         },
+        fundInfo: {
+            type: DataTypes.JSONB,
+        },
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE,
