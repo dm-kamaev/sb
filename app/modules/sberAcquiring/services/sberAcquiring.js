@@ -52,7 +52,6 @@ sberAcquiring.firstPay = function(params) {
     } catch (err) {
         throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
     }
-
 };
 
     /* params –– {
@@ -125,7 +124,6 @@ sberAcquiring.getStatusAndGetBind = function(params) {
     } catch (e) {
         throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
     }
-
 };
 
 
@@ -147,23 +145,23 @@ sberAcquiring.getStatusAndGetBind = function(params) {
      errorMessage: 'Заказ с таким номером уже обработан',
     }*/
 // orderId is mdOrder for actionPayByBind
-sberAcquiring.actionCreatePayByBind = function (params) {
-  try {
-      return await (axios.get('/payment/rest/register.do?', {
-          params: {
-              userName: params.userName || configSberAcquiring.userNameSsl,
-              password: params.password || configSberAcquiring.passwordSsl,
-              amount:      params.amount,
-              orderNumber: params.orderNumber,
-              returnUrl:   params.returnUrl,
-              failUrl:     params.failUrl,
-              language:    'ru',
-              clientId:    params.clientId,
-          }
-      })).data;
-  } catch (e) {
-      throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
-  }
+sberAcquiring.actionCreatePayByBind = function(params) {
+    try {
+        return await(axios.get('/payment/rest/register.do?', {
+            params: {
+                userName: params.userName || configSberAcquiring.userNameSsl,
+                password: params.password || configSberAcquiring.passwordSsl,
+                amount: params.amount,
+                orderNumber: params.orderNumber,
+                returnUrl: params.returnUrl,
+                failUrl: params.failUrl,
+                language: 'ru',
+                clientId: params.clientId,
+            }
+        })).data;
+    } catch (e) {
+        throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
+    }
 };
 
 
@@ -201,9 +199,10 @@ sberAcquiring.actionPayByBind = function (params) {
             }
         });
     }));
-};
+}
 
 module.exports = sberAcquiring;
+
 
 
 /* EXAMPLE USE */
