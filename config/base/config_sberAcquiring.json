@@ -1,4 +1,7 @@
 {
     "userName": "aventica-api",
-    "password": "aventica"
+    "password": "aventica",
+
+    "userNameSsl":  "aventica_ssl-api",
+    "passwordSsl": "aventica_ssl"
 }
