@@ -2,11 +2,12 @@
 
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
-const axios = require('axios').create({
-    baseURL: 'https://3dsec.sberbank.ru'
-});
+const axios = require('axios').create({ baseURL: 'https://3dsec.sberbank.ru' });
+const config              = require('../../../../config/config.json');
 const configSberAcquiring = require('../../../../config/config_sberAcquiring.json');
 const errors = require('../../../components/errors');
+var request = require('request');
+const log = console.log;
 
 const sberAcquiring = {};
 
@@ -51,7 +52,7 @@ sberAcquiring.firstPay = function(params) {
         } catch (err) {
             throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
         }
-    };
+};
 
     /*params –– {
         userName: 'aventica-api',
@@ -124,70 +125,121 @@ sberAcquiring.getStatusAndGetBind = function(params) {
         throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
     }
 
-}
+};
 
-// TODO: Create
-sberAcquiring.actionCreatePayByBind = function() {}
 
-// TODO: Create
-sberAcquiring.actionPayByBind = function() {}
+/* params ––
+    { amount:      333,
+      orderNumber: 76,
+      returnUrl:   config.hostname+'#sucess',
+      failUrl:     config.hostname+'#failed',
+      language:    'ru',
+      clientId:    73,
+     }
+  responce –– {
+   // number pay
+   orderId: 'aad5141d-da93-4b95-8dee-4c80031a1b44',
+   // where redirect
+   formUrl: 'https://3dsec.sberbank.ru/payment/merchants/aventica/payment_ru.html?mdOrder=4ccf2517-66d4-404f-ad97-ae5497258737'
+ } or {
+     errorCode: '1',
+     errorMessage: 'Заказ с таким номером уже обработан',
+    }*/
+// orderId is mdOrder for actionPayByBind
+sberAcquiring.actionCreatePayByBind = function (params) {
+  try {
+      return await (axios.get('/payment/rest/register.do?', {
+          params: {
+              userName: params.userName || configSberAcquiring.userNameSsl,
+              password: params.password || configSberAcquiring.passwordSsl,
+              amount:      params.amount,
+              orderNumber: params.orderNumber,
+              returnUrl:   params.returnUrl,
+              failUrl:     params.failUrl,
+              language:    'ru',
+              clientId:    params.clientId,
+          }
+      })).data;
+  } catch (e) {
+      throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
+  }
+};
+
+
+/* params –– {
+    orderId:   '6984845d-f910-4b49-9fed-9aa3159e2b9b',
+    bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db',
+   }
+   responce –– {
+     "redirect":"http://sbervm.ru:3000/#sucess?orderId=6984845d-f910-4b49-9fed-9aa3159e2b9b",
+     "info":"Ваш платёж обработан, происходит переадресация...",
+     "errorCode":0
+    } or {
+     "error":"Связка не найдена",
+     "errorCode":2,
+     "errorMessage":"Связка не найдена"
+    }
+*/
+sberAcquiring.actionPayByBind = function (params) {
+    var data = {
+        userName:  params.userName || configSberAcquiring.userNameSsl,
+        password:  params.password || configSberAcquiring.passwordSsl,
+        mdOrder:   params.orderId,
+        bindingId: params.bindingId,
+        language: 'ru',
+    };
+    return await(new Promise((resolve, reject) => {
+        request.post({
+            url: 'https://3dsec.sberbank.ru/payment/rest/paymentOrderBinding.do',
+            formData: data
+        }, function(err, httpResponse, body) {
+            if (err) {
+                reject(new errors.HttpError('Failed connection with sberbank acquiring', 500));
+            } else {
+                resolve(body);
+            }
+        });
+    }));
+};
 
 module.exports = sberAcquiring;
 
 
 /* EXAMPLE USE */
-// var sberAcquiring = new SberAcquiring();
-// var firstPay = async(() => {
-//   return await(sberAcquiring.actionFirstPay({
-//         userName: configSberAcquiring.userName,
-//         password: configSberAcquiring.password,
-//         amount: '100',
-//         clientId: '2', // The number (ID) of the customer in the shop system. Is used to implement the functionality of the ligaments. The store must have permission to use the ligaments.
-//         orderNumber: '23', // The ID of the order in the shop system that is unique to each store within the system
-//         returnUrl: 'http://sbervm.ru:3000/pay/paid/2/',
-//         jsonParams: JSON.stringify({
-//           "recurringFrequency": "10",
-//           "recurringExpiry": "20161001"
-//         }),
-//     }));
-// });
+// async(()=>{
+//   var responceSberAcqu = await(sberAcquiring.getStatusAndGetBind({
+//     orderNumber: 38,
+//     orderId: '3ec6b463-3637-423f-9c23-d9f41f7bd85b',
+//     clientId: 73,
+//   }));
+//   // 73 bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db'
+//   console.log(responceSberAcqu);
+// })();
+
+// actionCreatePayByBind();
+// function actionCreatePayByBind () {
+//     async(()=>{
+//       var responceSberAcqu = await(sberAcquiring.actionCreatePayByBind({
+//         amount:      333,
+//         orderNumber: 76,
+//         returnUrl:   config.hostname+'#sucess',
+//         failUrl:     config.hostname+'#failed',
+//         language:    'ru',
+//         clientId:    73,
+//       }));
+//       // orderId: '6984845d-f910-4b49-9fed-9aa3159e2b9b'
+//       console.log('actionCreatePayByBind=', responceSberAcqu);
+//     })();
+// }
 
 
-// firstPay().then(function (responce) {
-//     var data = responce.data;
-//     log('data=', data);
-//     // if (responce.orderId && responce.formUrl) {
-//     //   log('right responce = ', responce);
-//     // } else if (responce.errorCode && responce.errorMessage) {
-//     //   log('wrong responce = ', responce);
-//     // } else {
-//     //   log('unknown responce = ', responce);
-//     // }
-// }).catch(function (err) {
-//     log('ERROR=', err);
-// });
-
-
-// var getStatus = async(() => {
-//   return await(sberAcquiring.actionGetStatusAndGetBind({
-//         userName: configSberAcquiring.userName,
-//         password: configSberAcquiring.password,
-//         clientId: '2', // The number (ID) of the customer in the shop system. Is used to implement the functionality of the ligaments. The store must have permission to use the ligaments.
-//         orderNumber: '23', // The ID of the order in the shop system that is unique to each store within the system
-//         orderId:     '1a34bfdd-4941-4dcf-9948-4c19ca51cf47', // The ID of the order in the shop system that is unique to each store within the system
-//     }));
-// });
-
-// getStatus().then(function (responce) {
-//     var data = responce.data;
-//     log('data=', data);
-//     // WE SAVE actionCode: 0, actionCodeDescription: '',
-//     // bindingId: '441966f2-d176-4ba8-9a30-596a24f87ec4'
-//     // if (responce.errorCode === 0 && responce.errorMessage === '') {
-//     //   log('right responce (bindingId) =', responce.bindingInfo.bindingId);
-//     // } else {
-//     //   log('wrong responce = ', responce);
-//     // }
-// }).catch(function (err) {
-//     log('ERROR=', err);
-// });
+// actionPayByBind();
+// function actionPayByBind () {
+//     async(()=>{
+//       var responceSberAcqu = await(sberAcquiring.actionPayByBind({
+//         orderId:   '6984845d-f910-4b49-9fed-9aa3159e2b9b',
+//         bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db',
+//       }));
+//       console.log('responceSberAcqu=', responceSberAcqu);
+//     })();
+// }
