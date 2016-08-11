@@ -246,9 +246,6 @@ class UserFundController extends Controller {
                 }),
             }));
             log('responceSberAcqu=', responceSberAcqu);
-            await(orderService.updateInfo(orderNumber, {
-                orderId: responceSberAcqu.orderId
-            }));
             return orderService.handlerResponceSberAcqu(orderNumber, responceSberAcqu);
         } else {
             return { message: 'Вы изменили сумму ежемесячного платежа.' };

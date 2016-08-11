@@ -48,12 +48,13 @@ exports.updateInfo = updateInfo;
 
 exports.handlerResponceSberAcqu = function(orderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
-        // TODO: save orderId
-        // TODO: redirect
+        await(orderService.updateInfo(orderNumber, { orderId: responceSberAcqu.orderId }));
         return responceSberAcqu;
     } else {
-        var errorCode = responceSberAcqu.errorCode || '100', // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
-            errorMessage = responceSberAcqu.errorMessage || 'Неизвестный ответ от Сбербанк эквайринг';
+        const ourErrorCode    = '100'; // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
+        const ourErrorMessage = 'Неизвестный ответ от Сбербанк эквайринг';
+        var errorCode    = responceSberAcqu.errorCode    || ourErrorCode,
+            errorMessage = responceSberAcqu.errorMessage || ourErrorMessage;
         var res = { errorCode, errorMessage };
         await(updateInfo(orderNumber, res));
         return res;
