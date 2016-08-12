@@ -202,33 +202,26 @@ class UserFundController extends Controller {
      // { "amount": 210 }
     actionSetAmount(actionContext) {
         var sberUserId = actionContext.request.user.id,
-            changer = 'user',
+            changer    = 'user',
             userFundId = actionContext.request.user.userFund.id,
-            amount = actionContext.data.amount;
+            amount     = actionContext.data.amount;
         await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
-        var SberUserUserFund = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
+        var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
 
-        var card = await(userService.findSberUserById(sberUserId));
-        var currentCardId = card.dataValues.currentCardId;
+        var card          = await(userService.findSberUserById(sberUserId)),
+            currentCardId = card.dataValues.currentCardId;
         // if user with unconfirmed payment, then do first pay
         if (!currentCardId) {
             var entities = await(userFundService.getEntities(userFundId));
-            var listDirsTopicsFunds = [], listFunds = [];
-            for (var i = 0, l = entities.length; i < l; i++) {
-                var entity = entities[i].dataValues, type = entity.type;
-                listDirsTopicsFunds.push([type, entity.title]);
-                if (type === 'direction' || type === 'topic') {
-                    listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
-                } else {
-                    listFunds.push(entity.title);
-                }
-            }
+            var res      = orderService.getListDirectionTopicFunds(entities),
+                listDirectionTopicFunds = res[0], listFunds = res[1];
             // log('SberUserUserFundId=', SberUserUserFundId);
             // log('orderNumber=',        orderNumber);
-            // var fundInfo = { listDirsTopicsFunds, listFunds };
-            var fundInfo = entities;
-            var resInsert = await(orderService.insertPay(SberUserUserFundId, amount, listDirsTopicsFunds, listFunds, fundInfo));
+            log('listDirectionTopicFunds=', listDirectionTopicFunds);
+            log('listFunds=', listFunds)
+            var data        = { SberUserUserFundId, amount, listDirectionTopicFunds, listFunds, fundInfo: entities};
+            var resInsert   = await(orderService.insertPay(data));
             var orderNumber = resInsert.dataValues.orderNumber;
             // TODO: Test error for sber acqui
             // !!! REMOVE ON PRODUCTION next line!!!
@@ -237,9 +230,9 @@ class UserFundController extends Controller {
                 amount,
                 orderNumber,
                 returnUrl: config.hostname + '#success',
-                failUrl: config.hostname + '#failed',
-                language: 'ru',
-                clientId: sberUserId,
+                failUrl:   config.hostname + '#failed',
+                language:  'ru',
+                clientId:  sberUserId,
                 jsonParams: JSON.stringify({
                     recurringFrequency: '10',
                     recurringExpiry: '21000101'
