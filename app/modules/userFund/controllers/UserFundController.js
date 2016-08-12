@@ -3,7 +3,7 @@
 
 const config = require('../../../../config/config.json');
 const Controller = require('nodules/controller').Controller;
-const async = require('asyncawait/async');
+// const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const userFundService = require('../services/userFundService');
@@ -201,27 +201,38 @@ class UserFundController extends Controller {
      */
      // { "amount": 210 }
     actionSetAmount(actionContext) {
-        var sberUserId = actionContext.request.user.id,
-            changer    = 'user',
-            userFundId = actionContext.request.user.userFund.id,
-            amount     = actionContext.data.amount;
-        await(userFundService.setAmount(sberUserId, userFundId, changer, amount));
-        var SberUserUserFund   = await(userFundService.getSberUserUserFundId(sberUserId, userFundId));
+        var sberUserId = actionContext.request.user.id;
+        var changer = 'user';
+        var userFundId = actionContext.request.user.userFund.id;
+        var amount = actionContext.data.amount;
+        await(
+            userFundService.setAmount(sberUserId, userFundId, changer, amount)
+        );
+        var SberUserUserFund = await(
+            userFundService.getSberUserUserFundId(sberUserId, userFundId)
+        );
         var SberUserUserFundId = SberUserUserFund.dataValues.id;
 
-        var card          = await(userService.findSberUserById(sberUserId)),
+        var card = await(userService.findSberUserById(sberUserId)),
             currentCardId = card.dataValues.currentCardId;
         // if user with unconfirmed payment, then do first pay
         if (!currentCardId) {
             var entities = await(userFundService.getEntities(userFundId));
-            var res      = orderService.getListDirectionTopicFunds(entities),
-                listDirectionTopicFunds = res[0], listFunds = res[1];
+            var res = orderService.getListDirectionTopicFunds(entities),
+                listDirectionsTopicsFunds = res[0], listFunds = res[1];
             // log('SberUserUserFundId=', SberUserUserFundId);
             // log('orderNumber=',        orderNumber);
-            log('listDirectionTopicFunds=', listDirectionTopicFunds);
-            log('listFunds=', listFunds)
-            var data        = { SberUserUserFundId, amount, listDirectionTopicFunds, listFunds, fundInfo: entities};
-            var resInsert   = await(orderService.insertPay(data));
+            log('listDirectionsTopicsFunds=', listDirectionsTopicsFunds);
+            log('listFunds=', listFunds);
+
+            var data = {
+                SberUserUserFundId,
+                amount,
+                listDirectionsTopicsFunds,
+                listFunds,
+                fundInfo: entities
+            };
+            var resInsert = await(orderService.insertPay(data));
             var orderNumber = resInsert.dataValues.orderNumber;
             // TODO: Test error for sber acqui
             // !!! REMOVE ON PRODUCTION next line!!!
@@ -230,16 +241,18 @@ class UserFundController extends Controller {
                 amount,
                 orderNumber,
                 returnUrl: config.hostname + '#success',
-                failUrl:   config.hostname + '#failed',
-                language:  'ru',
-                clientId:  sberUserId,
+                failUrl: config.hostname + '#failed',
+                language: 'ru',
+                clientId: sberUserId,
                 jsonParams: JSON.stringify({
                     recurringFrequency: '10',
                     recurringExpiry: '21000101'
                 }),
             }));
             log('responceSberAcqu=', responceSberAcqu);
-            return orderService.handlerResponceSberAcqu(orderNumber, responceSberAcqu);
+            return orderService.handlerResponceSberAcqu(
+                orderNumber, responceSberAcqu
+            );
         } else {
             return { message: 'Вы изменили сумму ежемесячного платежа.' };
         }
