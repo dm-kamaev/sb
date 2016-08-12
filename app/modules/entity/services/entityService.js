@@ -119,12 +119,33 @@ exports.deleteEntity = function(id) {
 };
 
 
+/**
+ * get list Funds's name
+ * @param  {[int]} entityId  [id Direction or Topic]
+ * @return {[type]}          [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
+ */
+exports.getListFundsName = function(entityId) {
+    var listFunds = await(sequelize.models.EntityOtherEntity.findAll({
+        where: { entityId }
+    }));
+    return listFunds.map(function(listFund) {
+        var record = listFund.dataValues,
+            otherEntityId = record.otherEntityId;
+        var entity = await(getEntityByEntityId(otherEntityId, 'fund', true));
+        if (entity) { return entity.title; }
+    });
+};
+
+
 
 /**
+ * get entity by id, type, published
+ * @param  {[int]}     id
  * @param  {[string]}  type       [ direction || topic || fund ]
  * @param  {[boolean]} published
+ * @return {[type]}                [description]
  */
-function getEntitybyEntityId(id, type, published) {
+function getEntityByEntityId(id, type, published) {
     return await(sequelize.models.Entity.findOne({
         where: {
             id,
@@ -133,23 +154,6 @@ function getEntitybyEntityId(id, type, published) {
         }
     }));
 }
-exports.getEntitybyEntityId = getEntitybyEntityId;
-
-
-// get list fund name
-exports.getFundsName = function(entityId) {
-    var res = [];
-    var listFunds = await(sequelize.models.EntityOtherEntity.findAll({
-        where: { entityId }
-    }));
-    for (var i = 0, l = listFunds.length; i < l; i++) {
-        var record = listFunds[i].dataValues,
-            otherEntityId = record.otherEntityId;
-        var entity = await(getEntitybyEntityId(otherEntityId, 'fund', true));
-        if (entity) { res.push(entity.title); }
-    }
-    return res;
-};
 
 
 exports.associateEntity = function(id, otherId) {

@@ -2,26 +2,26 @@
 
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
-const sequelize       = require('../../../components/sequelize');
-const entityService   = require('../../entity/services/entityService');
+const sequelize = require('../../../components/sequelize');
+const entityService = require('../../entity/services/entityService');
 
 
 /**
  * create order in our base
  * @param  {[int]}      data.SberUserUserFundId
  * @param  {[int]}      data.amount
- * @param  {[array]}    data.listDirectionTopicFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
- * @param  {[array]}    data.listFunds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
+ * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
+ * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
  * @param  {[array]}    data.fundInfo  [ entities as in database ]
  * @return {[object]}   [ get id insert ]
  */
-exports.insertPay = function (data) {
+exports.insertPay = function(data) {
     return await(sequelize.models.Order.create({
-        SberUserUserFundId:     data.SberUserUserFundId,
-        amount:                 data.amount,
-        listDirectionTopicFunds:data.listDirectionTopicFunds,
-        listFunds:              data.listFunds,
-        fundInfo:               data.fundInfo,
+        SberUserUserFundId: data.SberUserUserFundId,
+        amount: data.amount,
+        directionsTopicsFunds: data.listDirectionsTopicsFunds,
+        funds: data.listFunds,
+        fundInfo: data.fundInfo,
     }));
 };
 
@@ -62,18 +62,18 @@ exports.updateInfo = updateInfo;
  * @param  {[array]} entities [description]
  * @return [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ] [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
  */
-exports.getListDirectionTopicFunds = function (entities) {
-    var listDirectionTopicFunds = [], listFunds = [];
+exports.getListDirectionTopicFunds = function(entities) {
+    var listDirectionsTopicsFunds = [], listFunds = [];
     for (var i = 0, l = entities.length; i < l; i++) {
         var entity = entities[i].dataValues, type = entity.type;
-        listDirectionTopicFunds.push([type, entity.title]);
+        listDirectionsTopicsFunds.push([type, entity.title]);
         if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await(entityService.getFundsName(entity.id)));
+            listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
         } else {
             listFunds.push(entity.title);
         }
     }
-    return [ listDirectionTopicFunds, listFunds ];
+    return [ listDirectionsTopicsFunds, listFunds ];
 };
 
 
@@ -82,9 +82,9 @@ exports.handlerResponceSberAcqu = function(orderNumber, responceSberAcqu) {
         await(updateInfo(orderNumber, { orderId: responceSberAcqu.orderId }));
         return responceSberAcqu;
     } else {
-        const ourErrorCode    = '100'; // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
+        const ourErrorCode = '100'; // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
         const ourErrorMessage = 'Неизвестный ответ от Сбербанк эквайринг';
-        var errorCode    = responceSberAcqu.errorCode    || ourErrorCode,
+        var errorCode = responceSberAcqu.errorCode || ourErrorCode,
             errorMessage = responceSberAcqu.errorMessage || ourErrorMessage;
         var res = { errorCode, errorMessage };
         await(updateInfo(orderNumber, res));

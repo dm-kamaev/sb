@@ -3,7 +3,7 @@
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const axios = require('axios').create({ baseURL: 'https://3dsec.sberbank.ru' });
-const config              = require('../../../../config/config.json');
+const config = require('../../../../config/config.json');
 const configSberAcquiring = require('../../../../config/config_sberAcquiring.json');
 const errors = require('../../../components/errors');
 var request = require('request');
@@ -179,11 +179,11 @@ sberAcquiring.actionCreatePayByBind = function(params) {
      "errorMessage":"Связка не найдена"
     }
 */
-sberAcquiring.actionPayByBind = function (params) {
+sberAcquiring.actionPayByBind = function(params) {
     var data = {
-        userName:  params.userName || configSberAcquiring.userNameSsl,
-        password:  params.password || configSberAcquiring.passwordSsl,
-        mdOrder:   params.orderId,
+        userName: params.userName || configSberAcquiring.userNameSsl,
+        password: params.password || configSberAcquiring.passwordSsl,
+        mdOrder: params.orderId,
         bindingId: params.bindingId,
         language: 'ru',
     };
@@ -199,7 +199,7 @@ sberAcquiring.actionPayByBind = function (params) {
             }
         });
     }));
-}
+};
 
 module.exports = sberAcquiring;
 

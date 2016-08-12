@@ -33,10 +33,10 @@ module.exports = function(sequelize, DataTypes) {
         actionCode: {
             type: DataTypes.INTEGER
         },
-        listFunds: {
+        funds: {
             type: DataTypes.ARRAY(DataTypes.STRING),
         },
-        listDirTopicFunds: {
+        directionsTopicsFunds: {
             type: DataTypes.ARRAY(DataTypes.STRING),
         },
         fundInfo: {
