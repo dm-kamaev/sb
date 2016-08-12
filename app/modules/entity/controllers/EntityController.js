@@ -46,6 +46,7 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
+            if (!Array.isArray(entities)) entities = [ entities ];
             var entity = await(entityService.createEntity(data));
             await(entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
@@ -175,6 +176,7 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
+            if (!Array.isArray(entities)) entities = [ entities ];     
             delete data.id;
             await(entityService.removeAssociations(id));
             var entity = await(entityService.updateEntity(id, data));
