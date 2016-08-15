@@ -37,7 +37,6 @@ const sberAcquiring = {};
  */
 sberAcquiring.firstPay = function(params) {
     try {
-        throw('ERROR');
         return await(axios.get('/payment/rest/register.do?', {
             params: {
                 userName: params.userName || configSberAcquiring.userName,
