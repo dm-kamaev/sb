@@ -22,7 +22,7 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             validate: {
                 min: {
-                    args: 10000,
+                    args: 100,
                     msg: 'Минимальная сумма пожертвования 100 рублей'
                 },
                 max: {
