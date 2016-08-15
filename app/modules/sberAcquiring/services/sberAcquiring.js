@@ -1,12 +1,13 @@
 'use strict';
 
-const async = require('asyncawait/async');
+// const async = require('asyncawait/async');
 const await = require('asyncawait/await');
-const axios = require('axios').create({ baseURL: 'https://3dsec.sberbank.ru' });
-const config = require('../../../../config/config.json');
+// const config = require('../../../../config/config.json');
 const configSberAcquiring = require('../../../../config/config_sberAcquiring.json');
+const axios = require('axios').create({ baseURL: configSberAcquiring.hostname });
+const orderService = require('../../orders/services/orderService.js');
 const errors = require('../../../components/errors');
-var request = require('request');
+const request = require('request');
 const log = console.log;
 
 const sberAcquiring = {};
@@ -36,6 +37,7 @@ const sberAcquiring = {};
  */
 sberAcquiring.firstPay = function(params) {
     try {
+        throw('ERROR');
         return await(axios.get('/payment/rest/register.do?', {
             params: {
                 userName: params.userName || configSberAcquiring.userName,
@@ -50,7 +52,13 @@ sberAcquiring.firstPay = function(params) {
             }
         })).data;
     } catch (err) {
-        throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
+        await(orderService.updateInfo(
+          params.orderNumber, { status: 'eqOrderNotCreated' })
+        );
+        throw new errors.HttpError(
+          'Failed connection with sberbank acquiring',
+          500
+        );
     }
 };
 
@@ -189,11 +197,15 @@ sberAcquiring.actionPayByBind = function(params) {
     };
     return await(new Promise((resolve, reject) => {
         request.post({
-            url: 'https://3dsec.sberbank.ru/payment/rest/paymentOrderBinding.do',
+            url: configSberAcquiring.hostname+'/payment/rest/paymentOrderBinding.do',
             formData: data
         }, function(err, httpResponse, body) {
             if (err) {
-                reject(new errors.HttpError('Failed connection with sberbank acquiring', 500));
+                reject(
+                  new errors.HttpError(
+                  'Failed connection with sberbank acquiring',
+                  500)
+                );
             } else {
                 resolve(body);
             }

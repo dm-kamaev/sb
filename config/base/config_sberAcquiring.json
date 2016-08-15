@@ -3,5 +3,7 @@
     "password": "aventica",
 
     "userNameSsl":  "aventica_ssl-api",
-    "passwordSsl": "aventica_ssl"
+    "passwordSsl": "aventica_ssl",
+
+    "hostname":   "https://3dsec.sberbank.ru"
 }
