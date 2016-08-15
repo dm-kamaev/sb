@@ -36,6 +36,9 @@ module.exports = function(sequelize, DataTypes) {
         sberAcquActionCodeDescription: {
             type: DataTypes.STRING,
         },
+        status: {
+            type: DataTypes.STRING,
+        },
         funds: {
             type: DataTypes.ARRAY(DataTypes.STRING),
         },
