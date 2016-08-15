@@ -46,10 +46,10 @@ exports.getOrderWithInludes = function(orderNumber) {
 };
 
 
-function updateInfo(orderNumber, data) {
+function updateInfo(sberAcquOrderNumber, data) {
     return await(sequelize.models.Order.update(data, {
         where: {
-            orderNumber,
+            sberAcquOrderNumber,
         }
     }));
 }
@@ -77,17 +77,17 @@ exports.getListDirectionTopicFunds = function(entities) {
 };
 
 
-exports.handlerResponceSberAcqu = function(orderNumber, responceSberAcqu) {
+exports.handlerResponceSberAcqu = function(sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
-        await(updateInfo(orderNumber, { orderId: responceSberAcqu.orderId }));
+        await(updateInfo(sberAcquOrderNumber, { sberAcquOrderId: responceSberAcqu.orderId }));
         return responceSberAcqu;
     } else {
         const ourErrorCode = '100'; // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
         const ourErrorMessage = 'Неизвестный ответ от Сбербанк эквайринг';
         var errorCode = responceSberAcqu.errorCode || ourErrorCode,
             errorMessage = responceSberAcqu.errorMessage || ourErrorMessage;
-        var res = { errorCode, errorMessage };
-        await(updateInfo(orderNumber, res));
-        return res;
+        var data = { sberAcquErrorCode: errorCode, sberAcquErrorMessage: errorMessage };
+        await(updateInfo(sberAcquOrderNumber, data));
+        return { errorCode, errorMessage };
     }
 };
