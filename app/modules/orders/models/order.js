@@ -11,27 +11,30 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             field: 'sberUserUserFundId'
         },
-        orderNumber: {
+        sberAcquOrderNumber: {
             allowNull: false,
             autoIncrement: true,
             primaryKey: true,
             type: DataTypes.INTEGER,
         },
-        orderId: {
+        sberAcquOrderId: {
             type: DataTypes.STRING
         },
         amount: {
             allowNull: false,
             type: DataTypes.INTEGER,
         },
-        errorCode: {
+        sberAcquErrorCode: {
             type: DataTypes.INTEGER
         },
-        errorMessage: {
+        sberAcquErrorMessage: {
             type: DataTypes.TEXT
         },
-        actionCode: {
-            type: DataTypes.INTEGER
+        sberAcquActionCode: {
+            type: DataTypes.TEXT,
+        },
+        sberAcquActionCodeDescription: {
+            type: DataTypes.STRING,
         },
         funds: {
             type: DataTypes.ARRAY(DataTypes.STRING),

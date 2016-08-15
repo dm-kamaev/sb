@@ -233,13 +233,13 @@ class UserFundController extends Controller {
                 fundInfo: entities
             };
             var resInsert = await(orderService.insertPay(data));
-            var orderNumber = resInsert.dataValues.orderNumber;
+            var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
             // TODO: Test error for sber acqui
             // !!! REMOVE ON PRODUCTION next line!!!
-            // orderNumber = 13;
+            // sberAcquOrderNumber = 13;
             var responceSberAcqu = await(sberAcquiring.firstPay({
+                orderNumber: sberAcquOrderNumber,
                 amount,
-                orderNumber,
                 returnUrl: config.hostname + '#success',
                 failUrl: config.hostname + '#failed',
                 language: 'ru',
@@ -251,7 +251,7 @@ class UserFundController extends Controller {
             }));
             log('responceSberAcqu=', responceSberAcqu);
             return orderService.handlerResponceSberAcqu(
-                orderNumber, responceSberAcqu
+                sberAcquOrderNumber, responceSberAcqu
             );
         } else {
             return { message: 'Вы изменили сумму ежемесячного платежа.' };
