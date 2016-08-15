@@ -22,24 +22,32 @@ exports.insertPay = function(data) {
         directionsTopicsFunds: data.listDirectionsTopicsFunds,
         funds: data.listFunds,
         fundInfo: data.fundInfo,
+        status: data.status
     }));
 };
 
 
-exports.getOrderWithInludes = function(orderNumber) {
+exports.getOrderWithInludes = function(sberAcquOrderNumber) {
     return await(sequelize.models.Order.findOne({
         where: {
-            orderNumber
+            sberAcquOrderNumber
         },
         include: [{
             model: sequelize.models.SberUserUserFund,
             as: 'sberUserUserFund',
             include: [{
                 model: sequelize.models.SberUser,
-                as: 'sberUser'
+                as: 'sberUser',
+                include: {
+                    model: sequelize.models.UserFund,
+                    as: 'userFund'
+                }
             }, {
                 model: sequelize.models.DesiredAmountHistory,
                 as: 'currentAmount'
+            }, {
+                model: sequelize.models.UserFund,
+                as: 'userFund'
             }]
         }]
     }));

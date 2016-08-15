@@ -26,9 +26,11 @@ module.exports = {
     },
 
     down: function(queryInterface, Sequelize) {
-        return queryInterface.removeColumn('SberUserUserFund', 'currentAmountId')
+        return queryInterface.removeColumn('SberUserUserFund',
+                          'currentAmountId')
                 .then(() => {
-                    return queryInterface.removeColumn('SberUserUserFund', 'enabled');
+                    return queryInterface.removeColumn('SberUserUserFund',
+                                'enabled');
                 })
                 .then(() => {
                     return queryInterface.removeIndex('SberUserUserFund',

@@ -113,7 +113,7 @@ exports.toggleEnabled = function(id, isEnabled) {
     }));
 };
 
-exports.setAmount = function(sberUserId, userFundId, changer, amount) {
+exports.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
     return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.SberUserUserFund.findOrCreate({
             where: {
@@ -125,7 +125,7 @@ exports.setAmount = function(sberUserId, userFundId, changer, amount) {
             .then(suuf => {
                 return sequelize.models.DesiredAmountHistory.create({
                     SberUserUserFundId: suuf.id,
-                    payDate: Date.now(),
+                    payDate: payDate || Date.now(),
                     changer,
                     amount
                 });

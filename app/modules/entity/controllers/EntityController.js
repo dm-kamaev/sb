@@ -176,7 +176,7 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
-            if (!Array.isArray(entities)) entities = [ entities ];     
+            if (!Array.isArray(entities)) entities = [ entities ];
             delete data.id;
             await(entityService.removeAssociations(id));
             var entity = await(entityService.updateEntity(id, data));

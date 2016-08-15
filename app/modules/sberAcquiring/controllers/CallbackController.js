@@ -7,6 +7,7 @@ const errors = require('../../../components/errors');
 const acquiringService = require('../services/sberAcquiring');
 const orderService = require('../../orders/services/orderService');
 const userService = require('../../user/services/userService');
+const userFundService = require('../../userFund/services/userFundService');
 const sberConfig = require('../../../../config/config_sberAcquiring.json');
 const moment = require('moment');
 
@@ -14,40 +15,55 @@ module.exports = class CallbackController extends Controller {
     actionCallback(ctx) {
         // callback data
         var mdOrder = ctx.request.query.mdOrder,
-            orderNumber = ctx.request.query.orderNumber,
+            sberAcquOrderNumber = ctx.request.query.orderNumber,
             operation = ctx.request.query.operation,
             status = ctx.request.query.status;
-        // find order
-        var order = await(orderService.getOrderWithInludes(orderNumber));
+
+        var order = await(orderService.getOrderWithInludes(sberAcquOrderNumber));
 
         if (!order) {
-          // panic, order not found!!!
+            // panic, order not found!!!
         }
+
+        if (order.status != 'waitingForPay') return;
+
+        await(orderService.updateInfo(sberAcquOrderNumber, {
+            status: 'confirmingPayment'
+        }));
 
         var paymentId = order.sberUserUserFund.currentAmount.id,
             userFund = order.sberUserUserFund.userFund,
             sberUser = order.sberUserUserFund.sberUser;
 
-        // check order status
-        var status = await(acquiringService.getStatusAndGetBind({
-            orderNumber,
-            orderId: order.orderId,
-            clientId: order.sberUserUserFund.sberUser.id
-        }));
+        var eqOrderStatus;
+
+        try {
+            eqOrderStatus = await(acquiringService.getStatusAndGetBind({
+                sberAcquOrderNumber,
+                orderId: order.sberAcquOrderId,
+                clientId: order.sberUserUserFund.sberUser.id
+            }));
+        } catch (err) {
+            await(orderService.updateInfo(orderNumber, {
+                status: 'waitingForPay'
+            }));
+            throw new errors.HttpError('Failed to get order status', 500);
+        }
 
         // update order
-        await(orderService.updateOrder(orderNumber, {
-            errorCode: status.errorCode,
-            errorMessage: status.errorMessage,
-            actionCode: status.actionCode
+        await(orderService.updateInfo(sberAcquOrderNumber, {
+            sberAcquErrorCode: eqOrderStatus.errorCode,
+            sberAcquErrorMessage: eqOrderStatus.errorMessage,
+            sberAcquActionCode: eqOrderStatus.actionCode,
+            sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
+            status: eqOrderStatus.actionCode ? 'failed' : 'paid'
         }));
 
-        if (status.actionCode != 0) {
-            // handle error
+        if (eqOrderStatus.actionCode != 0) {
+            // handle somehow
         } else {
-            // order paid successfully
             // create new card for user and set pay date
-            await(userService.createCard(sberUser.id, status.bindingId));
+            await(userService.createCard(sberUser.id, eqOrderStatus.bindingInfo.bindingId));
             await(userFundService.updateDesiredAmountHistory(paymentId, {
                 payDate: moment().add(1, 'month').toDate()
             }));
