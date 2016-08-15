@@ -43,6 +43,8 @@ app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/', express.static(path.join(__dirname, '../../../public/frontend')));
 app.use('/', express.static(path.join(__dirname, '../../../public/uploads')));
 
+app.use('/callback', callbackRouter);
+
 // app.use(cordovaSession);
 app.use(session);
 app.use(passport.init);
@@ -55,7 +57,6 @@ app.use('/entity', entityRoutes);
 app.use('/user-fund', userFundRoutes);
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
-app.use('/callback', callbackRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{

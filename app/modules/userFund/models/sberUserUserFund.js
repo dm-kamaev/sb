@@ -63,6 +63,10 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'sberUser',
                     foreginKey: 'sberUserId'
                 });
+                SberUserUserFund.belongsTo(models.UserFund, {
+                    as: 'userFund',
+                    foreginKey: 'userFundId'
+                });
             }
         }
     });

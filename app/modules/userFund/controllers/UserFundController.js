@@ -186,6 +186,7 @@ class UserFundController extends Controller {
      *
      */
     actionCountUserFunds(actionContext, id) {
+        console.log(await(orderService.getOrderWithInludes(actionContext.data.orderNumber)));
         var all = await(entityService.getFundsCount());
         var today = await(entityService.getTodayFundsCount());
         return {
@@ -230,7 +231,8 @@ class UserFundController extends Controller {
                 amount,
                 listDirectionsTopicsFunds,
                 listFunds,
-                fundInfo: entities
+                fundInfo: entities,
+                status: 'waitingForPay'
             };
             var resInsert = await(orderService.insertPay(data));
             var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
