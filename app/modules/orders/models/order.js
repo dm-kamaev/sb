@@ -31,10 +31,10 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.TEXT
         },
         sberAcquActionCode: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.TEXT,
         },
         sberAcquActionCodeDescription: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING,
         },
         funds: {
             type: DataTypes.ARRAY(DataTypes.STRING),
