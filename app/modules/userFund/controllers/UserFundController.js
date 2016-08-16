@@ -221,10 +221,6 @@ class UserFundController extends Controller {
             var entities = await(userFundService.getEntities(userFundId));
             var res = orderService.getListDirectionTopicFunds(entities),
                 listDirectionsTopicsFunds = res[0], listFunds = res[1];
-            // log('SberUserUserFundId=', SberUserUserFundId);
-            // log('orderNumber=',        orderNumber);
-            log('listDirectionsTopicsFunds=', listDirectionsTopicsFunds);
-            log('listFunds=', listFunds);
 
             var data = {
                 SberUserUserFundId,
@@ -232,13 +228,11 @@ class UserFundController extends Controller {
                 listDirectionsTopicsFunds,
                 listFunds,
                 fundInfo: entities,
-                status: 'waitingForPay'
+                status: 'new'
             };
             var resInsert = await(orderService.insertPay(data));
             var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
-            // TODO: Test error for sber acqui
-            // !!! REMOVE ON PRODUCTION next line!!!
-            // sberAcquOrderNumber = 13;
+
             var responceSberAcqu = await(sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount,
@@ -251,7 +245,6 @@ class UserFundController extends Controller {
                     recurringExpiry: '21000101'
                 }),
             }));
-            log('responceSberAcqu=', responceSberAcqu);
             return orderService.handlerResponceSberAcqu(
                 sberAcquOrderNumber, responceSberAcqu
             );
