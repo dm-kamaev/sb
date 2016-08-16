@@ -3,7 +3,7 @@
 class NotFoundError extends Error {
   /**
    * @constructor
-   * @param {String} modelName
+   * @param {string} modelName
    * @param {Integer} id identifier of not found model
    */
     constructor(modelName, id) {

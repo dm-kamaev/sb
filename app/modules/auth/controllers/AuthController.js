@@ -233,7 +233,7 @@ class AuthController extends Controller {
         }
     };
     /**
-     * @api /auth/verify verify email
+     * @api {get} /auth/verify verify email
      * @apiName Verify email
      * @apiGroup Auth
      *
@@ -259,7 +259,7 @@ class AuthController extends Controller {
         }
     };
     /**
-     * @api /auth/send send verification mail
+     * @api {post} /auth/send send verification mail
      * @apiName send verification mail
      * @apiGroup Auth
      *

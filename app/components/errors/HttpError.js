@@ -3,7 +3,7 @@
 class NotFoundError extends Error {
   /**
    * @constructor
-   * @param {String} message
+   * @param {string} message
    * @param {Integer} statusCode
    */
     constructor(message, statusCode) {

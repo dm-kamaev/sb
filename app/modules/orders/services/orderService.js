@@ -54,7 +54,7 @@ exports.getOrderWithInludes = function(sberAcquOrderNumber) {
 };
 
 
-exports.updateInfo = function (sberAcquOrderNumber, data) {
+exports.updateInfo = function(sberAcquOrderNumber, data) {
     return await(sequelize.models.Order.update(data, {
         where: {
             sberAcquOrderNumber,
@@ -87,7 +87,7 @@ exports.getListDirectionTopicFunds = function(entities) {
 exports.handlerResponceSberAcqu = function(sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
         await(
-            exports.updateInfo(sberAcquOrderNumber,{
+            exports.updateInfo(sberAcquOrderNumber, {
                 sberAcquOrderId: responceSberAcqu.orderId,
                 status: 'waitingForPay'
             })

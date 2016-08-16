@@ -196,7 +196,7 @@ sberAcquiring.actionPayByBind = function(params) {
     };
     return await(new Promise((resolve, reject) => {
         request.post({
-            url: configSberAcquiring.hostname+'/payment/rest/paymentOrderBinding.do',
+            url: configSberAcquiring.hostname + '/payment/rest/paymentOrderBinding.do',
             formData: data
         }, function(err, httpResponse, body) {
             if (err) {

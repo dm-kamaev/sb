@@ -8,7 +8,7 @@ logger.info('querying orders...');
 sequelize.models.Order.findAll({
     where: {
         createdAt: {
-          $lt: new Date() - 1000 * 60 * 21
+            $lt: new Date() - 1000 * 60 * 21
         },
         sberAcquActionCode: null,
         status: 'waitingForPay'

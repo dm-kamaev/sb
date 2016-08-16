@@ -60,7 +60,7 @@ module.exports = class CallbackController extends Controller {
         }));
 
         if (eqOrderStatus.actionCode != 0) {
-            //handle somehow
+            // handle somehow
         } else {
             // create new card for user and set pay date
             await(userService.createCard(sberUser.id, eqOrderStatus.bindingInfo.bindingId));

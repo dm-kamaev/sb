@@ -120,18 +120,6 @@ class UserController extends Controller {
             return userView.renderUser(authUser, sberUser);
         }
     };
-
-    actionEmailVerify(ctx) {
-        var token = ctx.query.token;
-
-        jwt.verify(token, JWT_SECRET, (err, decoded) => {
-            console.log(decoded);
-        });
-    }
-
-    actionSendVerification(ctx) {
-
-    }
 };
 
 module.exports = UserController;

@@ -24,7 +24,9 @@ module.exports = (req, res, next) => {
 
 nonSPARouter.get('/', async((req, res) => {
     if (req.query.entity) {
-        var entity = await(entityService.getEntity(req.query.entity, null, true));
+        var entity = await(
+          entityService.getEntity(req.query.entity, null, true)
+        );
         if (entity) {
             var renderedEntity = entityView.renderEntity(entity);
             var dimensions = sizeOf(path.join(__dirname,
@@ -41,7 +43,7 @@ nonSPARouter.get('/', async((req, res) => {
     } else if (req.query.userFund) {
         var userFund = await(userFundService.getUserFund(req.query.userFund));
         if (userFund) {
-            var renderedUserFund = entityView.renderUserFund(UserFund);
+            var renderedUserFund = entityView.renderUserFund(userFund);
             return res.render('layout', {
                 // imageUrl: ... ,
                 url: `http://www58.lan:3000/#card?id=${req.query.userFund}`,

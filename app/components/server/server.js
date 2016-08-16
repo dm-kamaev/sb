@@ -17,7 +17,6 @@ const authRouter = require('../../modules/auth/router');
 const callbackRouter = require('../../modules/sberAcquiring/router');
 
 const headers = require('./middleware/headers');
-const cordovaSession = require('./middleware/session/cordova');
 const session = require('./middleware/session/session');
 const passport = require('./middleware/passport');
 const anonymous = require('./middleware/anonymous');
