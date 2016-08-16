@@ -1,0 +1,7 @@
+{
+    "username": "gorod",
+    "database": "sber-emulator",
+    "host": "localhost",
+    "dialect": "postgres",
+    "password": "123qwe"
+}
