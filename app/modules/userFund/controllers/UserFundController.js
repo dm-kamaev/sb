@@ -202,10 +202,19 @@ class UserFundController extends Controller {
      */
      // { "amount": 210 }
     actionSetAmount(actionContext) {
-        var sberUserId = actionContext.request.user.id;
-        var changer = 'user';
-        var userFundId = actionContext.request.user.userFund.id;
-        var amount = actionContext.data.amount;
+      var sberUserId = actionContext.request.user.id,
+          changer = 'user',
+          //now user can only pay to own userFund
+          userFundId = actionContext.data.userFundId ||
+                                  actionContext.request.user.userFund.id,
+          amount = actionContext.data.amount;
+
+      //check whether userFund enabled if he is not the owner
+        if (userFundId != actionContext.request.user.userFund.id) {
+            var userFund = await(userFundService.getUserFund(userFundId))
+            if (!userFund) throw new errors.NotFoundError('UserFund', userFundId);
+            if (!userFund.enabled) throw new errors.HttpError('UserFund disabled', 400);
+        }
         await(
             userFundService.setAmount(sberUserId, userFundId, changer, amount)
         );

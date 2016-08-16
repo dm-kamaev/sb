@@ -7,6 +7,7 @@ const entityService = require('../services/entityService');
 const entityView = require('../views/entityView');
 const userFundView = require('../../userFund/views/userFundView');
 const errors = require('../../../components/errors');
+const _ = require('lodash');
 
 class EntityController extends Controller {
     /**
@@ -46,7 +47,7 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
-            if (!Array.isArray(entities)) entities = [ entities ];
+            entities = _.castArray(entities).filter(Number.isInteger);
             var entity = await(entityService.createEntity(data));
             await(entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
@@ -176,12 +177,14 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
-            if (!Array.isArray(entities)) entities = [ entities ];
+            entities = _.castArray(entities).filter(Number.isInteger);
             delete data.id;
-            await(entityService.removeAssociations(id));
             var entity = await(entityService.updateEntity(id, data));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
-            await(entityService.associateEntities(id, entities));
+            if (entities.length) {
+                await(entityService.removeAssociations(id));
+                await(entityService.associateEntities(id, entities));
+            }
             return null;
         } catch (err) {
             if (err.name == 'SequelizeValidationError') {

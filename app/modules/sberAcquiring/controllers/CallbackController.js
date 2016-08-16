@@ -56,11 +56,11 @@ module.exports = class CallbackController extends Controller {
             sberAcquErrorMessage: eqOrderStatus.errorMessage,
             sberAcquActionCode: eqOrderStatus.actionCode,
             sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-            status: eqOrderStatus.actionCode ? 'failed' : 'paid'
+            status: eqOrderStatus.actionCode == 0 ? 'paid' : 'failed'
         }));
 
         if (eqOrderStatus.actionCode != 0) {
-            // handle somehow
+            //handle somehow
         } else {
             // create new card for user and set pay date
             await(userService.createCard(sberUser.id, eqOrderStatus.bindingInfo.bindingId));
