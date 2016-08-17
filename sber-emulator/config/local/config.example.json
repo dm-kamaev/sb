@@ -1,0 +1,7 @@
+{
+    "username": "gorod",
+    "password": "123qwe",
+    "database": "quiz-api",
+    "host": "localhost",
+    "dialect": "postgres"
+}

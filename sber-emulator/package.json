@@ -1,0 +1,41 @@
+{
+  "name": "sber-emulator",
+  "version": "1.0.0",
+  "scripts": {
+    "config": "node app/scripts/createConfig.js",
+    "migrate": "node app/scripts/migrate.js",
+    "rollback": "node app/scripts/rollback.js",
+    "update": "node node_modules/nodules/npmUpdate",
+    "lint-fix": "node_modules/.bin/eslint app/**/*.js --fix --config ./node_modules/nodules/.eslintrc || true"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/c7s/node-backend-boilerplate.git"
+  },
+  "dependencies": {
+    "asyncawait": "1.0.3",
+    "axios": "^0.13.1",
+    "body-parser": "1.15.0",
+    "connect-session-sequelize": "3.0.0",
+    "continuation-local-storage": "3.1.4",
+    "express": "4.13.1",
+    "express-session": "1.13.0",
+    "fs-extra": "0.28.0",
+    "i18n": "^0.8.3",
+    "lodash": "4.9.0",
+    "morgan": "1.6.1",
+    "nodules": "git+ssh://git@github.com:c7s/nodules.git#dev",
+    "passport": "0.3.2",
+    "pg": "4.4.2",
+    "pg-hstore": "2.3.2",
+    "sequelize": "3.23.x",
+    "sequelize-cli": "1.9.1",
+    "uuid": "^2.0.2"
+  },
+  "devDependencies": {
+    "gulp": "3.9.1",
+    "gulp-apidoc": "0.2.3",
+    "gulp-eslint": "2.0.0"
+  },
+  "private": true
+}

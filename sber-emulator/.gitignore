@@ -1,0 +1,24 @@
+# Logs
+/runtime/
+*.log
+
+#vim tmp files
+*.swp
+*.swo
+
+#jshint config
+.jshintrc
+
+# Dependency directory
+# https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
+public/*
+!/public/socket
+/app/app_front.js
+
+
+
+/node_modules
+/build
+/doc
+
+.directory
