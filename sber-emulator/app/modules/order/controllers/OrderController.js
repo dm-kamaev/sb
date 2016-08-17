@@ -49,6 +49,11 @@ class OrderController extends Controller {
             query.clientId, query.orderId));
         return OrderView.renderInfo(order);
     }
+
+    actionPayByBind(actionContext) {
+        var query = actionContext.request.query;
+        return await(OrderService.payByBind(query.mdOrder, query.bindingId));
+    }
 }
 
 module.exports = OrderController;

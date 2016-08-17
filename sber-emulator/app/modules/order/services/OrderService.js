@@ -19,7 +19,7 @@ OrderService.firstPay = async(function(paymentData) {
     return (await(models.Order.create(paymentData)));
 });
 
-OrderService.setPaid = async(function(orderId) {
+OrderService.setPaid = async(function(orderId, binding) {
     var order = await(models.Order.findOne({
         where: {
             orderId: orderId,
@@ -28,7 +28,7 @@ OrderService.setPaid = async(function(orderId) {
 
     if (order.dataValues.paid == 0) {
         await(order.update({
-            binding: uuid.v4(),
+            binding: binding || uuid.v4(),
             paid: true
         }));
     }
@@ -52,7 +52,7 @@ OrderService.sendCallback = async(function(orderId, delay) {
         }
     }));
     setTimeout(function() {
-        axios.get('http://localhost:3000/callback?', {
+        axios.get('/callback?', {
             params: {
                 mdOrder: order.dataValues.orderId,
                 orderNumber: order.dataValues.orderNumber,
@@ -61,5 +61,26 @@ OrderService.sendCallback = async(function(orderId, delay) {
             }
         });
     }, delay || 1);
+});
+
+OrderService.payByBind = async(function(orderId, binding) {
+    var bindingCount = await(models.Order.count({
+        where: {
+            binding: binding
+        }
+    }));
+    if (bindingCount > 0) {
+        var order =  await(OrderService.setPaid(orderId, binding));
+        return {
+            redirect: config.backendUrl+'/#success?orderId='+orderId,
+            info: 'Ваш платёж обработан, происходит переадресация...',
+            errorCode: 0
+        }
+    } else {
+        return {
+            errorCode: 2,
+            errorMessage: 'Связка не найдена'
+        }
+    }
 });
 module.exports = OrderService;

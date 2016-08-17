@@ -27,8 +27,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         binding: {
             allowNull: true,
-            type: DataTypes.UUID,
-            unique: true
+            type: DataTypes.UUID
         },
         createdAt: {
             type: DataTypes.DATE
