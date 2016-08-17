@@ -8,7 +8,7 @@ const acquiringService = require('../services/sberAcquiring');
 const orderService = require('../../orders/services/orderService');
 const userService = require('../../user/services/userService');
 const userFundService = require('../../userFund/services/userFundService');
-const sberConfig = require('../../../../config/config_sberAcquiring.json');
+const sberConfig = require('../../../../config/config-sberAcquiring.json');
 const moment = require('moment');
 
 module.exports = class CallbackController extends Controller {

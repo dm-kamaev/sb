@@ -3,7 +3,7 @@
 // const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 // const config = require('../../../../config/config.json');
-const configSberAcquiring = require('../../../../config/config_sberAcquiring.json');
+const configSberAcquiring = require('../../../../config/config-sberAcquiring.json');
 const axios = require('axios').create({ baseURL: configSberAcquiring.hostname });
 const orderService = require('../../orders/services/orderService.js');
 const errors = require('../../../components/errors');
