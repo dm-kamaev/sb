@@ -1,14 +1,14 @@
 'use strict';
 
-// const async = require('asyncawait/async');
 const await = require('asyncawait/await');
-// const config = require('../../../../config/config.json');
 const configSberAcquiring = require('../../../../config/config-sberAcquiring.json');
-const axios = require('axios').create({ baseURL: configSberAcquiring.hostname });
+const axios = require('axios').create({
+  baseURL: configSberAcquiring.hostname,
+  validateStatus: (status) => { return status >= 200 && status < 500; },
+});
 const orderService = require('../../orders/services/orderService.js');
 const errors = require('../../../components/errors');
 const request = require('request');
-const log = console.log;
 
 const sberAcquiring = {};
 
@@ -50,13 +50,14 @@ sberAcquiring.firstPay = function(params) {
                 jsonParams: params.jsonParams,
             }
         })).data;
-    } catch (err) {
+    } catch (e) {
         await(orderService.updateInfo(
           params.orderNumber, { status: 'eqOrderNotCreated' })
         );
+        var error = handlerHttpError(e) || JSON.stringify(e);
         throw new errors.HttpError(
-          'Failed connection with sberbank acquiring',
-          500
+            'Failed connection with sberbank acquiring. Error: '+error,
+            500
         );
     }
 };
@@ -129,7 +130,11 @@ sberAcquiring.getStatusAndGetBind = function(params) {
             }
         })).data;
     } catch (e) {
-        throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
+        var error = handlerHttpError(e) || JSON.stringify(e);
+        throw new errors.HttpError(
+            'Failed connection with sberbank acquiring. Error: '+error,
+            500
+        );
     }
 };
 
@@ -167,7 +172,11 @@ sberAcquiring.actionCreatePayByBind = function(params) {
             }
         })).data;
     } catch (e) {
-        throw new errors.HttpError('Failed connection with sberbank acquiring', 500);
+        var error = handlerHttpError(e) || JSON.stringify(e);
+        throw new errors.HttpError(
+            'Failed connection with sberbank acquiring. Error: '+error,
+            500
+        );
     }
 };
 
@@ -202,11 +211,22 @@ sberAcquiring.actionPayByBind = function(params) {
             if (err) {
                 reject(
                   new errors.HttpError(
-                  'Failed connection with sberbank acquiring',
-                  500)
+                      'Failed connection with sberbank acquiring. Error: '+JSON.stringify(err),
+                      500
+                  )
                 );
             } else {
-                resolve(body);
+                if (httpResponse.statusCode === 200) {
+                    resolve(body);
+                } else {
+                    var error = handlerHttpError(httpResponse);
+                    reject(
+                        new errors.HttpError(
+                            'Failed connection with sberbank acquiring. Error: '+error,
+                            500
+                        )
+                    );
+                }
             }
         });
     }));
@@ -215,42 +235,23 @@ sberAcquiring.actionPayByBind = function(params) {
 module.exports = sberAcquiring;
 
 
-
-/* EXAMPLE USE */
-// async(()=>{
-//   var responceSberAcqu = await(sberAcquiring.getStatusAndGetBind({
-//     orderNumber: 38,
-//     orderId: '3ec6b463-3637-423f-9c23-d9f41f7bd85b',
-//     clientId: 73,
-//   }));
-//   // 73 bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db'
-//   console.log(responceSberAcqu);
-// })();
-
-// actionCreatePayByBind();
-// function actionCreatePayByBind () {
-//     async(()=>{
-//       var responceSberAcqu = await(sberAcquiring.actionCreatePayByBind({
-//         amount:      333,
-//         orderNumber: 76,
-//         returnUrl:   config.hostname+'#sucess',
-//         failUrl:     config.hostname+'#failed',
-//         language:    'ru',
-//         clientId:    73,
-//       }));
-//       // orderId: '6984845d-f910-4b49-9fed-9aa3159e2b9b'
-//       console.log('actionCreatePayByBind=', responceSberAcqu);
-//     })();
-// }
-
-
-// actionPayByBind();
-// function actionPayByBind () {
-//     async(()=>{
-//       var responceSberAcqu = await(sberAcquiring.actionPayByBind({
-//         orderId:   '6984845d-f910-4b49-9fed-9aa3159e2b9b',
-//         bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db',
-//       }));
-//       console.log('responceSberAcqu=', responceSberAcqu);
-//     })();
-// }
+function handlerHttpError(e) {
+    var error = '';
+    var headers = '', status = e.status, data = e.data;
+    if (e.headers && e.status && e.data) { // axios
+        headers = JSON.stringify(e.headers);
+        status = e.status;
+        data = e.data;
+    } else if (e.headers && e.statusCode, e.statusMessage) { // request
+        headers = JSON.stringify(e.headers);
+        status = e.statusCode;
+        data = e.statusMessage;
+    }
+    if (headers && status && data) {
+        error += 'Headers: ' + headers + '\n';
+        error += 'Status:  ' + status + '\n';
+        error += 'Data:    ' + data + '\n';
+        return error;
+    }
+    return '';
+}
