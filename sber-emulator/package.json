@@ -1,11 +1,12 @@
 {
-  "name": "node-backend-boilerplate",
+  "name": "sber-emulator",
   "version": "1.0.0",
   "scripts": {
     "config": "node app/scripts/createConfig.js",
     "migrate": "node app/scripts/migrate.js",
     "rollback": "node app/scripts/rollback.js",
-    "update": "node node_modules/nodules/npmUpdate"
+    "update": "node node_modules/nodules/npmUpdate",
+    "lint-fix": "node_modules/.bin/eslint app/**/*.js --fix --config ./node_modules/nodules/.eslintrc || true"
   },
   "repository": {
     "type": "git",
@@ -13,6 +14,7 @@
   },
   "dependencies": {
     "asyncawait": "1.0.3",
+    "axios": "^0.13.1",
     "body-parser": "1.15.0",
     "connect-session-sequelize": "3.0.0",
     "continuation-local-storage": "3.1.4",
@@ -27,7 +29,8 @@
     "pg": "4.4.2",
     "pg-hstore": "2.3.2",
     "sequelize": "3.23.x",
-    "sequelize-cli": "1.9.1"
+    "sequelize-cli": "1.9.1",
+    "uuid": "^2.0.2"
   },
   "devDependencies": {
     "gulp": "3.9.1",

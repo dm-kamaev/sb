@@ -5,8 +5,8 @@ const bodyParser = require('body-parser');
 const initLogging = require('./middleware/access-log');
 const initHeaders = require('./middleware/headers');
 const initRoutes = require('./routes');
-//const initPassport = require('./middleware/passport');
-//const initSession = require('./middleware/sessions');
+// const initPassport = require('./middleware/passport');
+// const initSession = require('./middleware/sessions');
 const ControllerError = require('nodules/controller/ControllerError');
 const i18n = require('../i18n');
 
@@ -19,8 +19,8 @@ initHeaders(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-//initSession(app);
-//initPassport(app);
+// initSession(app);
+// initPassport(app);
 initRoutes(app);
 
 

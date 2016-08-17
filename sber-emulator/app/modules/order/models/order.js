@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function (sequelize, DataTypes) {
+module.exports = function(sequelize, DataTypes) {
     var Order = sequelize.define('Order', {
         orderId: {
             allowNull: false,
@@ -39,9 +39,9 @@ module.exports = function (sequelize, DataTypes) {
     }, {
         tableName: 'Order',
         classMethdos: {
-            associate: function (models) {
+            associate: function(models) {
             }
         }
     });
     return Order;
-}
+};

@@ -12,7 +12,7 @@ module.exports = class extends ControllerError {
     constructor(exception) {
         super(exception);
         this.status = 200;
-        this.code = 1;
-        this.message = i18n.__('Order already processed');
+        this.errorCode = 1;
+        this.errorMessage = i18n.__('Order already processed');
     }
 };
