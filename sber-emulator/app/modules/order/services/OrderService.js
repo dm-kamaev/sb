@@ -5,7 +5,7 @@ const models = require('../../../components/sequelize').models;
 const logger = require('../../../components/logger').getLogger('main');
 const uuid = require('uuid');
 const config = require('../../../../config/urls.json');
-const axios = require('axios').create({baseUrl: config.backendUrl});
+const axios = require('axios');//.create({baseUrl: config.backendUrl});
 
 
 
@@ -52,14 +52,14 @@ OrderService.sendCallback = async(function(orderId, delay) {
         }
     }));
     setTimeout(function() {
-        axios.get('/callback?', {
+        axios.get('http://www60.lan:3000/callback', {
             params: {
                 mdOrder: order.dataValues.orderId,
                 orderNumber: order.dataValues.orderNumber,
                 operation: 'DEPOSITED',
-                status: order.dataValues.paid == true ? 2 : 0
+                status: order.dataValues.paid === true ? 2 : 0
             }
-        });
+        }).catch(e => console.log(e));
     }, delay || 1);
 });
 
