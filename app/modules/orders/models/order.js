@@ -2,14 +2,13 @@
 
 module.exports = function(sequelize, DataTypes) {
     var Order = sequelize.define('Order', {
-        SberUserUserFundId: {
+        userFundSubscriptionId: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'SberUserUserFund',
+                model: 'UserFundSubsription',
                 key: 'id'
             },
-            allowNull: false,
-            field: 'sberUserUserFundId'
+            allowNull: false
         },
         sberAcquOrderNumber: {
             allowNull: false,
@@ -72,9 +71,9 @@ module.exports = function(sequelize, DataTypes) {
         paranoid: true,
         classMethods: {
             associate: function(models) {
-                Order.belongsTo(models.SberUserUserFund, {
-                    as: 'sberUserUserFund',
-                    foreginKey: 'sberUserUserFundId'
+                Order.belongsTo(models.UserFundSubsription, {
+                    as: 'userFundSubscription',
+                    foreignKey: 'userFundSubscriptionId'
                 });
             }
         }

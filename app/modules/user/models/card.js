@@ -28,7 +28,7 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 Card.belongsTo(models.SberUser, {
                     as: 'owner',
-                    foreginKey: 'sberUserId'
+                    foreignKey: 'sberUserId'
                 });
             }
         }

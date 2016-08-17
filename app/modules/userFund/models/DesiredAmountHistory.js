@@ -8,14 +8,14 @@ module.exports = function(sequelize, DataTypes) {
             primaryKey: true,
             type: DataTypes.INTEGER,
         },
-        SberUserUserFundId: {
+        subscriptionId: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'SberUserUserFund',
+                model: 'UserFundSubsription',
                 key: 'id'
             },
             allowNull: false,
-            field: 'sberUserUserFundId'
+            field: 'userFundSubscriptionId'
         },
         amount: {
             type: DataTypes.INTEGER,

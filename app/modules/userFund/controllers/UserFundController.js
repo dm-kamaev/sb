@@ -226,21 +226,25 @@ class UserFundController extends Controller {
         await(
             userFundService.setAmount(sberUserId, userFundId, changer, amount)
         );
-        var SberUserUserFund = await(
-            userFundService.getSberUserUserFundId(sberUserId, userFundId)
-        );
-        var SberUserUserFundId = SberUserUserFund.dataValues.id;
 
+        console.log('here1');
+        var subscription = await(
+            userFundService.getUserFundSubscriptionId(sberUserId, userFundId)
+        );
+        var userFundSubscriptionId = subscription.dataValues.id;
+        console.log('here2');
         var card = await(userService.findSberUserById(sberUserId)),
             currentCardId = card.dataValues.currentCardId;
         // if user with unconfirmed payment, then do first pay
         if (!currentCardId) {
             var entities = await(userFundService.getEntities(userFundId));
+            console.log('here3');
             var res = orderService.getListDirectionTopicFunds(entities),
                 listDirectionsTopicsFunds = res[0], listFunds = res[1];
 
+            console.log('here4');
             var data = {
-                SberUserUserFundId,
+                userFundSubscriptionId,
                 amount,
                 listDirectionsTopicsFunds,
                 listFunds,

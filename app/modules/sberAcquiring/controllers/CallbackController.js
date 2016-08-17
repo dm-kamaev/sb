@@ -31,9 +31,9 @@ module.exports = class CallbackController extends Controller {
             status: 'confirmingPayment'
         }));
 
-        var paymentId = order.sberUserUserFund.currentAmount.id,
-            userFund = order.sberUserUserFund.userFund,
-            sberUser = order.sberUserUserFund.sberUser;
+        var paymentId = order.userFundSubscription.currentAmount.id,
+            userFund = order.userFundSubscription.userFund,
+            sberUser = order.userFundSubscription.sberUser;
 
         var eqOrderStatus;
 
@@ -41,7 +41,7 @@ module.exports = class CallbackController extends Controller {
             eqOrderStatus = await(acquiringService.getStatusAndGetBind({
                 sberAcquOrderNumber,
                 orderId: order.sberAcquOrderId,
-                clientId: order.sberUserUserFund.sberUser.id
+                clientId: order.userFundSubscription.sberUser.id
             }));
         } catch (err) {
             await(orderService.updateInfo(orderNumber, {
@@ -67,8 +67,8 @@ module.exports = class CallbackController extends Controller {
             await(userFundService.updateDesiredAmountHistory(paymentId, {
                 payDate: moment().add(1, 'month').toDate()
             }));
-            var suufId = order.sberUserUserFund.id;
-            await(userFundService.updateSberUserUserFund(suufId, {
+            var subscriptionId = order.userFundSubscription.id;
+            await(userFundService.updateUserFundSubscription(subscriptionId, {
                 enabled: true
             }));
             if (userFund.id == sberUser.userFund.id) {

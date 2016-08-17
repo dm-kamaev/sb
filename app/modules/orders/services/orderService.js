@@ -17,7 +17,7 @@ const entityService = require('../../entity/services/entityService');
  */
 exports.insertPay = function(data) {
     return await(sequelize.models.Order.create({
-        SberUserUserFundId: data.SberUserUserFundId,
+        userFundSubscriptionId: data.userFundSubscriptionId,
         amount: data.amount,
         directionsTopicsFunds: data.listDirectionsTopicsFunds,
         funds: data.listFunds,
@@ -33,8 +33,8 @@ exports.getOrderWithInludes = function(sberAcquOrderNumber) {
             sberAcquOrderNumber
         },
         include: [{
-            model: sequelize.models.SberUserUserFund,
-            as: 'sberUserUserFund',
+            model: sequelize.models.UserFundSubsription,
+            as: 'userFundSubscription',
             include: [{
                 model: sequelize.models.SberUser,
                 as: 'sberUser',

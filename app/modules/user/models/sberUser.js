@@ -49,13 +49,13 @@ module.exports = function(sequelize, DataTypes) {
                 });
                 SberUser.belongsToMany(models.UserFund, {
                     as: 'friendFund',
-                    through: 'SberUserUserFund',
-                    foreginKey: 'sberUserId',
+                    through: 'UserFundSubsription',
+                    foreignKey: 'sberUserId',
                     otherKey: 'userFundId'
                 });
                 SberUser.belongsTo(models.Card, {
                     as: 'currentCard',
-                    foreginKey: 'currentCardId'
+                    foreignKey: 'currentCardId'
                 });
             }
         }

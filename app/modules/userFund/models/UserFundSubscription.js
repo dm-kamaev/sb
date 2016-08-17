@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-    var SberUserUserFund = sequelize.define('SberUserUserFund', {
+    var UserFundSubsription = sequelize.define('UserFundSubsription', {
         id: {
             allowNull: false,
             autoIncrement: true,
@@ -43,32 +43,32 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE
         }
     }, {
-        tableName: 'SberUserUserFund',
+        tableName: 'UserFundSubsription',
         unserscored: true,
         classMethods: {
             associate: function(models) {
-                SberUserUserFund.belongsTo(models.DesiredAmountHistory, {
+                UserFundSubsription.belongsTo(models.DesiredAmountHistory, {
                     as: 'currentAmount',
-                    foreginKey: 'currentAmountId'
+                    foreignKey: 'currentAmountId'
                 });
-                SberUserUserFund.hasMany(models.DesiredAmountHistory, {
+                UserFundSubsription.hasMany(models.DesiredAmountHistory, {
                     as: 'amountChangeHistory',
-                    foreginKey: 'sberUserUserFundId'
+                    foreignKey: 'userFundSubscriptionId'
                 });
-                SberUserUserFund.hasMany(models.Order, {
+                UserFundSubsription.hasMany(models.Order, {
                     as: 'order',
-                    foreginKey: 'sberUserUserFundId'
+                    foreignKey: 'userFundSubscriptionId'
                 });
-                SberUserUserFund.belongsTo(models.SberUser, {
+                UserFundSubsription.belongsTo(models.SberUser, {
                     as: 'sberUser',
-                    foreginKey: 'sberUserId'
+                    foreignKey: 'sberUserId'
                 });
-                SberUserUserFund.belongsTo(models.UserFund, {
+                UserFundSubsription.belongsTo(models.UserFund, {
                     as: 'userFund',
-                    foreginKey: 'userFundId'
+                    foreignKey: 'userFundId'
                 });
             }
         }
     });
-    return SberUserUserFund;
+    return UserFundSubsription;
 };

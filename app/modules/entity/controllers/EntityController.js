@@ -47,7 +47,9 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
-            entities = _.castArray(entities).filter(Number.isInteger);
+            entities = _.castArray(entities)
+                .map(e => parseInt(e))
+                .filter(Number.isInteger);
             var entity = await(entityService.createEntity(data));
             await(entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
@@ -177,7 +179,9 @@ class EntityController extends Controller {
         try {
             var data = actionContext.request.body,
                 entities = data.entities;
-            entities = _.castArray(entities).filter(Number.isInteger);
+            entities = _.castArray(entities)
+                .map(e => parseInt(e))
+                .filter(Number.isInteger);
             delete data.id;
             var entity = await(entityService.updateEntity(id, data));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);

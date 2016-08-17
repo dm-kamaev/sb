@@ -115,23 +115,23 @@ exports.toggleEnabled = function(id, isEnabled) {
 
 exports.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
     return await(sequelize.sequelize_.transaction(t => {
-        return sequelize.models.SberUserUserFund.findOrCreate({
+        return sequelize.models.UserFundSubsription.findOrCreate({
             where: {
                 userFundId,
                 sberUserId
             }
         })
-            .spread(suuf => suuf)
-            .then(suuf => {
+            .spread(subscription => subscription)
+            .then(subscription => {
                 return sequelize.models.DesiredAmountHistory.create({
-                    SberUserUserFundId: suuf.id,
+                    subscriptionId: subscription.id,
                     payDate: payDate || Date.now(),
                     changer,
                     amount
                 });
             })
             .then(amount => {
-                return sequelize.models.SberUserUserFund.update({
+                return sequelize.models.UserFundSubsription.update({
                     currentAmountId: amount.id
                 }, {
                     where: {
@@ -147,7 +147,7 @@ exports.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
 };
 
 exports.getCurrentAmount = function(sberUserId, userFundId) {
-    var suuf = await(sequelize.models.SberUserUserFund.findOne({
+    var suuf = await(sequelize.models.UserFundSubsription.findOne({
         where: {
             sberUserId,
             userFundId
@@ -162,8 +162,8 @@ exports.getCurrentAmount = function(sberUserId, userFundId) {
 };
 
 
-exports.getSberUserUserFundId = function(sberUserId, userFundId) {
-    return await(sequelize.models.SberUserUserFund.findOne({
+exports.getUserFundSubscriptionId = function(sberUserId, userFundId) {
+    return await(sequelize.models.UserFundSubsription.findOne({
         where: {
             sberUserId,
             userFundId
@@ -179,8 +179,8 @@ exports.updateDesiredAmountHistory = function(id, data) {
     }));
 };
 
-exports.updateSberUserUserFund = function(id, data) {
-    return await(sequelize.models.SberUserUserFund.update(data, {
+exports.updateUserFundSubscription = function(id, data) {
+    return await(sequelize.models.UserFundSubsription.update(data, {
         where: {
             id
         }
