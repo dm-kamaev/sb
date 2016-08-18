@@ -1,17 +1,15 @@
 /* eslint-disable require-jsdoc, valid-jsdoc*/
 'use strict';
 
-const config = require('../../../../config/config.json');
 const Controller = require('nodules/controller').Controller;
 // const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
-const userFundService = require('../services/userFundService');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityView = require('../../entity/views/entityView');
+const userFundService = require('../services/userFundService');
 const userService = require('../../user/services/userService');
-const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const userFundView = require('../views/userFundView');
 const log = console.log;
 
@@ -217,8 +215,8 @@ class UserFundController extends Controller {
                                   actionContext.request.user.userFund.id,
             amount = actionContext.data.amount;
 
-      // check whether userFund enabled if he is not the owner
-        if (userFundId != actionContext.request.user.userFund.id) {
+        // check whether userFund enabled if he is not the owner
+        if (userFundId !== actionContext.request.user.userFund.id) {
             var userFund = await(userFundService.getUserFund(userFundId));
             if (!userFund) throw new errors.NotFoundError('UserFund', userFundId);
             if (!userFund.enabled) throw new errors.HttpError('UserFund disabled', 400);
@@ -227,52 +225,18 @@ class UserFundController extends Controller {
             userFundService.setAmount(sberUserId, userFundId, changer, amount)
         );
 
-        console.log('here1');
         var subscription = await(
             userFundService.getUserFundSubscriptionId(sberUserId, userFundId)
         );
-        var userFundSubscriptionId = subscription.dataValues.id;
-        console.log('here2');
-        var card = await(userService.findSberUserById(sberUserId)),
-            currentCardId = card.dataValues.currentCardId;
-        // if user with unconfirmed payment, then do first pay
-        if (!currentCardId) {
-            var entities = await(userFundService.getEntities(userFundId));
-            console.log('here3');
-            var res = orderService.getListDirectionTopicFunds(entities),
-                listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
-                listFunds = res.listFunds;
 
-            console.log('here4');
-            var data = {
-                userFundSubscriptionId,
-                amount,
-                listDirectionsTopicsFunds,
-                listFunds,
-                fundInfo: entities,
-                status: 'new'
-            };
-            var resInsert = await(orderService.insertPay(data));
-            var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
-
-            var responceSberAcqu = await(sberAcquiring.firstPay({
-                orderNumber: sberAcquOrderNumber,
-                amount,
-                returnUrl: config.hostname + '#success',
-                failUrl: config.hostname + '#failed',
-                language: 'ru',
-                clientId: sberUserId,
-                jsonParams: JSON.stringify({
-                    recurringFrequency: '10',
-                    recurringExpiry: '21000101'
-                }),
-            }));
-            return orderService.handlerResponceSberAcqu(
-                sberAcquOrderNumber, responceSberAcqu
-            );
-        } else {
-            return { message: 'Вы изменили сумму ежемесячного платежа.' };
-        }
+        var card = await(userService.findCardBySberUserId(sberUserId));
+        var params = {
+            userFundId,
+            amount,
+            userFundSubscriptionId: subscription.dataValues.id,
+            currentCardId: card.dataValues.currentCardId,
+        };
+        return orderService.firstPayOrSendMessage(params);
     }
     /**
      * @api {get} /user-fund/amount get amount
