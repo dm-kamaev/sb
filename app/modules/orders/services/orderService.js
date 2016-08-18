@@ -1,30 +1,12 @@
 'use strict';
 
+const config = require('../../../../config/config.json');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
-
-
-/**
- * create order in our base
- * @param  {[int]}      data.SberUserUserFundId
- * @param  {[int]}      data.amount
- * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
- * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
- * @param  {[array]}    data.fundInfo  [ entities as in database ]
- * @return {[object]}   [ get id insert ]
- */
-exports.insertPay = function(data) {
-    return await(sequelize.models.Order.create({
-        userFundSubscriptionId: data.userFundSubscriptionId,
-        amount: data.amount,
-        directionsTopicsFunds: data.listDirectionsTopicsFunds,
-        funds: data.listFunds,
-        fundInfo: data.fundInfo,
-        status: data.status
-    }));
-};
+const userFundService = require('../../userFund/services/userFundService');
+const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 
 
 exports.getOrderWithInludes = function(sberAcquOrderNumber) {
@@ -55,6 +37,74 @@ exports.getOrderWithInludes = function(sberAcquOrderNumber) {
 
 
 /**
+ * if first pay for user
+ * then create order in our system and in sberbank acquring
+ * else return message
+ * @param  {[obj]}  {}
+ * @return {[obj]}
+ */
+exports.firstPayOrSendMessage = function (params) {
+    // if user with unconfirmed payment, then do first pay
+    if (!params.currentCardId) {
+        var entities = await(userFundService.getEntities(params.userFundId));
+        var res = getListDirectionTopicFunds(entities),
+            listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
+            listFunds = res.listFunds;
+
+        var data = {
+            userFundSubscriptionId: params.userFundSubscriptionId,
+            amount: params.amount,
+            listDirectionsTopicsFunds,
+            listFunds,
+            fundInfo: entities,
+            status: 'new'
+        };
+        var resInsert = await(insertPay(data));
+        var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
+
+        var responceSberAcqu = await(sberAcquiring.firstPay({
+            orderNumber: sberAcquOrderNumber,
+            amount: params.amount,
+            returnUrl: config.hostname + '#success',
+            failUrl: config.hostname + '#failed',
+            language: 'ru',
+            clientId: params.sberUserId,
+            jsonParams: JSON.stringify({
+                recurringFrequency: '10',
+                recurringExpiry: '21000101'
+            }),
+        }));
+        return handlerResponceSberAcqu(
+            sberAcquOrderNumber, responceSberAcqu
+        );
+    } else {
+        return { message: 'Вы изменили сумму ежемесячного платежа.' };
+    }
+}
+
+
+/**
+ * create order in our base
+ * @param  {[int]}      data.SberUserUserFundId
+ * @param  {[int]}      data.amount
+ * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
+ * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
+ * @param  {[array]}    data.fundInfo  [ entities as in database ]
+ * @return {[object]}   [ get id insert ]
+ */
+function insertPay (data) {
+    return await(sequelize.models.Order.create({
+        userFundSubscriptionId: data.userFundSubscriptionId,
+        amount: data.amount,
+        directionsTopicsFunds: data.listDirectionsTopicsFunds,
+        funds: data.listFunds,
+        fundInfo: data.fundInfo,
+        status: data.status
+    }));
+}
+
+
+/**
  * update info in Orders(table) for order
  * @param  {[int]}  sberAcquOrderNumber
  * @param  {[obj]}  data
@@ -78,7 +128,7 @@ exports.updateInfo = function(sberAcquOrderNumber, data) {
  *           listFunds:                 [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
  *         }
  */
-exports.getListDirectionTopicFunds = function(entities) {
+function getListDirectionTopicFunds (entities) {
     var listDirectionsTopicsFunds = [], listFunds = [];
     for (var i = 0, l = entities.length; i < l; i++) {
         var entity = entities[i].dataValues, type = entity.type;
@@ -90,16 +140,16 @@ exports.getListDirectionTopicFunds = function(entities) {
         }
     }
     return { listDirectionsTopicsFunds, listFunds };
-};
+}
 
 
 /**
  * study responce sberbank acquiring
  * @param  {[int]}  sberAcquOrderNumber
  * @param  {[obj]}  responceSberAcqu
- * @return {[obj]}  { orderId,  responceSberAcqu.formUrl } || { errorCode, errorMessage }
+ * @return {[obj]}  { orderId, formUrl } || { errorCode, errorMessage }
  */
-exports.handlerResponceSberAcqu = function(sberAcquOrderNumber, responceSberAcqu) {
+function handlerResponceSberAcqu (sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
         await(
             exports.updateInfo(sberAcquOrderNumber, {
@@ -121,4 +171,4 @@ exports.handlerResponceSberAcqu = function(sberAcquOrderNumber, responceSberAcqu
         await(exports.updateInfo(sberAcquOrderNumber, data));
         return { errorCode, errorMessage };
     }
-};
+}

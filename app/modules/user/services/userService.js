@@ -34,6 +34,21 @@ exports.findSberUserById = function(id) {
     }));
 };
 
+
+/**
+ * if verify card user then exist data else null
+ * @param  {[int]} sberUserId [description]
+ * @return {[type]}           [description]
+ */
+exports.findCardBySberUserId = function (sberUserId) {
+    return await(sequelize.models.SberUser.findOne({
+        where: {
+            id: sberUserId
+        }
+    }));
+};
+
+
 exports.findSberUserByAuthId = function(authId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
