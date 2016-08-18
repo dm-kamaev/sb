@@ -4,7 +4,7 @@ var express = require('express'),
 var OrderController = require('./controllers/OrderController'),
     orderController = new OrderController();
 
-router.get('/payment/rest/register.do', orderController.actionFirstPay);
+router.get('/payment/rest/register.do', orderController.actionCreateOrder);
 router.get('/pay/:orderId/wait/:delay', orderController.actionSetPaid);
 router.get('/payment/rest/getOrderStatusExtended.do',
     orderController.actionGetInfo);

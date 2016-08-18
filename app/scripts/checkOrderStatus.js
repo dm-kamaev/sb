@@ -4,11 +4,13 @@ const logger = require('../components/logger').getLogger('main');
 const axios = require('axios');
 const sequelize = require('../components/sequelize');
 
+var immediate = process.argv.some(e => e === 'immediate');
+
 logger.info('querying orders...');
 sequelize.models.Order.findAll({
     where: {
         createdAt: {
-            $lt: new Date() - 1000 * 60 * 21
+            $lt: immediate ? new Date() : new Date() - 1000 * 60 * 21
         },
         sberAcquActionCode: null,
         status: 'waitingForPay'

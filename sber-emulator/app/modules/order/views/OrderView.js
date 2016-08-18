@@ -10,10 +10,9 @@ OrderView.renderOrder = function(orderData) {
     return result;
 };
 
-OrderView.renderInfo = function(orderData, errorData, actionData) {
+OrderView.renderInfo = function(orderData) {
     var result = {
-        errorCode: errorData == undefined ? 0 : errorData.code,
-        // errorMessage: errorData.message,
+        errorCode: 0,
         actionCode: orderData.paid ? 0 : -101,
         actionMessage: '',
         orderStatus: orderData.paid ? 2 : 0,

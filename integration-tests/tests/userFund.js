@@ -2,6 +2,8 @@
 
 const chakram = require('chakram');
 const expect = chakram.expect;
+const exec = require('child_process').execSync;
+const path = require('path');
 
 var extend = require('util')._extend;
 
@@ -48,6 +50,14 @@ describe('User fund Actions Test', function() {
         });
     });
 
+    before('Register', function() {
+        var url = services.url.concatUrl('auth/register');
+        var user = services.user.genRandomUser();
+        var response = chakram.post(url, user);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
     before('Load entities', function() {
         var entities = services.entity.generateEntities(3);
         var url = services.url.concatUrl('entity');
@@ -90,6 +100,133 @@ describe('User fund Actions Test', function() {
         var response = chakram.get(url);
         expect(response).to.have.status(200);
         expect(response).entitiesDeleted();
+        return chakram.wait();
+    });
+});
+
+describe('Success first payment test', function() {
+    var userFundId,
+        paymentRedirectUrl,
+        orderId;
+
+    before('Add methods', function () {
+        chakram.addMethod('fundEnabledAndIdSaved', function(respObj) {
+            var fund = respObj.body.userFund;
+            this.assert(
+                fund.enabled,
+                'User fund is not enabled!'
+            )
+            userFundId = fund.id;
+            return chakram.wait();
+        });
+
+        chakram.addMethod('redirectRecievedAndSaved', function(respObj) {
+            var redirect = respObj.body;
+            this.assert(
+                !(redirect.errorCode = undefined),
+                'Acquiring returned error: ' +
+                redirect.errorMessage
+            );
+            paymentRedirectUrl = redirect.formUrl;
+            orderId = redirect.orderId;
+            return chakram.wait();
+        });
+    });
+
+    it('Should create user fund', function() {
+        var url = services.url.concatUrl('user/user-fund');
+        var fund = services.userFund.generateFund();
+        var response = chakram.post(url, fund);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    it('Should get user with enabled fund', function() {
+        var url = services.url.concatUrl('user');
+        var response = chakram.get(url);
+        expect(response).to.have.status(200);
+        expect(response).is.fundEnabledAndIdSaved();
+        return chakram.wait();
+    });
+
+    it('Should set amount', function() {
+        var url = services.url.concatUrl('user-fund/amount');
+        var amount = services.userFund.generateAmount(userFundId);
+        var response = chakram.post(url, amount);
+        expect(response).to.have.status(200);
+        expect(response).is.redirectRecievedAndSaved();
+        return chakram.wait();
+    });
+
+    it('Should pay', function() {
+        var url = paymentRedirectUrl;
+        var response = chakram.get(url);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    it('Should get amount', function () {
+        var url = services.url.concatUrl('user-fund/amount');
+        var response = chakram.get(url);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+});
+
+describe('Unsuccess first payment test', function() {
+    var userFundId,
+        paymentRedirectUrl,
+        orderId;
+
+    before('Logout', function() {
+        var url = services.url.concatUrl('auth/logout');
+        var response = chakram.post(url);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    before('Register', function() {
+        var url = services.url.concatUrl('auth/register');
+        var user = services.user.genRandomUser();
+        var response = chakram.post(url, user);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    it('Should create user fund', function() {
+        var url = services.url.concatUrl('user/user-fund');
+        var fund = services.userFund.generateFund();
+        var response = chakram.post(url, fund);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    it('Should get user with enabled fund', function() {
+        var url = services.url.concatUrl('user');
+        var response = chakram.get(url);
+        expect(response).to.have.status(200);
+        expect(response).is.fundEnabledAndIdSaved();
+        return chakram.wait();
+    });
+
+    it('Should set amount', function() {
+        var url = services.url.concatUrl('user-fund/amount');
+        var amount = services.userFund.generateAmount(userFundId);
+        var response = chakram.post(url, amount);
+        expect(response).to.have.status(200);
+        expect(response).is.redirectRecievedAndSaved();
+        return chakram.wait();
+    });
+
+    it('Should run cronscript', function () {
+        exec('node ../app/scripts/checkOrderStatus.js immediate', (error, stdout,  stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+            console.log(`stderr: ${stderr}`);
+        });
         return chakram.wait();
     });
 });
