@@ -8,7 +8,9 @@ const axios = require('axios').create({
     baseURL: `http://${config.host}:${config.port}`
 });
 
-exports.findSberUserById = function(id) {
+var UserService = {};
+
+UserService.findSberUserById = function(id) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id
@@ -40,7 +42,7 @@ exports.findSberUserById = function(id) {
  * @param  {[int]} sberUserId [description]
  * @return {[type]}           [description]
  */
-exports.findCardBySberUserId = function (sberUserId) {
+UserService.findCardBySberUserId = function (sberUserId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id: sberUserId
@@ -48,8 +50,7 @@ exports.findCardBySberUserId = function (sberUserId) {
     }));
 };
 
-
-exports.findSberUserByAuthId = function(authId) {
+UserService.findSberUserByAuthId = function(authId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             authId
@@ -62,7 +63,7 @@ exports.findSberUserByAuthId = function(authId) {
     }));
 };
 
-exports.findAuthUserByPhone = function(phoneNumber) {
+UserService.findAuthUserByPhone = function(phoneNumber) {
     var authUsers = await(axios.get('/users', {
         params: {
             phone: phoneNumber
@@ -72,7 +73,7 @@ exports.findAuthUserByPhone = function(phoneNumber) {
     return authUsers.data[0];
 };
 
-exports.createAuthUser = function(userData) {
+UserService.createAuthUser = function(userData) {
     var response = await(axios.post('/user', {
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -82,7 +83,7 @@ exports.createAuthUser = function(userData) {
     return response.data;
 };
 
-exports.createSberUser = function(authId) {
+UserService.createSberUser = function(authId) {
     return await(sequelize.models.SberUser.create({
         authId,
         userFund: {
@@ -96,12 +97,12 @@ exports.createSberUser = function(authId) {
     }));
 };
 
-exports.findAuthUserByAuthId = function(authId) {
+UserService.findAuthUserByAuthId = function(authId) {
     var response = await(axios.get(`/user/${authId}`));
     return response.data;
 };
 
-exports.setAuthId = function(id, authId) {
+UserService.setAuthId = function(id, authId) {
     return await(sequelize.models.SberUser.update({
         authId
     }, {
@@ -111,7 +112,7 @@ exports.setAuthId = function(id, authId) {
     }));
 };
 
-exports.updateAuthUser = function(authId, userData) {
+UserService.updateAuthUser = function(authId, userData) {
     var response = await(axios.patch(`/user/${authId}`, {
         firstName: userData.firstName,
         lastName: userData.lastName
@@ -119,7 +120,7 @@ exports.updateAuthUser = function(authId, userData) {
     return response.data;
 };
 
-exports.setUserFund = function(id, userFundId) {
+UserService.setUserFund = function(id, userFundId) {
     return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.UserFund.update({
             creatorId: null
@@ -140,7 +141,7 @@ exports.setUserFund = function(id, userFundId) {
     }));
 };
 
-exports.findAuthUserByEmail = function(email) {
+UserService.findAuthUserByEmail = function(email) {
     var response = await(axios.get('/users', {
         params: {
             email
@@ -151,7 +152,7 @@ exports.findAuthUserByEmail = function(email) {
     return users[0];
 };
 
-exports.createCard = function(sberUserId, bindingId) {
+UserService.createCard = function(sberUserId, bindingId) {
     return await(sequelize.sequelize.transaction((t) => {
         return sequelize.models.Card.create({
             sberUserId,
@@ -168,3 +169,5 @@ exports.createCard = function(sberUserId, bindingId) {
             });
     }));
 };
+
+module.exports = UserService;

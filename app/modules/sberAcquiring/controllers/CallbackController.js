@@ -3,6 +3,7 @@
 
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
+const orderStatus = require('../../orders/enums/orderStatus');
 const errors = require('../../../components/errors');
 const acquiringService = require('../services/sberAcquiring');
 const orderService = require('../../orders/services/orderService');
@@ -14,10 +15,7 @@ const moment = require('moment');
 module.exports = class CallbackController extends Controller {
     actionCallback(ctx) {
         // callback data
-        var mdOrder = ctx.request.query.mdOrder,
-            sberAcquOrderNumber = ctx.request.query.orderNumber,
-            operation = ctx.request.query.operation,
-            status = ctx.request.query.status;
+        var sberAcquOrderNumber = ctx.request.query.orderNumber;
 
         var order = await(orderService.getOrderWithInludes(sberAcquOrderNumber));
 
@@ -25,55 +23,32 @@ module.exports = class CallbackController extends Controller {
             // panic, order not found!!!
         }
 
-        if (order.status != 'waitingForPay') return;
+        if (!orderService.isAvalibleForPayment(order)) return;
 
-        await(orderService.updateInfo(sberAcquOrderNumber, {
-            status: 'confirmingPayment'
-        }));
+        var sberAcquiringOrderStatus = orderService.getAcquiringOrder(order);
 
-        var paymentId = order.userFundSubscription.currentAmount.id,
-            userFund = order.userFundSubscription.userFund,
-            sberUser = order.userFundSubscription.sberUser;
-
-        var eqOrderStatus;
-
-        try {
-            eqOrderStatus = await(acquiringService.getStatusAndGetBind({
-                sberAcquOrderNumber,
-                orderId: order.sberAcquOrderId,
-                clientId: order.userFundSubscription.sberUser.id
-            }));
-        } catch (err) {
-            await(orderService.updateInfo(orderNumber, {
-                status: 'waitingForPay'
-            }));
-            throw new errors.HttpError('Failed to get order status', 500);
-        }
-
-        // update order
-        await(orderService.updateInfo(sberAcquOrderNumber, {
-            sberAcquErrorCode: eqOrderStatus.errorCode,
-            sberAcquErrorMessage: eqOrderStatus.errorMessage,
-            sberAcquActionCode: eqOrderStatus.actionCode,
-            sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-            status: eqOrderStatus.actionCode == 0 ? 'paid' : 'failed'
-        }));
-
-        if (eqOrderStatus.actionCode != 0) {
-            // handle somehow
-        } else {
+        if (orderService.isSuccessful(sberAcquiringOrderStatus)) {
             // create new card for user and set pay date
-            await(userService.createCard(sberUser.id, eqOrderStatus.bindingInfo.bindingId));
-            await(userFundService.updateDesiredAmountHistory(paymentId, {
-                payDate: moment().add(1, 'month').toDate()
-            }));
-            var subscriptionId = order.userFundSubscription.id;
+            var userFundSubscription = order.userFundSubscription,
+                sberUser             = userFundSubscription.sberUser,
+                userFund             = userFundSubscription.userFund,
+                ownUserFund          = sberUser.userFund;
+
+            await(userService.createCard(sberUser.id,
+                        sberAcquiringOrderStatus.bindingInfo.bindingId));
+            // await(userFundService.updateDesiredAmountHistory(paymentId, {
+            //     payDate: moment().add(1, 'month').toDate()
+            // }));
+            var subscriptionId = userFundSubscription.id;
             await(userFundService.updateUserFundSubscription(subscriptionId, {
                 enabled: true
             }));
-            if (userFund.id == sberUser.userFund.id) {
+            if (userFund.id == ownUserFund.id) {
                 await(userFundService.toggleEnabled(userFund.id, true));
             }
+        } else {
+            // handle somehow
+
         }
         return null;
     }

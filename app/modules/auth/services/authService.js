@@ -35,7 +35,9 @@ class ValidationError extends Error {
     }
 }
 
-exports.register = function(userData) {
+var AuthService = {};
+
+AuthService.register = function(userData) {
     var firstName = userData.firstName,
         lastName = userData.lastName,
         email = userData.email,
@@ -87,7 +89,7 @@ exports.register = function(userData) {
     }
 };
 
-exports.login = function(email, password) {
+AuthService.login = function(email, password) {
     try {
         var response = await(axios.post(`/user/${email}`, {
             password
@@ -102,7 +104,7 @@ exports.login = function(email, password) {
     return response.data;
 };
 
-exports.generateToken = function(email) {
+AuthService.generateToken = function(email) {
     return await(new Promise((resolve, reject) => {
         jwt.sign({
             email
@@ -115,7 +117,7 @@ exports.generateToken = function(email) {
     }));
 };
 
-exports.verifyToken = function(token) {
+AuthService.verifyToken = function(token) {
     return await(new Promise((resolve, reject) => {
         jwt.verify(token, JWT_SECRET, (err, decoded) => {
             if (err) reject(err);
@@ -124,7 +126,7 @@ exports.verifyToken = function(token) {
     }));
 };
 
-exports.verifyUser = function(sberUserId) {
+AuthService.verifyUser = function(sberUserId) {
     return await(sequelize.models.SberUser.update({
         verified: true
     }, {
@@ -136,7 +138,7 @@ exports.verifyUser = function(sberUserId) {
 };
 
 // >>>> old, but can be used later
-exports.createAuthUser = function(userData) {
+AuthService.createAuthUser = function(userData) {
     var firstName = userData.firstName,
         lastName = userData.lastName;
     if (!firstName || !lastName ||
@@ -168,7 +170,7 @@ exports.createAuthUser = function(userData) {
     return response.data;
 };
 
-exports.saveCode = function(phone, code, sberUserId) {
+AuthService.saveCode = function(phone, code, sberUserId) {
     var send = await(sequelize.models.Phone.findOne({
         where: {
             number: phone,
@@ -188,11 +190,11 @@ exports.saveCode = function(phone, code, sberUserId) {
     }));
 };
 
-exports.sendCode = function(phone, code) {
+AuthService.sendCode = function(phone, code) {
     // sending SMS to the user...
 };
 
-exports.verifyCode = function(phone, code) {
+AuthService.verifyCode = function(phone, code) {
     return await(sequelize.models.Phone.update({
         verified: true
     }, {
@@ -202,3 +204,5 @@ exports.verifyCode = function(phone, code) {
         }
     }));
 };
+
+module.exports = AuthService;

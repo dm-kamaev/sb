@@ -2,7 +2,6 @@
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
-// const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const orderService = require('../../orders/services/orderService.js');
@@ -184,7 +183,6 @@ class UserFundController extends Controller {
      *
      */
     actionCountUserFunds(actionContext, id) {
-        console.log(await(orderService.getOrderWithInludes(actionContext.data.orderNumber)));
         var all = await(entityService.getFundsCount());
         var today = await(entityService.getTodayFundsCount());
         return {
@@ -233,6 +231,7 @@ class UserFundController extends Controller {
             amount,
             userFundSubscriptionId: subscription.dataValues.id,
             currentCardId: card.dataValues.currentCardId,
+            sberUserId
         };
         return orderService.firstPayOrSendMessage(params);
     }

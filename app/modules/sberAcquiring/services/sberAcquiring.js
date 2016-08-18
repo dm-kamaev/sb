@@ -6,7 +6,6 @@ const axios = require('axios').create({
   baseURL: configSberAcquiring.hostname,
   validateStatus: (status) => { return status >= 200 && status < 500; },
 });
-const orderService = require('../../orders/services/orderService.js');
 const errors = require('../../../components/errors');
 const request = require('request');
 
@@ -35,21 +34,21 @@ const sberAcquiring = {};
      errorMessage: 'Заказ с таким номером уже обработан',
     }
  */
-sberAcquiring.firstPay = function(params) {
-    return await(axios.get(configSberAcquiring.registerOrder, {
-        params: {
-            userName: params.userName || configSberAcquiring.userName,
-            password: params.password || configSberAcquiring.password,
-            amount: params.amount,
-            orderNumber: params.orderNumber,
-            returnUrl: params.returnUrl,
-            failUrl: params.failUrl,
-            language: 'ru',
-            clientId: params.clientId,
-            jsonParams: params.jsonParams,
-        }
-    })).data;
-};
+ sberAcquiring.firstPay = function(params) {
+     return await(axios.get(configSberAcquiring.registerOrder, {
+         params: {
+             userName: params.userName || configSberAcquiring.userName,
+             password: params.password || configSberAcquiring.password,
+             amount: params.amount,
+             orderNumber: params.orderNumber,
+             returnUrl: params.returnUrl,
+             failUrl: params.failUrl,
+             language: 'ru',
+             clientId: params.clientId,
+             jsonParams: params.jsonParams,
+         }
+     })).data;
+ };
 
     /* params –– {
         userName: 'aventica-api',

@@ -8,9 +8,12 @@ const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const errors = require('../../../components/errors');
+const orderStatus = require('../enums/orderStatus')
 
-exports.getOrderWithInludes = function(sberAcquOrderNumber) {
-    return await(sequelize.models.Order.findOne({
+var OrderService = {};
+
+OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
+    return await (sequelize.models.Order.findOne({
         where: {
             sberAcquOrderNumber
         },
@@ -42,7 +45,7 @@ exports.getOrderWithInludes = function(sberAcquOrderNumber) {
  * @param  {[obj]}  data
  * @return {[type]}
  */
-exports.updateInfo = function(sberAcquOrderNumber, data) {
+OrderService.updateInfo = function(sberAcquOrderNumber, data) {
     return await(sequelize.models.Order.update(data, {
         where: {
             sberAcquOrderNumber,
@@ -57,11 +60,11 @@ exports.updateInfo = function(sberAcquOrderNumber, data) {
  * @param  {[obj]}  { userFundId, amount, userFundSubscriptionId, currentCardId }
  * @return {[obj]}
  */
-exports.firstPayOrSendMessage = function (params) {
+OrderService.firstPayOrSendMessage = function(params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
-        var entities = await(userFundService.getEntities(params.userFundId));
-        var res = getListDirectionTopicFunds(entities),
+        var entities = await (userFundService.getEntities(params.userFundId));
+        var res = getListDirectionTopicFunds_(entities),
             listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
             listFunds = res.listFunds;
         // console.log('HERE','\n', listDirectionsTopicsFunds,'\n',listFunds);
@@ -71,9 +74,9 @@ exports.firstPayOrSendMessage = function (params) {
             listDirectionsTopicsFunds,
             listFunds,
             fundInfo: entities,
-            status: 'new'
+            status: orderStatus.NEW
         };
-        var resInsert = await(insertPay(data));
+        var resInsert = await (insertPay_(data));
         var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
 
         var responceSberAcqu;
@@ -91,8 +94,9 @@ exports.firstPayOrSendMessage = function (params) {
                 }),
             }));
         } catch (e) {
-            await(exports.updateInfo(
-              sberAcquOrderNumber, { status: 'eqOrderNotCreated' })
+            await(OrderService.updateInfo(sberAcquOrderNumber, {
+                  status: orderStatus.EQ_ORDER_NOT_CREATED
+              })
             );
             // var error = handlerHttpError(e) || JSON.stringify(e);
             throw new errors.HttpError(
@@ -101,34 +105,81 @@ exports.firstPayOrSendMessage = function (params) {
             );
         }
 
-        return handlerResponceSberAcqu(
+        return handlerResponceSberAcqu_(
             sberAcquOrderNumber, responceSberAcqu
         );
     } else {
-        return { message: 'Вы изменили сумму ежемесячного платежа.' };
+        return {
+            message: 'Вы изменили сумму ежемесячного платежа.'
+        };
     }
 }
 
 
 /**
- * create order in our base
- * @param  {[int]}      data.SberUserUserFundId
- * @param  {[int]}      data.amount
- * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
- * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
- * @param  {[array]}    data.fundInfo  [ entities as in database ]
- * @return {[object]}   [ get id insert ]
+ * update info in Orders(table) for order
+ * @param  {[int]}  sberAcquOrderNumber
+ * @param  {[obj]}  data
+ * @return {[type]}
  */
-function insertPay (data) {
-    return await(sequelize.models.Order.create({
-        userFundSubscriptionId: data.userFundSubscriptionId,
-        amount: data.amount,
-        directionsTopicsFunds: data.listDirectionsTopicsFunds,
-        funds: data.listFunds,
-        fundInfo: data.fundInfo,
-        status: data.status
+OrderService.updateInfo = function(sberAcquOrderNumber, data) {
+    console.log(data);
+    console.log(sberAcquOrderNumber);
+    return await (sequelize.models.Order.update(data, {
+        where: {
+            sberAcquOrderNumber,
+        }
     }));
+};
+
+OrderService.isAvalibleForPayment = function(order) {
+    return order.status == orderStatus.WAITING_FOR_PAY;
+};
+
+OrderService.getAcquiringOrder = function(order) {
+    var sberAcquOrderNumber = order.sberAcquOrderNumber;
+
+    await (OrderService.updateInfo(sberAcquOrderNumber, {
+        status: orderStatus.CONFIRMING_PAYMENT
+    }));
+
+    var paymentId = order.userFundSubscription.currentAmount.id,
+        userFund = order.userFundSubscription.userFund,
+        sberUser = order.userFundSubscription.sberUser;
+
+    var eqOrderStatus = getAcquiringOrderStatus_(order)
+
+    await(OrderService.updateInfo(sberAcquOrderNumber, {
+        sberAcquErrorCode: eqOrderStatus.errorCode,
+        sberAcquErrorMessage: eqOrderStatus.errorMessage,
+        sberAcquActionCode: eqOrderStatus.actionCode,
+        sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
+        status: eqOrderStatus.actionCode == 0 ? orderStatus.PAID :
+                                                    orderStatus.FAILED
+    }));
+
+    return eqOrderStatus;
+};
+
+OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
+    return sberAcquiringOrderStatus.actionCode == 0;
 }
+
+function getAcquiringOrderStatus_(order) {
+  try {
+      return await(sberAcquiring.getStatusAndGetBind({
+          sberAcquOrderNumber: order.sberAcquOrderNumber,
+          orderId: order.sberAcquOrderId,
+          clientId: order.userFundSubscription.sberUser.id
+      }));
+  } catch (err) {
+      throw err;
+      await (OrderService.updateInfo(order.sberAcquOrderNumber, {
+          status: orderStatus.WAITING_FOR_PAY
+      }));
+      throw new errors.AcquiringError('Failed to get order status');
+  }
+};
 
 
 /**
@@ -140,8 +191,9 @@ function insertPay (data) {
  *           listFunds:                 [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
  *         }
  */
-function getListDirectionTopicFunds (entities) {
-    var listDirectionsTopicsFunds = [], listFunds = [];
+function getListDirectionTopicFunds_(entities) {
+    var listDirectionsTopicsFunds = [],
+        listFunds = [];
     for (var i = 0, l = entities.length; i < l; i++) {
         var entity = entities[i].dataValues, type = entity.type;
         console.log('ENTITY', entity.title, entity.type);
@@ -153,9 +205,11 @@ function getListDirectionTopicFunds (entities) {
             listFunds.push(entity.title);
         }
     }
-    return { listDirectionsTopicsFunds, listFunds };
+    return {
+        listDirectionsTopicsFunds,
+        listFunds
+    };
 }
-
 
 /**
  * study responce sberbank acquiring
@@ -163,12 +217,12 @@ function getListDirectionTopicFunds (entities) {
  * @param  {[obj]}  responceSberAcqu
  * @return {[obj]}  { orderId, formUrl } || { errorCode, errorMessage }
  */
-function handlerResponceSberAcqu (sberAcquOrderNumber, responceSberAcqu) {
+function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
-        await(
-            exports.updateInfo(sberAcquOrderNumber, {
+        await (
+            OrderService.updateInfo(sberAcquOrderNumber, {
                 sberAcquOrderId: responceSberAcqu.orderId,
-                status: 'waitingForPay'
+                status: orderStatus.WAITING_FOR_PAY
             })
         );
         return responceSberAcqu;
@@ -180,9 +234,34 @@ function handlerResponceSberAcqu (sberAcquOrderNumber, responceSberAcqu) {
         var data = {
             sberAcquErrorCode: errorCode,
             sberAcquErrorMessage: errorMessage,
-            status: 'eqOrderNotCreated'
+            status: orderStatus.EQ_ORDER_NOT_CREATED
         };
-        await(exports.updateInfo(sberAcquOrderNumber, data));
-        return { errorCode, errorMessage };
+        await (OrderService.updateInfo(sberAcquOrderNumber, data));
+        return {
+            errorCode,
+            errorMessage
+        };
     }
 }
+
+/**
+ * create order in our base
+ * @param  {[int]}      data.SberUserUserFundId
+ * @param  {[int]}      data.amount
+ * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
+ * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
+ * @param  {[array]}    data.fundInfo  [ entities as in database ]
+ * @return {[object]}   [ get id insert ]
+ */
+function insertPay_(data) {
+    return await (sequelize.models.Order.create({
+        userFundSubscriptionId: data.userFundSubscriptionId,
+        amount: data.amount,
+        directionsTopicsFunds: data.listDirectionsTopicsFunds,
+        funds: data.listFunds,
+        fundInfo: data.fundInfo,
+        status: data.status
+    }));
+}
+
+module.exports = OrderService;

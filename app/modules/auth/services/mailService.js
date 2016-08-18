@@ -13,9 +13,13 @@ const transporter = transporterGenerator.createSMTPTransporter({
 });
 const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbank.com>');
 
-exports.sendMail = function(email, emailData) {
+var MailService = {};
+
+MailService.sendMail = function(email, emailData) {
     var letter = new Letter('Подтвердите ваш почтовый ящик', `<div style = "color: red">${emailData}</div>`, 'html');
     await(mailSender.sendMail(email, letter));
     // need for debug
     return emailData;
 };
+
+module.exports = MailService;
