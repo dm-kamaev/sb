@@ -54,6 +54,12 @@ exports.getOrderWithInludes = function(sberAcquOrderNumber) {
 };
 
 
+/**
+ * update info in Orders(table) for order
+ * @param  {[int]}  sberAcquOrderNumber
+ * @param  {[obj]}  data
+ * @return {[type]}
+ */
 exports.updateInfo = function(sberAcquOrderNumber, data) {
     return await(sequelize.models.Order.update(data, {
         where: {
@@ -67,7 +73,10 @@ exports.updateInfo = function(sberAcquOrderNumber, data) {
  * get array with Direction,Topic,Funds and array with funds, where
  * Direction,Topic convert to Funds
  * @param  {[array]} entities [description]
- * @return [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ] [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
+ * @return {
+ *           listDirectionsTopicsFunds: [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ],
+ *           listFunds:                 [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
+ *         }
  */
 exports.getListDirectionTopicFunds = function(entities) {
     var listDirectionsTopicsFunds = [], listFunds = [];
@@ -80,10 +89,16 @@ exports.getListDirectionTopicFunds = function(entities) {
             listFunds.push(entity.title);
         }
     }
-    return [ listDirectionsTopicsFunds, listFunds ];
+    return { listDirectionsTopicsFunds, listFunds };
 };
 
 
+/**
+ * study responce sberbank acquiring
+ * @param  {[int]}  sberAcquOrderNumber
+ * @param  {[obj]}  responceSberAcqu
+ * @return {[obj]}  { orderId,  responceSberAcqu.formUrl } || { errorCode, errorMessage }
+ */
 exports.handlerResponceSberAcqu = function(sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
         await(

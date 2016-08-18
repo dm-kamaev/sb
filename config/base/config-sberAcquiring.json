@@ -5,5 +5,9 @@
     "userNameSsl":  "aventica_ssl-api",
     "passwordSsl": "aventica_ssl",
 
-    "hostname":   "https://3dsec.sberbank.ru"
+    "hostname":   "https://3dsec.sberbank.ru",
+
+    "registerOrder":  "/payment/rest/register.do?",
+    "getStatusOrder": "/payment/rest/getOrderStatusExtended.do?",
+    "payByBind":      "/payment/rest/paymentOrderBinding.do"
 }
