@@ -7,18 +7,27 @@ const uuid = require('uuid');
 const config = require('../../../../config/urls.json');
 const axios = require('axios');//.create({baseUrl: config.backendUrl});
 
-
-
 var OrderService = {};
 
 OrderService.Exceptions = {
 };
-
-OrderService.firstPay = async(function(paymentData) {
+/**
+ * @param {Object} paymentData
+ * @param {Number} paymentData.orderNumber
+ * @param {Number} paymentData.amount
+ * @param {Number} paymentData.clientId
+ * @return {Order}
+ */
+OrderService.createOrder = async(function(paymentData) {
     paymentData.orderId = uuid.v4();
     return (await(models.Order.create(paymentData)));
 });
 
+/**
+ * @param {uuid} orderId
+ * @param {uuid} binding
+ * @return {Order}
+ */
 OrderService.setPaid = async(function(orderId, binding) {
     var order = await(models.Order.findOne({
         where: {
@@ -35,6 +44,11 @@ OrderService.setPaid = async(function(orderId, binding) {
     return order;
 });
 
+/**
+ * @param {Number} clientId
+ * @param {uuid} orderId
+ * @return {Order}
+ */
 OrderService.getData = async(function(clientId, orderId) {
     var order = await(models.Order.findOne({
         where: {
@@ -45,6 +59,10 @@ OrderService.getData = async(function(clientId, orderId) {
     return order;
 });
 
+/**
+ * @param {Number} delay
+ * @param {uuid} orderId
+ */
 OrderService.sendCallback = async(function(orderId, delay) {
     var order = await(models.Order.findOne({
         where: {
@@ -63,6 +81,11 @@ OrderService.sendCallback = async(function(orderId, delay) {
     }, delay || 1);
 });
 
+/**
+ * @param {uuid} orderId
+ * @param {uuid} binding
+ * @return {Object}
+ */
 OrderService.payByBind = async(function(orderId, binding) {
     var bindingCount = await(models.Order.count({
         where: {
