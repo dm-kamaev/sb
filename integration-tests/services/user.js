@@ -9,8 +9,8 @@ service.genRandomUser = function () {
     var result = {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
-        email: faker.internet.email(),
-        password: faker.internet.password()
+        email: faker.internet.email(this.firstName, this.lastName),
+        password: faker.internet.password(8)
     };
 
     return result;
