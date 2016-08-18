@@ -7,7 +7,7 @@ const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
-
+const errors = require('../../../components/errors');
 
 exports.getOrderWithInludes = function(sberAcquOrderNumber) {
     return await(sequelize.models.Order.findOne({
@@ -37,10 +37,24 @@ exports.getOrderWithInludes = function(sberAcquOrderNumber) {
 
 
 /**
+ * update info in Orders(table) for order
+ * @param  {[int]}  sberAcquOrderNumber
+ * @param  {[obj]}  data
+ * @return {[type]}
+ */
+exports.updateInfo = function(sberAcquOrderNumber, data) {
+    return await(sequelize.models.Order.update(data, {
+        where: {
+            sberAcquOrderNumber,
+        }
+    }));
+};
+
+/**
  * if first pay for user
  * then create order in our system and in sberbank acquring
  * else return message
- * @param  {[obj]}  {}
+ * @param  {[obj]}  { userFundId, amount, userFundSubscriptionId, currentCardId }
  * @return {[obj]}
  */
 exports.firstPayOrSendMessage = function (params) {
@@ -50,7 +64,7 @@ exports.firstPayOrSendMessage = function (params) {
         var res = getListDirectionTopicFunds(entities),
             listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
             listFunds = res.listFunds;
-
+        // console.log('HERE','\n', listDirectionsTopicsFunds,'\n',listFunds);
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
@@ -62,18 +76,31 @@ exports.firstPayOrSendMessage = function (params) {
         var resInsert = await(insertPay(data));
         var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
 
-        var responceSberAcqu = await(sberAcquiring.firstPay({
-            orderNumber: sberAcquOrderNumber,
-            amount: params.amount,
-            returnUrl: config.hostname + '#success',
-            failUrl: config.hostname + '#failed',
-            language: 'ru',
-            clientId: params.sberUserId,
-            jsonParams: JSON.stringify({
-                recurringFrequency: '10',
-                recurringExpiry: '21000101'
-            }),
-        }));
+        var responceSberAcqu;
+        try {
+            responceSberAcqu = await(sberAcquiring.firstPay({
+                orderNumber: sberAcquOrderNumber,
+                amount: params.amount,
+                returnUrl: config.hostname + '#success',
+                failUrl: config.hostname + '#failed',
+                language: 'ru',
+                clientId: params.sberUserId,
+                jsonParams: JSON.stringify({
+                    recurringFrequency: '10',
+                    recurringExpiry: '21000101'
+                }),
+            }));
+        } catch (e) {
+            await(exports.updateInfo(
+              sberAcquOrderNumber, { status: 'eqOrderNotCreated' })
+            );
+            // var error = handlerHttpError(e) || JSON.stringify(e);
+            throw new errors.HttpError(
+                'Failed connection with sberbank acquiring. Error: '+e,
+                500
+            );
+        }
+
         return handlerResponceSberAcqu(
             sberAcquOrderNumber, responceSberAcqu
         );
@@ -105,21 +132,6 @@ function insertPay (data) {
 
 
 /**
- * update info in Orders(table) for order
- * @param  {[int]}  sberAcquOrderNumber
- * @param  {[obj]}  data
- * @return {[type]}
- */
-exports.updateInfo = function(sberAcquOrderNumber, data) {
-    return await(sequelize.models.Order.update(data, {
-        where: {
-            sberAcquOrderNumber,
-        }
-    }));
-};
-
-
-/**
  * get array with Direction,Topic,Funds and array with funds, where
  * Direction,Topic convert to Funds
  * @param  {[array]} entities [description]
@@ -132,8 +144,10 @@ function getListDirectionTopicFunds (entities) {
     var listDirectionsTopicsFunds = [], listFunds = [];
     for (var i = 0, l = entities.length; i < l; i++) {
         var entity = entities[i].dataValues, type = entity.type;
+        console.log('ENTITY', entity.title, entity.type);
         listDirectionsTopicsFunds.push([type, entity.title]);
         if (type === 'direction' || type === 'topic') {
+            console.log('NOT FUND', entity.title, entity.type);
             listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
         } else {
             listFunds.push(entity.title);
