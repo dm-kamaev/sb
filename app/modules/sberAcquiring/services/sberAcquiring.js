@@ -6,7 +6,6 @@ const axios = require('axios').create({
   baseURL: configSberAcquiring.hostname,
   validateStatus: (status) => { return status >= 200 && status < 500; },
 });
-const orderService = require('../../orders/services/orderService.js');
 const errors = require('../../../components/errors');
 const request = require('request');
 
@@ -35,32 +34,21 @@ const sberAcquiring = {};
      errorMessage: 'Заказ с таким номером уже обработан',
     }
  */
-sberAcquiring.firstPay = function(params) {
-    try {
-        return await(axios.get(configSberAcquiring.registerOrder, {
-            params: {
-                userName: params.userName || configSberAcquiring.userName,
-                password: params.password || configSberAcquiring.password,
-                amount: params.amount,
-                orderNumber: params.orderNumber,
-                returnUrl: params.returnUrl,
-                failUrl: params.failUrl,
-                language: 'ru',
-                clientId: params.clientId,
-                jsonParams: params.jsonParams,
-            }
-        })).data;
-    } catch (e) {
-        await(orderService.updateInfo(
-          params.orderNumber, { status: 'eqOrderNotCreated' })
-        );
-        var error = handlerHttpError(e) || JSON.stringify(e);
-        throw new errors.HttpError(
-            'Failed connection with sberbank acquiring. Error: '+error,
-            500
-        );
-    }
-};
+ sberAcquiring.firstPay = function(params) {
+     return await(axios.get(configSberAcquiring.registerOrder, {
+         params: {
+             userName: params.userName || configSberAcquiring.userName,
+             password: params.password || configSberAcquiring.password,
+             amount: params.amount,
+             orderNumber: params.orderNumber,
+             returnUrl: params.returnUrl,
+             failUrl: params.failUrl,
+             language: 'ru',
+             clientId: params.clientId,
+             jsonParams: params.jsonParams,
+         }
+     })).data;
+ };
 
     /* params –– {
         userName: 'aventica-api',
@@ -157,7 +145,7 @@ sberAcquiring.getStatusAndGetBind = function(params) {
      errorMessage: 'Заказ с таким номером уже обработан',
     }*/
 // orderId is mdOrder for actionPayByBind
-sberAcquiring.actionCreatePayByBind = function(params) {
+sberAcquiring.CreatePayByBind = function(params) {
     try {
         return await(axios.get(configSberAcquiring.registerOrder, {
             params: {
@@ -195,7 +183,7 @@ sberAcquiring.actionCreatePayByBind = function(params) {
      "errorMessage":"Связка не найдена"
     }
 */
-sberAcquiring.actionPayByBind = function(params) {
+sberAcquiring.PayByBind = function(params) {
     var handlerResponce = function (params) {
         if (params.httpResponse.statusCode === 200) {
             params.resolve(params.body);
@@ -259,4 +247,46 @@ function handlerHttpError(e) {
         return error;
     }
     return '';
+}
+
+
+
+/* EXAMPLE USE */
+const async = require('asyncawait/async');
+// const config = require('../../../../config/config.json');
+// async(()=>{
+//   var responceSberAcqu = await(sberAcquiring.getStatusAndGetBind({
+//     orderNumber: 118,
+//     orderId: 'f2634bf5-f956-4d1e-9bd5-f3e48db8b52e',
+//     clientId: 73,
+//   }));
+//   // 73 bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db'
+//   console.log(responceSberAcqu);
+// })();
+
+// actionCreatePayByBind();
+// function actionCreatePayByBind () {
+//     async(()=>{
+//       var responceSberAcqu = await(sberAcquiring.CreatePayByBind({
+//         amount:      333,
+//         orderNumber: 121,
+//         returnUrl:   config.hostname+'#sucess',
+//         failUrl:     config.hostname+'#failed',
+//         language:    'ru',
+//         clientId:    73,
+//       }));
+//       // orderId: '6984845d-f910-4b49-9fed-9aa3159e2b9b'
+//       console.log('actionCreatePayByBind=', responceSberAcqu);
+//     })();
+// }
+
+// actionPayByBind();
+function actionPayByBind () {
+    async(()=>{
+      var responceSberAcqu = await(sberAcquiring.PayByBind({
+        orderId:   'ef9446bb-0f55-45e1-8ee1-3e2651209f31',
+        bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db',
+      }));
+      console.log('responceSberAcqu=', responceSberAcqu);
+    })();
 }

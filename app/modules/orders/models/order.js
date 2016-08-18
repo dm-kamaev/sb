@@ -1,4 +1,6 @@
 'use strict';
+const orderStatus = require('../enums/orderStatus');
+const StatusError = require('../../../components/errors').StatusError;
 
 module.exports = function(sequelize, DataTypes) {
     var Order = sequelize.define('Order', {
@@ -41,9 +43,45 @@ module.exports = function(sequelize, DataTypes) {
         status: {
             type: DataTypes.STRING,
             validate: {
-                isIn: [['new', 'waitingForPay', 'eqOrderNotCreated',
-                                    'confirmingPayment', 'paid', 'failed']]
-            }
+                isIn: [ Object.keys(orderStatus)
+                              .map(status => orderStatus[status]) ]
+            },
+            // set: function(status) {
+            //     return;
+            //     // need to somehow get current status from database
+            //     // var currentStatus = this.getDataValue('status')
+            //     sequelize.query('SELECT "status" FROM "Order"')
+            //     switch(currentStatus){
+            //         case orderStatus.FAILED:
+            //         case orderStatus.PAID:
+            //         case orderStatus.EQ_ORDER_NOT_CREATED:
+            //               throw new StatusError(currentStatus, status)
+            //         case orderStatus.WAITING_FOR_PAY:
+            //               if (status != orderStatus.CONFIRMING_PAYMENT) {
+            //                   throw new StatusError(currentStatus, status)
+            //               }
+            //               this.setDataValue('status', status);
+            //               break;
+            //         case orderStatus.CONFIRMING_PAYMENT:
+            //               if (status != orderStatus.WAITING_FOR_PAY
+            //                          || status != orderStatus.PAID
+            //                          || status != orderStatus.FAILED) {
+            //                   throw new StatusError(currentStatus, status)
+            //               }
+            //               this.setDataValue('status', status);
+            //               break;
+            //         case orderStatus.NEW:
+            //               if (status != orderStatus.WAITING_FOR_PAY
+            //                   || status != orderStatus.EQ_ORDER_NOT_CREATED) {
+            //                   throw new StatusError(currentStatus, status)
+            //               }
+            //               this.setDataValue('status', status)
+            //               break;
+            //         default:
+            //               this.setDataValue('status', orderStatus.NEW)
+            //       }
+            //   },
+              defaultValue: orderStatus.NEW
         },
         funds: {
             type: DataTypes.ARRAY(DataTypes.STRING),
@@ -74,6 +112,10 @@ module.exports = function(sequelize, DataTypes) {
                 Order.belongsTo(models.UserFundSubsription, {
                     as: 'userFundSubscription',
                     foreignKey: 'userFundSubscriptionId'
+                });
+                Order.hasMany(models.OrderItem, {
+                    as: 'orderItem',
+                    foreignKey: 'sberAcquOrderNumber'
                 });
             }
         }

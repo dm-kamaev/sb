@@ -22,6 +22,10 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: false
         },
+        payDay: {
+            type: DataTypes.INTEGER,
+            // defaultValue:
+        },
         currentCardId: {
             type: DataTypes.INTEGER,
             references: {

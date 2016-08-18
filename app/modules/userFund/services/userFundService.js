@@ -3,8 +3,13 @@
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
+const errors = require('../../../components/errors');
+const userFundService = require('../services/userFundService');
 
-exports.createUserFund = function(data) {
+
+var UserFundService = {};
+
+UserFundService.createUserFund = function(data) {
     return await(sequelize.models.UserFund.create({
         title: data.title,
         description: data.description,
@@ -12,7 +17,7 @@ exports.createUserFund = function(data) {
     }));
 };
 
-exports.updateUserFund = function(id, data) {
+UserFundService.updateUserFund = function(id, data) {
     return await(sequelize.models.UserFund.update(data, {
         where: {
             id,
@@ -21,7 +26,7 @@ exports.updateUserFund = function(id, data) {
     }));
 };
 
-exports.getUserFund = function(id) {
+UserFundService.getUserFund = function(id) {
     return await(sequelize.models.UserFund.findOne({
         where: {
             id
@@ -29,11 +34,11 @@ exports.getUserFund = function(id) {
     }));
 };
 
-exports.getUserFunds = function() {
+UserFundService.getUserFunds = function() {
     return await(sequelize.models.UserFund.findAll());
 };
 
-exports.getTodayCreatedUserFunds = function() {
+UserFundService.getTodayCreatedUserFunds = function() {
     var today = new Date(),
         year = today.getFullYear(),
         month = today.getMonth(),
@@ -48,7 +53,7 @@ exports.getTodayCreatedUserFunds = function() {
     }));
 };
 
-exports.addEntity = function(id, entityId) {
+UserFundService.addEntity = function(id, entityId) {
     var count = await(sequelize.models.UserFundEntity.count({
         where: {
             entityId,
@@ -64,7 +69,7 @@ exports.addEntity = function(id, entityId) {
     }));
 };
 
-exports.removeEntity = function(id, entityId) {
+UserFundService.removeEntity = function(id, entityId) {
     return await(sequelize.models.UserFundEntity.destroy({
         where: {
             entityId,
@@ -73,7 +78,7 @@ exports.removeEntity = function(id, entityId) {
     }));
 };
 
-exports.getEntities = function(id) {
+UserFundService.getEntities = function(id) {
     var userFund = await(sequelize.models.UserFund.findOne({
         where: {
             id
@@ -95,11 +100,11 @@ exports.getEntities = function(id) {
     return userFund.entity;
 };
 
-exports.getUserFundsCount = function() {
+UserFundService.getUserFundsCount = function() {
     return await(sequelize.models.UserFund.count());
 };
 
-exports.toggleEnabled = function(id, isEnabled) {
+UserFundService.toggleEnabled = function(id, isEnabled) {
     return await(sequelize.models.UserFund.update({
         enabled: isEnabled
     }, {
@@ -113,7 +118,7 @@ exports.toggleEnabled = function(id, isEnabled) {
     }));
 };
 
-exports.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
+UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
     return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.UserFundSubsription.findOrCreate({
             where: {
@@ -146,7 +151,7 @@ exports.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
     }));
 };
 
-exports.getCurrentAmount = function(sberUserId, userFundId) {
+UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
     var suuf = await(sequelize.models.UserFundSubsription.findOne({
         where: {
             sberUserId,
@@ -162,7 +167,7 @@ exports.getCurrentAmount = function(sberUserId, userFundId) {
 };
 
 
-exports.getUserFundSubscriptionId = function(sberUserId, userFundId) {
+UserFundService.getUserFundSubscriptionId = function(sberUserId, userFundId) {
     return await(sequelize.models.UserFundSubsription.findOne({
         where: {
             sberUserId,
@@ -171,7 +176,7 @@ exports.getUserFundSubscriptionId = function(sberUserId, userFundId) {
     }));
 };
 
-exports.updateDesiredAmountHistory = function(id, data) {
+UserFundService.updateDesiredAmountHistory = function(id, data) {
     return await(sequelize.models.DesiredAmountHistory.update(data, {
         where: {
             id
@@ -179,10 +184,28 @@ exports.updateDesiredAmountHistory = function(id, data) {
     }));
 };
 
-exports.updateUserFundSubscription = function(id, data) {
+UserFundService.updateUserFundSubscription = function(id, data) {
     return await(sequelize.models.UserFundSubsription.update(data, {
         where: {
             id
         }
     }));
 };
+
+
+/**
+ * if not own userfund then check exist and enable another userfund
+ * @param  {[int]} ownUserFundId
+ * @param  {[int]} userFundId
+ * @return {[type]}
+ */
+UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId) {
+    // check whether userFund enabled if he is not the owner
+    if (ownUserFundId !== userFundId) {
+        var userFund = await(UserFundService.getUserFund(userFundId));
+        if (!userFund)        { throw new errors.NotFoundError('UserFund', userFundId); }
+        if (!userFund.enabled){ throw new errors.HttpError('UserFund disabled', 400);   }
+    }
+};
+
+module.exports = UserFundService;

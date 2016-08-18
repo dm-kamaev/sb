@@ -4,7 +4,9 @@ const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 const _ = require('lodash');
 
-exports.getAllEntities = function(userFundId, published) {
+var EntityService = {};
+
+EntityService.getAllEntities = function(userFundId, published) {
     return await(sequelize.models.Entity.findAll({
         where: {
             published
@@ -20,7 +22,7 @@ exports.getAllEntities = function(userFundId, published) {
     }));
 };
 
-exports.getEntity = function(id, userFundId, published, includes) {
+EntityService.getEntity = function(id, userFundId, published, includes) {
     var include = includes.map(e => {
         return {
             model: sequelize.models.Entity,
@@ -45,7 +47,7 @@ exports.getEntity = function(id, userFundId, published, includes) {
     }));
 };
 
-exports.getEntitiesByType = function(type, userFundId, published) {
+EntityService.getEntitiesByType = function(type, userFundId, published) {
     return await(sequelize.models.Entity.findAll({
         where: {
             type: {
@@ -64,7 +66,7 @@ exports.getEntitiesByType = function(type, userFundId, published) {
     }));
 };
 
-exports.getEntitiesByOwnerId = function(id, type, userFundId, published) {
+EntityService.getEntitiesByOwnerId = function(id, type, userFundId, published) {
     var res = await(sequelize.models.Entity.findOne({
         where: {
             id: id,
@@ -91,7 +93,7 @@ exports.getEntitiesByOwnerId = function(id, type, userFundId, published) {
     return res.childEntity;
 };
 
-exports.createEntity = function(data) {
+EntityService.createEntity = function(data) {
     return await(sequelize.models.Entity.create({
         title: data.title,
         description: data.description,
@@ -101,7 +103,7 @@ exports.createEntity = function(data) {
     }));
 };
 
-exports.updateEntity = function(id, data) {
+EntityService.updateEntity = function(id, data) {
     return await(sequelize.models.Entity.update(data, {
         where: {
             id: id,
@@ -110,7 +112,7 @@ exports.updateEntity = function(id, data) {
     }));
 };
 
-exports.deleteEntity = function(id) {
+EntityService.deleteEntity = function(id) {
     return await(sequelize.models.Entity.destroy({
         where: {
             id: id
@@ -124,14 +126,16 @@ exports.deleteEntity = function(id) {
  * @param  {[int]} entityId  [id Direction or Topic]
  * @return {[type]}          [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
  */
-exports.getListFundsName = function(entityId) {
+EntityService.getListFundsName = function(entityId) {
     var listFunds = await(sequelize.models.EntityOtherEntity.findAll({
         where: { entityId }
     }));
     return listFunds.map(function(listFund) {
         var record = listFund.dataValues,
             otherEntityId = record.otherEntityId;
+        // console.log('RECORD otherEntityId', record.otherEntityId);
         var entity = await(getEntityByEntityId(otherEntityId, 'fund', true));
+        // console.log('ENTITY', entity);
         if (entity) { return entity.title; }
     });
 };
@@ -156,7 +160,7 @@ function getEntityByEntityId(id, type, published) {
 }
 
 
-exports.associateEntity = function(id, otherId) {
+EntityService.associateEntity = function(id, otherId) {
     var relationsCount = await(sequelize.models.EntityOtherEntity.count({
         where: {
             entityId: id,
@@ -175,7 +179,7 @@ exports.associateEntity = function(id, otherId) {
     }]));
 };
 
-exports.removeAssociation = function(id, otherId) {
+EntityService.removeAssociation = function(id, otherId) {
     return await(sequelize.models.EntityOtherEntity.destroy({
         where: {
             entityId: {
@@ -188,7 +192,7 @@ exports.removeAssociation = function(id, otherId) {
     }));
 };
 
-exports.associateEntities = function(id, otherIds) {
+EntityService.associateEntities = function(id, otherIds) {
     var creating = otherIds.map(e => {
         return [{
             entityId: id,
@@ -204,7 +208,7 @@ exports.associateEntities = function(id, otherIds) {
     return await(sequelize.models.EntityOtherEntity.bulkCreate(associations));
 };
 
-exports.removeAssociations = function(id) {
+EntityService.removeAssociations = function(id) {
     return await(sequelize.models.EntityOtherEntity.destroy({
         where: {
             $or: [{
@@ -216,7 +220,7 @@ exports.removeAssociations = function(id) {
     }));
 };
 
-exports.getTodayFundsCount = function() {
+EntityService.getTodayFundsCount = function() {
     var today = new Date(),
         year = today.getFullYear(),
         month = today.getMonth(),
@@ -234,7 +238,7 @@ exports.getTodayFundsCount = function() {
     }));
 };
 
-exports.getFundsCount = function() {
+EntityService.getFundsCount = function() {
     return await(sequelize.models.Entity.count({
         where: {
             type: {
@@ -244,7 +248,7 @@ exports.getFundsCount = function() {
     }));
 };
 
-exports.getUserFunds = function(id, published) {
+EntityService.getUserFunds = function(id, published) {
     return await(sequelize.models.Entity.findOne({
         where: {
             id,
@@ -258,7 +262,7 @@ exports.getUserFunds = function(id, published) {
     }));
 };
 
-exports.publishAll = function() {
+EntityService.publishAll = function() {
     return await(sequelize.models.Entity.update({
         published: true
     }, {
@@ -268,7 +272,7 @@ exports.publishAll = function() {
     }));
 };
 
-exports.getEntitiesByTypeWithNested = function(type, includes) {
+EntityService.getEntitiesByTypeWithNested = function(type, includes) {
     var include = includes.map(e => {
         return {
             model: sequelize.models.Entity,
@@ -285,3 +289,5 @@ exports.getEntitiesByTypeWithNested = function(type, includes) {
         include
     }));
 };
+
+module.exports = EntityService;
