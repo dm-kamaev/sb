@@ -240,7 +240,8 @@ class UserFundController extends Controller {
             var entities = await(userFundService.getEntities(userFundId));
             console.log('here3');
             var res = orderService.getListDirectionTopicFunds(entities),
-                listDirectionsTopicsFunds = res[0], listFunds = res[1];
+                listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
+                listFunds = res.listFunds;
 
             console.log('here4');
             var data = {

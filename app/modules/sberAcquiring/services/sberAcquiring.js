@@ -37,7 +37,7 @@ const sberAcquiring = {};
  */
 sberAcquiring.firstPay = function(params) {
     try {
-        return await(axios.get('/payment/rest/register.do?', {
+        return await(axios.get(configSberAcquiring.registerOrder, {
             params: {
                 userName: params.userName || configSberAcquiring.userName,
                 password: params.password || configSberAcquiring.password,
@@ -119,7 +119,7 @@ sberAcquiring.firstPay = function(params) {
     }*/
 sberAcquiring.getStatusAndGetBind = function(params) {
     try {
-        return await(axios.get('/payment/rest/getOrderStatusExtended.do?', {
+        return await(axios.get(configSberAcquiring.getStatusOrder, {
             params: {
                 userName: params.userName || configSberAcquiring.userName,
                 password: params.password || configSberAcquiring.password,
@@ -159,7 +159,7 @@ sberAcquiring.getStatusAndGetBind = function(params) {
 // orderId is mdOrder for actionPayByBind
 sberAcquiring.actionCreatePayByBind = function(params) {
     try {
-        return await(axios.get('/payment/rest/register.do?', {
+        return await(axios.get(configSberAcquiring.registerOrder, {
             params: {
                 userName: params.userName || configSberAcquiring.userNameSsl,
                 password: params.password || configSberAcquiring.passwordSsl,
@@ -196,16 +196,29 @@ sberAcquiring.actionCreatePayByBind = function(params) {
     }
 */
 sberAcquiring.actionPayByBind = function(params) {
-    var data = {
-        userName: params.userName || configSberAcquiring.userNameSsl,
-        password: params.password || configSberAcquiring.passwordSsl,
-        mdOrder: params.orderId,
-        bindingId: params.bindingId,
-        language: 'ru',
+    var handlerResponce = function (params) {
+        if (params.httpResponse.statusCode === 200) {
+            params.resolve(params.body);
+        } else {
+            var error = handlerHttpError(params.httpResponse);
+            params.reject(
+                new errors.HttpError(
+                    'Failed connection with sberbank acquiring. Error: '+error,
+                    500
+                )
+            );
+        }
     };
-    return await(new Promise((resolve, reject) => {
+    var req = function (resolve, reject) {
+        var data = {
+            userName: params.userName || configSberAcquiring.userNameSsl,
+            password: params.password || configSberAcquiring.passwordSsl,
+            mdOrder: params.orderId,
+            bindingId: params.bindingId,
+            language: 'ru',
+        };
         request.post({
-            url: configSberAcquiring.hostname + '/payment/rest/paymentOrderBinding.do',
+            url: configSberAcquiring.hostname+configSberAcquiring.payByBind,
             formData: data
         }, function(err, httpResponse, body) {
             if (err) {
@@ -216,20 +229,12 @@ sberAcquiring.actionPayByBind = function(params) {
                   )
                 );
             } else {
-                if (httpResponse.statusCode === 200) {
-                    resolve(body);
-                } else {
-                    var error = handlerHttpError(httpResponse);
-                    reject(
-                        new errors.HttpError(
-                            'Failed connection with sberbank acquiring. Error: '+error,
-                            500
-                        )
-                    );
-                }
+                handlerResponce({resolve, reject, httpResponse, body});
             }
         });
-    }));
+    };
+
+    return await(new Promise(req));
 };
 
 module.exports = sberAcquiring;
@@ -242,7 +247,7 @@ function handlerHttpError(e) {
         headers = JSON.stringify(e.headers);
         status = e.status;
         data = e.data;
-    } else if (e.headers && e.statusCode, e.statusMessage) { // request
+    } else if (e.headers && e.statusCode && e.statusMessage) { // request
         headers = JSON.stringify(e.headers);
         status = e.statusCode;
         data = e.statusMessage;
