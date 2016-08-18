@@ -131,7 +131,9 @@ exports.getListFundsName = function(entityId) {
     return listFunds.map(function(listFund) {
         var record = listFund.dataValues,
             otherEntityId = record.otherEntityId;
+        // console.log('RECORD otherEntityId', record.otherEntityId);
         var entity = await(getEntityByEntityId(otherEntityId, 'fund', true));
+        // console.log('ENTITY', entity);
         if (entity) { return entity.title; }
     });
 };

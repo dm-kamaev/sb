@@ -3,6 +3,9 @@
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
+const errors = require('../../../components/errors');
+const userFundService = require('../services/userFundService');
+
 
 exports.createUserFund = function(data) {
     return await(sequelize.models.UserFund.create({
@@ -185,4 +188,20 @@ exports.updateUserFundSubscription = function(id, data) {
             id
         }
     }));
+};
+
+
+/**
+ * if not own userfund then check exist and enable another userfund
+ * @param  {[int]} ownUserFundId
+ * @param  {[int]} userFundId
+ * @return {[type]}
+ */
+exports.checkEnableAnotherUserFund = function (ownUserFundId, userFundId) {
+    // check whether userFund enabled if he is not the owner
+    if (ownUserFundId !== userFundId) {
+        var userFund = await(userFundService.getUserFund(userFundId));
+        if (!userFund)        { throw new errors.NotFoundError('UserFund', userFundId); }
+        if (!userFund.enabled){ throw new errors.HttpError('UserFund disabled', 400);   }
+    }
 };

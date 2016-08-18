@@ -36,30 +36,19 @@ const sberAcquiring = {};
     }
  */
 sberAcquiring.firstPay = function(params) {
-    try {
-        return await(axios.get(configSberAcquiring.registerOrder, {
-            params: {
-                userName: params.userName || configSberAcquiring.userName,
-                password: params.password || configSberAcquiring.password,
-                amount: params.amount,
-                orderNumber: params.orderNumber,
-                returnUrl: params.returnUrl,
-                failUrl: params.failUrl,
-                language: 'ru',
-                clientId: params.clientId,
-                jsonParams: params.jsonParams,
-            }
-        })).data;
-    } catch (e) {
-        await(orderService.updateInfo(
-          params.orderNumber, { status: 'eqOrderNotCreated' })
-        );
-        var error = handlerHttpError(e) || JSON.stringify(e);
-        throw new errors.HttpError(
-            'Failed connection with sberbank acquiring. Error: '+error,
-            500
-        );
-    }
+    return await(axios.get(configSberAcquiring.registerOrder, {
+        params: {
+            userName: params.userName || configSberAcquiring.userName,
+            password: params.password || configSberAcquiring.password,
+            amount: params.amount,
+            orderNumber: params.orderNumber,
+            returnUrl: params.returnUrl,
+            failUrl: params.failUrl,
+            language: 'ru',
+            clientId: params.clientId,
+            jsonParams: params.jsonParams,
+        }
+    })).data;
 };
 
     /* params –– {
