@@ -201,7 +201,8 @@ class UserFundController extends Controller {
      * @apiParamExample {json} exampleReqeust:
      * {
      *   "userFundId": "1",
-     *   "amount": "20000"
+     *   "amount": "20000",
+     *   "app": true
      * }
      */
      // { "amount": 210 }
@@ -211,7 +212,8 @@ class UserFundController extends Controller {
             ownUserFundId = actionContext.request.user.userFund.id,
             // now user can only pay to own userFund
             userFundId = actionContext.data.userFundId || ownUserFundId,
-            amount = actionContext.data.amount;
+            amount = actionContext.data.amount,
+            isCordova = actionContext.data.app;
 
         // check whether userFund enabled if he is not the owner
         // if now first pay then user's userfund is always disabled, but for another userfund

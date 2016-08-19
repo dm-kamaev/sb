@@ -8,7 +8,8 @@ const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const errors = require('../../../components/errors');
-const orderStatus = require('../enums/orderStatus')
+const orderStatus = require('../enums/orderStatus');
+const os = require('os');
 
 var OrderService = {};
 
@@ -57,7 +58,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
  * if first pay for user
  * then create order in our system and in sberbank acquring
  * else return message
- * @param  {[obj]}  { userFundId, amount, userFundSubscriptionId, currentCardId }
+ * @param  {[obj]}  { userFundId, amount, userFundSubscriptionId, currentCardId, isCordova }
  * @return {[obj]}
  */
 OrderService.firstPayOrSendMessage = function(params) {
@@ -84,8 +85,8 @@ OrderService.firstPayOrSendMessage = function(params) {
             responceSberAcqu = await(sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: config.hostname + '#success',
-                failUrl: config.hostname + '#failed',
+                returnUrl: `${os.hostname()}:3000/#success?app=${params.isCordova}`,
+                failUrl: `${os.hostname()}:3000/#failed?app=${params.isCordova}`,
                 language: 'ru',
                 clientId: params.sberUserId,
                 jsonParams: JSON.stringify({

@@ -15,11 +15,11 @@ userFundRouter.delete('/:entityId(\\d+)',
                 userFundController.actionRemoveEntity);
 userFundRouter.get('/entity', userFundController.actionGetEntities);
 userFundRouter.get('/count', userFundController.actionCountUserFunds);
-userFundRouter.post('/amount', userFundController.actionSetAmount);
 userFundRouter.use((req, res, next) => {
     // check permissions here somehow
     next();
 });
+userFundRouter.post('/amount', userFundController.actionSetAmount);
 userFundRouter.get('/amount', userFundController.actionGetCurrentAmount);
 
 module.exports = userFundRouter;
