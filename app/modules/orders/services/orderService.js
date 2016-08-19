@@ -10,6 +10,8 @@ const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
 const os = require('os');
+const _ = require('lodash');
+
 
 var OrderService = {};
 
@@ -68,7 +70,11 @@ OrderService.firstPayOrSendMessage = function(params) {
         var res = getListDirectionTopicFunds_(entities),
             listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
             listFunds = res.listFunds;
-        // console.log('HERE','\n', listDirectionsTopicsFunds,'\n',listFunds);
+
+        if (_.isEmpty(listDirectionsTopicsFunds) || _.isEmpty(listFunds)) {
+            throw new errors.HttpError('UserFund is empty', 400);
+        }
+
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
@@ -99,10 +105,8 @@ OrderService.firstPayOrSendMessage = function(params) {
                   status: orderStatus.EQ_ORDER_NOT_CREATED
               })
             );
-            // var error = handlerHttpError(e) || JSON.stringify(e);
-            throw new errors.HttpError(
-                'Failed connection with sberbank acquiring. Error: '+e,
-                500
+            throw new errors.AcquiringError(
+                'Failed connection with sberbank acquiring (first pay) '+JSON.stringify(e)
             );
         }
 
@@ -132,6 +136,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
         }
     }));
 };
+
 
 OrderService.isAvalibleForPayment = function(order) {
     return order.status == orderStatus.WAITING_FOR_PAY;
@@ -197,10 +202,8 @@ function getListDirectionTopicFunds_(entities) {
         listFunds = [];
     for (var i = 0, l = entities.length; i < l; i++) {
         var entity = entities[i].dataValues, type = entity.type;
-        console.log('ENTITY', entity.title, entity.type);
         listDirectionsTopicsFunds.push([type, entity.title]);
         if (type === 'direction' || type === 'topic') {
-            console.log('NOT FUND', entity.title, entity.type);
             listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
         } else {
             listFunds.push(entity.title);
@@ -211,6 +214,7 @@ function getListDirectionTopicFunds_(entities) {
         listFunds
     };
 }
+
 
 /**
  * study responce sberbank acquiring
@@ -238,10 +242,11 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
             status: orderStatus.EQ_ORDER_NOT_CREATED
         };
         await (OrderService.updateInfo(sberAcquOrderNumber, data));
-        return {
-            errorCode,
-            errorMessage
-        };
+        var textError = 'errorCode: "'+errorCode+'", errorMessage: "'+errorMessage+'"';
+        throw new errors.HttpError(
+            'Failed create order in Sberbank acquiring. '+textError,
+            503
+        );
     }
 }
 
