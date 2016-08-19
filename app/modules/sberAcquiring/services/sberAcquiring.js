@@ -7,6 +7,7 @@ const axios = require('axios').create({
   validateStatus: (status) => { return status >= 200 && status < 500; },
 });
 const errors = require('../../../components/errors');
+const requestPromise = require('../../../components/requestPromise');
 const request = require('request');
 
 const sberAcquiring = {};
@@ -34,21 +35,28 @@ const sberAcquiring = {};
      errorMessage: 'Заказ с таким номером уже обработан',
     }
  */
- sberAcquiring.firstPay = function(params) {
-     return await(axios.get(configSberAcquiring.registerOrder, {
-         params: {
-             userName: params.userName || configSberAcquiring.userName,
-             password: params.password || configSberAcquiring.password,
-             amount: params.amount,
-             orderNumber: params.orderNumber,
-             returnUrl: params.returnUrl,
-             failUrl: params.failUrl,
-             language: 'ru',
-             clientId: params.clientId,
-             jsonParams: params.jsonParams,
-         }
-     })).data;
- };
+sberAcquiring.firstPay = function(params) {
+    if (!params.jsonParams) {
+        params.jsonParams = JSON.stringify({
+            recurringFrequency: configSberAcquiring.recurringFrequency,
+            recurringExpiry: configSberAcquiring.recurringExpiry,
+        });
+    }
+
+    return await(axios.get(configSberAcquiring.registerOrder, {
+        params: {
+            userName: params.userName || configSberAcquiring.userName,
+            password: params.password || configSberAcquiring.password,
+            amount: params.amount,
+            orderNumber: params.orderNumber,
+            returnUrl: params.returnUrl,
+            failUrl: params.failUrl,
+            language: 'ru',
+            clientId: params.clientId,
+            jsonParams: params.jsonParams,
+        }
+    })).data;
+};
 
     /* params –– {
         userName: 'aventica-api',
@@ -106,24 +114,16 @@ const sberAcquiring = {};
       }
     }*/
 sberAcquiring.getStatusAndGetBind = function(params) {
-    try {
-        return await(axios.get(configSberAcquiring.getStatusOrder, {
-            params: {
-                userName: params.userName || configSberAcquiring.userName,
-                password: params.password || configSberAcquiring.password,
-                language: 'ru',
-                orderNumber: params.orderNumber,
-                orderId: params.orderId,
-                clientId: params.clientId,
-            }
-        })).data;
-    } catch (e) {
-        var error = handlerHttpError(e) || JSON.stringify(e);
-        throw new errors.HttpError(
-            'Failed connection with sberbank acquiring. Error: '+error,
-            500
-        );
-    }
+    return await(axios.get(configSberAcquiring.getStatusOrder, {
+        params: {
+            userName: params.userName || configSberAcquiring.userName,
+            password: params.password || configSberAcquiring.password,
+            language: 'ru',
+            orderNumber: params.orderNumber,
+            orderId: params.orderId,
+            clientId: params.clientId,
+        }
+    })).data;
 };
 
 
@@ -144,10 +144,9 @@ sberAcquiring.getStatusAndGetBind = function(params) {
      errorCode: '1',
      errorMessage: 'Заказ с таким номером уже обработан',
     }*/
-// orderId is mdOrder for actionPayByBind
-sberAcquiring.CreatePayByBind = function(params) {
-    try {
-        return await(axios.get(configSberAcquiring.registerOrder, {
+// orderId is mdOrder for payByBind
+sberAcquiring.createPayByBind = function(params) {
+    return await(axios.get(configSberAcquiring.registerOrder, {
             params: {
                 userName: params.userName || configSberAcquiring.userNameSsl,
                 password: params.password || configSberAcquiring.passwordSsl,
@@ -159,13 +158,6 @@ sberAcquiring.CreatePayByBind = function(params) {
                 clientId: params.clientId,
             }
         })).data;
-    } catch (e) {
-        var error = handlerHttpError(e) || JSON.stringify(e);
-        throw new errors.HttpError(
-            'Failed connection with sberbank acquiring. Error: '+error,
-            500
-        );
-    }
 };
 
 
@@ -183,110 +175,19 @@ sberAcquiring.CreatePayByBind = function(params) {
      "errorMessage":"Связка не найдена"
     }
 */
-sberAcquiring.PayByBind = function(params) {
-    var handlerResponce = function (params) {
-        if (params.httpResponse.statusCode === 200) {
-            params.resolve(params.body);
-        } else {
-            var error = handlerHttpError(params.httpResponse);
-            params.reject(
-                new errors.HttpError(
-                    'Failed connection with sberbank acquiring. Error: '+error,
-                    500
-                )
-            );
-        }
+sberAcquiring.payByBind = function(params) {
+    var data = {
+        userName: params.userName || configSberAcquiring.userNameSsl,
+        password: params.password || configSberAcquiring.passwordSsl,
+        mdOrder: params.orderId,
+        bindingId: params.bindingId,
+        language: 'ru',
     };
-    var req = function (resolve, reject) {
-        var data = {
-            userName: params.userName || configSberAcquiring.userNameSsl,
-            password: params.password || configSberAcquiring.passwordSsl,
-            mdOrder: params.orderId,
-            bindingId: params.bindingId,
-            language: 'ru',
-        };
-        request.post({
-            url: configSberAcquiring.hostname+configSberAcquiring.payByBind,
-            formData: data
-        }, function(err, httpResponse, body) {
-            if (err) {
-                reject(
-                  new errors.HttpError(
-                      'Failed connection with sberbank acquiring. Error: '+JSON.stringify(err),
-                      500
-                  )
-                );
-            } else {
-                handlerResponce({resolve, reject, httpResponse, body});
-            }
-        });
-    };
-
-    return await(new Promise(req));
+    return requestPromise.post(
+      configSberAcquiring.hostname+configSberAcquiring.payByBind,
+      data
+    );
 };
 
+
 module.exports = sberAcquiring;
-
-
-function handlerHttpError(e) {
-    var error = '';
-    var headers = '', status = e.status, data = e.data;
-    if (e.headers && e.status && e.data) { // axios
-        headers = JSON.stringify(e.headers);
-        status = e.status;
-        data = e.data;
-    } else if (e.headers && e.statusCode && e.statusMessage) { // request
-        headers = JSON.stringify(e.headers);
-        status = e.statusCode;
-        data = e.statusMessage;
-    }
-    if (headers && status && data) {
-        error += 'Headers: ' + headers + '\n';
-        error += 'Status:  ' + status + '\n';
-        error += 'Data:    ' + data + '\n';
-        return error;
-    }
-    return '';
-}
-
-
-
-/* EXAMPLE USE */
-const async = require('asyncawait/async');
-// const config = require('../../../../config/config.json');
-// async(()=>{
-//   var responceSberAcqu = await(sberAcquiring.getStatusAndGetBind({
-//     orderNumber: 118,
-//     orderId: 'f2634bf5-f956-4d1e-9bd5-f3e48db8b52e',
-//     clientId: 73,
-//   }));
-//   // 73 bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db'
-//   console.log(responceSberAcqu);
-// })();
-
-// actionCreatePayByBind();
-// function actionCreatePayByBind () {
-//     async(()=>{
-//       var responceSberAcqu = await(sberAcquiring.CreatePayByBind({
-//         amount:      333,
-//         orderNumber: 121,
-//         returnUrl:   config.hostname+'#sucess',
-//         failUrl:     config.hostname+'#failed',
-//         language:    'ru',
-//         clientId:    73,
-//       }));
-//       // orderId: '6984845d-f910-4b49-9fed-9aa3159e2b9b'
-//       console.log('actionCreatePayByBind=', responceSberAcqu);
-//     })();
-// }
-
-// actionPayByBind();
-function actionPayByBind () {
-    async(()=>{
-      var responceSberAcqu = await(sberAcquiring.PayByBind({
-        orderId:   'ef9446bb-0f55-45e1-8ee1-3e2651209f31',
-        bindingId: '332b4837-0b9d-4e8a-bcd3-e77e1b46d3db',
-      }));
-      console.log('responceSberAcqu=', responceSberAcqu);
-    })();
-}

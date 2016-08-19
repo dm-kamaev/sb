@@ -86,25 +86,21 @@ OrderService.firstPayOrSendMessage = function(params) {
 
         var responceSberAcqu;
         try {
-            responceSberAcqu = await(sberAcquiring.firstPay({
+            responceSberAcqu = sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: config.hostname + '#success',
-                failUrl: config.hostname + '#failed',
+                returnUrl: config.hostname+'#success',
+                failUrl: config.hostname+'#failed',
                 language: 'ru',
                 clientId: params.sberUserId,
-                jsonParams: JSON.stringify({
-                    recurringFrequency: '10',
-                    recurringExpiry: '21000101'
-                }),
-            }));
-        } catch (e) {
+            });
+        } catch (err) {
             await(OrderService.updateInfo(sberAcquOrderNumber, {
                   status: orderStatus.EQ_ORDER_NOT_CREATED
               })
             );
             throw new errors.AcquiringError(
-                'Failed connection with sberbank acquiring (first pay) '+JSON.stringify(e)
+                'Failed connection with sberbank acquiring (first pay) '+JSON.stringify(err)
             );
         }
 
@@ -137,7 +133,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
 
 
 OrderService.isAvalibleForPayment = function(order) {
-    return order.status == orderStatus.WAITING_FOR_PAY;
+    return order.status === orderStatus.WAITING_FOR_PAY;
 };
 
 OrderService.getAcquiringOrder = function(order) {
@@ -158,7 +154,7 @@ OrderService.getAcquiringOrder = function(order) {
         sberAcquErrorMessage: eqOrderStatus.errorMessage,
         sberAcquActionCode: eqOrderStatus.actionCode,
         sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-        status: eqOrderStatus.actionCode == 0 ? orderStatus.PAID :
+        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID :
                                                     orderStatus.FAILED
     }));
 
@@ -166,24 +162,25 @@ OrderService.getAcquiringOrder = function(order) {
 };
 
 OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
-    return sberAcquiringOrderStatus.actionCode == 0;
+    return sberAcquiringOrderStatus.actionCode === 0;
 }
 
 function getAcquiringOrderStatus_(order) {
   try {
-      return await(sberAcquiring.getStatusAndGetBind({
+      return sberAcquiring.getStatusAndGetBind({
           sberAcquOrderNumber: order.sberAcquOrderNumber,
           orderId: order.sberAcquOrderId,
           clientId: order.userFundSubscription.sberUser.id
-      }));
+      });
   } catch (err) {
-      throw err;
       await (OrderService.updateInfo(order.sberAcquOrderNumber, {
           status: orderStatus.WAITING_FOR_PAY
       }));
-      throw new errors.AcquiringError('Failed to get order status');
+      throw new errors.AcquiringError(
+          'Failed connection with sberbank acquiring (get order status) '+JSON.stringify(err)
+      );
   }
-};
+}
 
 
 /**

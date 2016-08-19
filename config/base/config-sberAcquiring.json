@@ -9,5 +9,8 @@
 
     "registerOrder":  "/payment/rest/register.do?",
     "getStatusOrder": "/payment/rest/getOrderStatusExtended.do?",
-    "payByBind":      "/payment/rest/paymentOrderBinding.do"
+    "payByBind":      "/payment/rest/paymentOrderBinding.do",
+
+    "recurringFrequency": "28",
+    "recurringExpiry": "21000101"
 }
