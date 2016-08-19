@@ -24,7 +24,8 @@ OrderView.renderInfo = function(orderData) {
         bindingInfo: {
             clientId: orderData.clientId,
             bindingId: orderData.binding
-        }
+        },
+        orderNumber: orderData.orderNumber
     };
 
     return result;

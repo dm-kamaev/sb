@@ -4,6 +4,7 @@ const chakram = require('chakram');
 const expect = chakram.expect;
 const exec = require('child_process').execSync;
 const path = require('path');
+const queryString = require('query-string');
 
 var extend = require('util')._extend;
 
@@ -106,29 +107,47 @@ describe('User fund Actions Test', function() {
 
 describe('Success first payment test', function() {
     var userFundId,
-        paymentRedirectUrl,
-        orderId;
+    paymentRedirectUrl,
+    orderId,
+    userId,
+    orderNumber;
 
     before('Add methods', function () {
+        chakram.addMethod('orderNumberSaved', function(respObj) {
+            var emulatorOrder = respObj.body;
+            orderNumber = emulatorOrder.orderNumber;
+            return chakram.wait();
+        });
+
         chakram.addMethod('fundEnabledAndIdSaved', function(respObj) {
-            var fund = respObj.body.userFund;
+            var user = respObj.body;
             this.assert(
-                fund.enabled,
+                user.userFund.enabled,
                 'User fund is not enabled!'
             )
-            userFundId = fund.id;
+            userFundId = user.userFund.id;
+            userId = user.id;
             return chakram.wait();
         });
 
         chakram.addMethod('redirectRecievedAndSaved', function(respObj) {
             var redirect = respObj.body;
             this.assert(
-                !(redirect.errorCode = undefined),
+                redirect.errorCode == undefined,
                 'Acquiring returned error: ' +
                 redirect.errorMessage
             );
             paymentRedirectUrl = redirect.formUrl;
             orderId = redirect.orderId;
+            return chakram.wait();
+        });
+
+        chakram.addMethod('checkStatus', function(respObj, status) {
+            this.assert(
+                respObj.body.status == status,
+                'Incorrect status! Expected: ' + status + ' but recieved: '
+                    + respObj.body.status
+            );
             return chakram.wait();
         });
     });
@@ -158,6 +177,23 @@ describe('Success first payment test', function() {
         return chakram.wait();
     });
 
+    it('Should get orderNumber', function () {
+        var url = 'http://www60.lan:3005/payment/rest/' +
+            'getOrderStatusExtended.do?orderId=' +
+                orderId + '&clientId=' + userId;
+        var response = chakram.get(url);
+        expect(response).to.have.status(200);
+        expect(response).is.orderNumberSaved();
+        return chakram.wait();
+    });
+
+    it('Should get waitingForPay status', function () {
+        var url = services.url.concatUrl('order/'+orderNumber);
+        var response = chakram.get(url);
+        expect(response).is.checkStatus('waitingForPay');
+        return chakram.wait();
+    });
+
     it('Should pay', function() {
         var url = paymentRedirectUrl;
         var response = chakram.get(url);
@@ -165,18 +201,66 @@ describe('Success first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should get amount', function () {
-        var url = services.url.concatUrl('user-fund/amount');
-        var response = chakram.get(url);
-        expect(response).to.have.status(200);
-        return chakram.wait();
+    it('Should get paid status', function (done) {
+        var url = services.url.concatUrl('order/'+orderNumber);
+        //delay, because server need time to recieve callback from sber
+        var request = new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                try{
+                    var response = chakram.get(url);
+                    resolve(response);
+                } catch (e) {
+                    reject(e);
+                }
+            }, 500);
+        });
+        request.then(response => {
+            chakram.waitFor([
+                expect(response).is.checkStatus('paid'),
+                done()
+            ]);
+        }).catch(e => console.log(e));
     });
 });
 
 describe('Unsuccess first payment test', function() {
     var userFundId,
-        paymentRedirectUrl,
-        orderId;
+    paymentRedirectUrl,
+    orderId,
+    orderNumber,
+    userId;
+
+    before('Add methods', function () {
+        chakram.addMethod('orderNumberSaved', function(respObj) {
+            var emulatorOrder = respObj.body;
+            orderNumber = emulatorOrder.orderNumber;
+            return chakram.wait();
+        });
+
+        chakram.addMethod('fundEnabledAndIdSaved', function(respObj) {
+            var user = respObj.body;
+            this.assert(
+                user.userFund.enabled,
+                'User fund is not enabled!'
+            )
+            userFundId = user.userFund.id;
+            userId = user.id;
+            return chakram.wait();
+        });
+
+        chakram.addMethod('redirectRecievedAndSaved', function(respObj) {
+            var redirect = respObj.body;
+            this.assert(
+                redirect.errorCode == undefined,
+                'Acquiring returned error: ' +
+                redirect.errorMessage
+            );
+            paymentRedirectUrl = redirect.formUrl;
+            orderId = redirect.orderId;
+            return chakram.wait();
+        });
+
+    });
 
     before('Logout', function() {
         var url = services.url.concatUrl('auth/logout');
@@ -218,15 +302,41 @@ describe('Unsuccess first payment test', function() {
         return chakram.wait();
     });
 
+    it('Should get orderNumber', function () {
+        var url = 'http://www60.lan:3005/payment/rest/' +
+            'getOrderStatusExtended.do?orderId=' +
+                orderId + '&clientId=' + userId;
+        var response = chakram.get(url);
+        expect(response).to.have.status(200);
+        expect(response).is.orderNumberSaved();
+        return chakram.wait();
+    });
+
+    it('Should get waitingForPay status', function () {
+        var url = services.url.concatUrl('order/'+orderNumber);
+        var response = chakram.get(url);
+        expect(response).is.checkStatus('waitingForPay');
+        return chakram.wait();
+    });
+
     it('Should run cronscript', function () {
-        exec('node ../app/scripts/checkOrderStatus.js immediate', (error, stdout,  stderr) => {
-            if (error) {
-                console.error(`exec error: ${error}`);
-                return;
-            }
-            console.log(`stdout: ${stdout}`);
-            console.log(`stderr: ${stderr}`);
+        //est. running time = 12000ms
+        exec('node ../app/scripts/checkOrderStatus.js immediate',
+            (error, stdout,  stderr) => {
+                if (error) {
+                    console.error(`exec error: ${error}`);
+                    return;
+                }
+                console.log(`stdout: ${stdout}`);
+                console.log(`stderr: ${stderr}`);
         });
+        return chakram.wait();
+    });
+
+    it('Should get failed status', function () {
+        var url = services.url.concatUrl('order/'+orderNumber);
+        var response = chakram.get(url);
+        expect(response).is.checkStatus('failed');
         return chakram.wait();
     });
 });
