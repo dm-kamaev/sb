@@ -71,9 +71,9 @@ OrderService.firstPayOrSendMessage = function(params) {
             listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
             listFunds = res.listFunds;
 
-        if (_.isEmpty(listDirectionsTopicsFunds) || _.isEmpty(listFunds)) {
-            throw new errors.HttpError('UserFund is empty', 400);
-        }
+        if (!entities.length) {
+          throw new errors.HttpError('UserFund is empty', 400);
+        }  
 
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
@@ -92,7 +92,7 @@ OrderService.firstPayOrSendMessage = function(params) {
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
                 returnUrl: `${os.hostname()}:3000/#success?app=${params.isCordova}`,
-                failUrl: `${os.hostname()}:3000/#failed?app=${params.isCordova}`,
+                failUrl: `${os.hostname()}:3000/#failure?app=${params.isCordova}`,
                 language: 'ru',
                 clientId: params.sberUserId,
             });
@@ -263,7 +263,8 @@ function insertPay_(data) {
         directionsTopicsFunds: data.listDirectionsTopicsFunds,
         funds: data.listFunds,
         fundInfo: data.fundInfo,
-        status: data.status
+        status: data.status,
+        // orderItems:
     }));
 }
 

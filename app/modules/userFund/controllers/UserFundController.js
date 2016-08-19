@@ -233,7 +233,8 @@ class UserFundController extends Controller {
             amount,
             userFundSubscriptionId: subscription.dataValues.id,
             currentCardId: card.dataValues.currentCardId,
-            sberUserId
+            sberUserId,
+            isCordova
         };
         return orderService.firstPayOrSendMessage(params);
     }
