@@ -6,7 +6,9 @@
     "chakram": "^1.4.0",
     "faker": "^3.1.0",
     "mocha": "^3.0.2",
-    "randomstring": "^1.1.5"
+    "randomstring": "^1.1.5",
+    "query-string": "^4.2.3"
   },
-  "dependencies": {}
+  "dependencies": {
+  }
 }
