@@ -30,3 +30,6 @@ deployment-config.json
 
 # shell-scripts
 create_file.sh
+
+# test
+test.js
