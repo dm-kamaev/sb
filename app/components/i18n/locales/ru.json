@@ -1,0 +1,5 @@
+{
+	"UserFund is empty": "Юзер фонд пуст",
+  "Failed connection with sberbank acquiring (first pay). {{error}}": "Ошибка соединения со сбербанк эквайринг (первый платеж). {{error}}",
+  "Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}"
+}
