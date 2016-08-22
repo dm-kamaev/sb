@@ -50,7 +50,7 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
  * @return {[type]}
  */
 OrderService.updateInfo = function(sberAcquOrderNumber, data) {
-    return await(sequelize.models.Order.update(data, {
+    return await (sequelize.models.Order.update(data, {
         where: {
             sberAcquOrderNumber,
         }
@@ -75,10 +75,16 @@ OrderService.firstPayOrSendMessage = function(params) {
             listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
             listFunds = res.listFunds;
 
-        if (!entities.length) {
-          throw new errors.HttpError('UserFund is empty', 400);
-        }
-
+        var start = new Date();
+        entities.map(entity => Object.assign(entity, {
+                uncovered: false,
+                fund: entity.fund.map(fund => Object.assign(fund, {
+                    uncovered: true,
+                    parentId: entity.id
+                }))
+            }))
+        console.log(new Date() - start);
+        
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
@@ -95,12 +101,13 @@ OrderService.firstPayOrSendMessage = function(params) {
             responceSberAcqu = sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: `${os.hostname()}:3000/#success?app=${params.isCordova}`,
-                failUrl: `${os.hostname()}:3000/#failure?app=${params.isCordova}`,
+                returnUrl: `http://${os.hostname()}:${config.port}/#success?app=${params.isCordova}`,
+                failUrl: `http://${os.hostname()}:${config.port}/#failure?app=${params.isCordova}`,
                 language: 'ru',
                 clientId: params.sberUserId,
             });
         } catch (err) {
+<<<<<<< HEAD
             await(OrderService.updateInfo(sberAcquOrderNumber, {
                   status: orderStatus.EQ_ORDER_NOT_CREATED
               })
@@ -108,6 +115,13 @@ OrderService.firstPayOrSendMessage = function(params) {
             var textError = i18n.__(
                 'Failed connection with sberbank acquiring (first pay). {{error}}',
                 { error: JSON.stringify(err) }
+=======
+            await (OrderService.updateInfo(sberAcquOrderNumber, {
+                status: orderStatus.EQ_ORDER_NOT_CREATED
+            }));
+            throw new errors.AcquiringError(
+                'Failed connection with sberbank acquiring (first pay) ' + JSON.stringify(err)
+>>>>>>> SV-217 added crontab configs
             );
             throw new errors.AcquiringError(textError);
         }
@@ -130,8 +144,6 @@ OrderService.firstPayOrSendMessage = function(params) {
  * @return {[type]}
  */
 OrderService.updateInfo = function(sberAcquOrderNumber, data) {
-    console.log(data);
-    console.log(sberAcquOrderNumber);
     return await (sequelize.models.Order.update(data, {
         where: {
             sberAcquOrderNumber,
@@ -157,13 +169,12 @@ OrderService.getAcquiringOrder = function(order) {
 
     var eqOrderStatus = getAcquiringOrderStatus_(order)
 
-    await(OrderService.updateInfo(sberAcquOrderNumber, {
+    await (OrderService.updateInfo(sberAcquOrderNumber, {
         sberAcquErrorCode: eqOrderStatus.errorCode,
         sberAcquErrorMessage: eqOrderStatus.errorMessage,
         sberAcquActionCode: eqOrderStatus.actionCode,
         sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID :
-                                                    orderStatus.FAILED
+        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID : orderStatus.FAILED
     }));
 
     return eqOrderStatus;
@@ -174,6 +185,7 @@ OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
 }
 
 function getAcquiringOrderStatus_(order) {
+<<<<<<< HEAD
   try {
       return sberAcquiring.getStatusAndGetBind({
           sberAcquOrderNumber: order.sberAcquOrderNumber,
@@ -190,6 +202,22 @@ function getAcquiringOrderStatus_(order) {
       );
       throw new errors.AcquiringError(textError);
   }
+=======
+    try {
+        return sberAcquiring.getStatusAndGetBind({
+            sberAcquOrderNumber: order.sberAcquOrderNumber,
+            orderId: order.sberAcquOrderId,
+            clientId: order.userFundSubscription.sberUser.id
+        });
+    } catch (err) {
+        await (OrderService.updateInfo(order.sberAcquOrderNumber, {
+            status: orderStatus.WAITING_FOR_PAY
+        }));
+        throw new errors.AcquiringError(
+            'Failed connection with sberbank acquiring (get order status) ' + JSON.stringify(err)
+        );
+    }
+>>>>>>> SV-217 added crontab configs
 }
 
 
@@ -206,10 +234,11 @@ function getListDirectionTopicFunds_(entities) {
     var listDirectionsTopicsFunds = [],
         listFunds = [];
     for (var i = 0, l = entities.length; i < l; i++) {
-        var entity = entities[i].dataValues, type = entity.type;
+        var entity = entities[i].dataValues,
+            type = entity.type;
         listDirectionsTopicsFunds.push([type, entity.title]);
         if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
+            listFunds = listFunds.concat(await (entityService.getListFundsName(entity.id)));
         } else {
             listFunds.push(entity.title);
         }
@@ -247,12 +276,19 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
             status: orderStatus.EQ_ORDER_NOT_CREATED
         };
         await (OrderService.updateInfo(sberAcquOrderNumber, data));
+<<<<<<< HEAD
         var textError = i18n.__(
             "Failed create order in Sberbank acquiring. "+
             "errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",{
                 errorCode,
                 errorMessage
              }
+=======
+        var textError = 'errorCode: "' + errorCode + '", errorMessage: "' + errorMessage + '"';
+        throw new errors.HttpError(
+            'Failed create order in Sberbank acquiring. ' + textError,
+            503
+>>>>>>> SV-217 added crontab configs
         );
         throw new errors.HttpError(textError, 503);
     }
