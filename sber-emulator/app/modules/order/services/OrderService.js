@@ -106,4 +106,16 @@ OrderService.payByBind = async(function(orderId, binding) {
         }
     }
 });
+
+OrderService.lastOrderFromClient = async(function(clientId) {
+    var order = await(models.Order.findOne({
+        where: {
+            clientId: clientId
+        },
+        order: [
+            ['createdAt', 'DESC']
+        ]
+    }));
+    return order;
+});
 module.exports = OrderService;

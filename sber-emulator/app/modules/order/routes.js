@@ -10,5 +10,6 @@ router.get('/payment/rest/getOrderStatusExtended.do',
     orderController.actionGetInfo);
 router.get('/payment/rest/paymentOrderBinding.do',
     orderController.actionPayByBind);
-
+router.get('/client/:clientId/last', orderController.actionLastOrderFromClient);
+router.post('/fail/:fail', orderController.actionFailOrders);
 module.exports = router;
