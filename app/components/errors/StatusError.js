@@ -1,5 +1,7 @@
 'use strict';
 
+const i18n = require('../i18n');
+
 module.exports = class StatusError extends Error {
     /**
      * @constructor
@@ -7,7 +9,10 @@ module.exports = class StatusError extends Error {
      * @param {String} status new status
      */
     constructor(currentStatus, status) {
-        super(`Wrong status: ${status}. CurrentStatus: ${currentStatus}`);
+        super(i18n.__("Wrong status: {{status}}. CurrentStatus: {{currentStatus}}", {
+          status,
+          currentStatus
+        }));
 
         this.name = 'StatusError';
         Error.captureStackTrace(this, this.constructor);

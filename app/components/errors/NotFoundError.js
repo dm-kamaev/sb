@@ -1,5 +1,7 @@
 'use strict';
 
+const i18n = require('../i18n');
+
 class NotFoundError extends Error {
   /**
    * @constructor
@@ -7,7 +9,11 @@ class NotFoundError extends Error {
    * @param {Integer} id identifier of not found model
    */
     constructor(modelName, id) {
-        super(`Can't find ${modelName} with id ${id}`);
+        // super(`Can't find ${modelName} with id ${id}`);
+        super(i18n.__("Can't find {{modelName}} with id {{id}}", {
+          modelName,
+          id
+        }));
 
         this.name = 'NotFoundError';
         this.statusCode = 404;

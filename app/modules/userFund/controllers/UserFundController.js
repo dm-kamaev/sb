@@ -4,6 +4,7 @@
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
+const i18n   = require('../../../components/i18n');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityView = require('../../entity/views/entityView');
@@ -11,6 +12,7 @@ const userFundService = require('../services/userFundService');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
 const log = console.log;
+
 
 class UserFundController extends Controller {
     /**
@@ -54,7 +56,7 @@ class UserFundController extends Controller {
      */
     actionDeleteUserFund(actionContext, id) {
         var deletedCount = await(userFundService.deleteUserFund(id));
-        if (!deletedCount) throw new errors.NotFoundError('UserFund', id);
+        if (!deletedCount) throw new errors.NotFoundError(i18n.__('UserFund'), id);
         return null;
     };
 
@@ -76,7 +78,7 @@ class UserFundController extends Controller {
         var data = actionContext.request.body;
         delete data.id;
         var updatedCount = await(userFundService.updateUserFund(id, data));
-        if (!updatedCount[0]) throw new errors.NotFoundError('UserFund', id);
+        if (!updatedCount[0]) throw new errors.NotFoundError(i18n.__('UserFund'), id);
         return null;
     };
 
@@ -91,7 +93,7 @@ class UserFundController extends Controller {
      */
     actionGetUserFund(actionContext, id) {
         var userFund = await(userFundService.getUserFund(id));
-        if (!userFund) throw new errors.NotFoundError('UserFund', id);
+        if (!userFund) throw new errors.NotFoundError(i18n.__('UserFund'), id);
         return userFundView.renderUserFund(userFund);
     };
 
@@ -138,9 +140,9 @@ class UserFundController extends Controller {
         } catch (err) {
             if (err.message == 'Not found') {
                 var ids = [id, entityId].join(' OR ');
-                throw new errors.NotFoundError('UserFund OR Entity', ids);
+                throw new errors.NotFoundError(i18n.__('UserFund OR Entity'), ids);
             }
-            throw new errors.HttpError('RelationExists', 400);
+            throw new errors.HttpError(i18n.__('Relation exists'), 400);
         }
     };
 
@@ -156,7 +158,7 @@ class UserFundController extends Controller {
     actionRemoveEntity(actionContext, entityId) {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.removeEntity(id, entityId));
-        if (!res) throw new errors.HttpError('Relation don\'t exists', 400);
+        if (!res) throw new errors.HttpError(i18n.__("Relation don't exists"), 400);
         return null;
     };
 
