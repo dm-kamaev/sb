@@ -185,9 +185,9 @@ describe('Success first payment test', function() {
     });
 
     it('Should get orderNumber', function () {
-        var url = 'http://www60.lan:3005/payment/rest/' +
+        var url = services.url.concatEmulUrl('payment/rest/' +
             'getOrderStatusExtended.do?orderId=' +
-                orderId + '&clientId=' + userId;
+                orderId + '&clientId=' + userId);
         var response = chakram.get(url);
         expect(response).to.have.status(200);
         expect(response).is.orderNumberSaved();
@@ -317,9 +317,9 @@ describe('Unsuccess first payment test', function() {
     });
 
     it('Should get orderNumber', function () {
-        var url = 'http://www60.lan:3005/payment/rest/' +
+        var url = services.url.concatEmulUrl('payment/rest/' +
             'getOrderStatusExtended.do?orderId=' +
-                orderId + '&clientId=' + userId;
+                orderId + '&clientId=' + userId);
         var response = chakram.get(url);
         expect(response).to.have.status(200);
         expect(response).is.orderNumberSaved();
@@ -495,7 +495,7 @@ describe('Sber acquiring fails test', function() {
     });
 
     before('Fail orders', function () {
-        var url = 'http://www60.lan:3005/fail/1';
+        var url = services.url.concatEmulUrl('fail/1');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
         return chakram.wait();
@@ -533,7 +533,7 @@ describe('Sber acquiring fails test', function() {
     });
 
     it('Should get orderNumber', function () {
-        var url = 'http://www60.lan:3005/client/' + userId + '/last';
+        var url = services.url.concatEmulUrl('client/' + userId + '/last');
         var response = chakram.get(url);
         expect(response).to.have.status(200);
         expect(response).is.orderNumberSaved();
@@ -548,7 +548,7 @@ describe('Sber acquiring fails test', function() {
     });
 
     after('Cancel ordrers failing', function () {
-        var url = 'http://www60.lan:3005/fail/0';
+        var url = services.url.concatEmulUrl('fail/0');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
         return chakram.wait();
