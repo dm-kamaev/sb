@@ -10,5 +10,9 @@ module.exports = {
     'express': {
         'handlers': ['terminal'],
         'level': 'DEBUG',
+    },
+    'scripts': {
+        'handlers': ['terminal'],
+        'level': 'TRACE',
     }
 }
