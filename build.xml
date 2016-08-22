@@ -27,6 +27,8 @@
              user.supervisor.link,
              auth.supervisor.link,
              sber.ensure-local-config,
+             sber.make-tmp-dir,
+             user.migrate,
              sber.migrate-database,
              auth.create-runtime-dir,
              user.create-runtime-dir,
@@ -77,4 +79,11 @@
           <arg line="-R g+w ${basedir}/public/uploads/entity_pics"/>
       </exec>
   </target>
+
+  <target name="sber.make-tmp-dir">
+      <exec executable="mkdir" dir="${basedir}">
+          <arg line="app/components/sequelize/tmp"/>
+      </exec>
+  </target>
+  
 </project>
