@@ -61,8 +61,8 @@
   </target>
 
   <target name="sber.migrate-database">
-      <exec executable="${npm}" dir="${basedir}" failonerror="on">
-          <arg line="run migrate"/>
+      <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
+          <arg line="migrate"/>
       </exec>
   </target>
 
@@ -77,5 +77,4 @@
           <arg line="-R g+w ${basedir}/public/uploads/entity_pics"/>
       </exec>
   </target>
-
 </project>
