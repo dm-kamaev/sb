@@ -4,6 +4,7 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
 const errors = require('../../../components/errors');
+const i18n = require('../../../components/i18n');
 const userFundService = require('../services/userFundService');
 
 
@@ -61,7 +62,7 @@ UserFundService.addEntity = function(id, entityId) {
         }
     }));
 
-    if (count) throw new Error('Relation exists');
+    if (count) throw new Error(i18n.__('Relation exists'));
 
     return await(sequelize.models.UserFundEntity.create({
         entityId,
@@ -95,7 +96,7 @@ UserFundService.getEntities = function(id) {
         }
     }));
 
-    if (!userFund) throw new Error('Not found');
+    if (!userFund) throw new Error(i18n.__('Not found'));
 
     return userFund.entity;
 };
@@ -203,8 +204,12 @@ UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId
     // check whether userFund enabled if he is not the owner
     if (ownUserFundId !== userFundId) {
         var userFund = await(UserFundService.getUserFund(userFundId));
-        if (!userFund)        { throw new errors.NotFoundError('UserFund', userFundId); }
-        if (!userFund.enabled){ throw new errors.HttpError('UserFund disabled', 400);   }
+        if (!userFund) {
+            throw new errors.NotFoundError(i18n.__('UserFund'), userFundId);
+        }
+        if (!userFund.enabled) {
+            throw new errors.HttpError(i18n.__('UserFund disabled'), 400);
+        }
     }
 };
 

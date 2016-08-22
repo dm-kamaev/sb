@@ -1,0 +1,17 @@
+{
+  "Wrong status: {{status}}. CurrentStatus: {{currentStatus}}": "Неверный статус: {{status}}. Текущий статус: {{currentStatus}}",
+  "UserFund OR Entity": "Юзер фонд или Фонд",
+  "Relation exists": "Связь существует",
+  "Relation don't exists": "Связь не существует",
+  "Not found": "Не найдено",
+  "Can't find {{modelName}} with id {{id}}": "Не найден {{modelName}} c id {{id}}",
+  "UserFund": "Юзер фонд",
+  "UserFund disabled": "Юзер фонд отключен",
+  "UserFund is empty": "Юзер фонд пуст",
+  "Error in Sberbank acquiring system": "Ошибка в системе Сбербанка эквайринга",
+  "Unknown response from Sberbank acquiring": "Неизвестный ответ от Сбербанк эквайринг",
+  "Failed create order in Sberbank acquiring. errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'": "Не удалось создать платеж в Сбербанк эквайринг. errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",
+  "You changed the monthly payment amount.": "Вы изменили сумму ежемесячного платежа.",
+  "Failed connection with sberbank acquiring (first pay). {{error}}": "Ошибка соединения со сбербанк эквайринг (первый платеж). {{error}}",
+  "Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}"
+}

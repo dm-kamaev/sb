@@ -10,6 +10,7 @@ const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
 const os = require('os');
+const i18n = require('../../../components/i18n');
 const _ = require('lodash');
 
 
@@ -67,13 +68,16 @@ OrderService.firstPayOrSendMessage = function(params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
         var entities = await (userFundService.getEntities(params.userFundId));
+        if (!entities.length) {
+            throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
+        }
         var res = getListDirectionTopicFunds_(entities),
             listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
             listFunds = res.listFunds;
 
         if (!entities.length) {
           throw new errors.HttpError('UserFund is empty', 400);
-        }  
+        }
 
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
@@ -101,9 +105,11 @@ OrderService.firstPayOrSendMessage = function(params) {
                   status: orderStatus.EQ_ORDER_NOT_CREATED
               })
             );
-            throw new errors.AcquiringError(
-                'Failed connection with sberbank acquiring (first pay) '+JSON.stringify(err)
+            var textError = i18n.__(
+                'Failed connection with sberbank acquiring (first pay). {{error}}',
+                { error: JSON.stringify(err) }
             );
+            throw new errors.AcquiringError(textError);
         }
 
         return handlerResponceSberAcqu_(
@@ -111,7 +117,7 @@ OrderService.firstPayOrSendMessage = function(params) {
         );
     } else {
         return {
-            message: 'Вы изменили сумму ежемесячного платежа.'
+            message: i18n.__('You changed the monthly payment amount.')
         };
     }
 }
@@ -178,9 +184,11 @@ function getAcquiringOrderStatus_(order) {
       await (OrderService.updateInfo(order.sberAcquOrderNumber, {
           status: orderStatus.WAITING_FOR_PAY
       }));
-      throw new errors.AcquiringError(
-          'Failed connection with sberbank acquiring (get order status) '+JSON.stringify(err)
+      var textError = i18n.__(
+          'Failed connection with sberbank acquiring (get order status). {{error}}',
+          { error: JSON.stringify(err) }
       );
+      throw new errors.AcquiringError(textError);
   }
 }
 
@@ -230,7 +238,7 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
         return responceSberAcqu;
     } else {
         const ourErrorCode = '100'; // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
-        const ourErrorMessage = 'Неизвестный ответ от Сбербанк эквайринг';
+        const ourErrorMessage = i18n.__('Unknown response from Sberbank acquiring');
         var errorCode = responceSberAcqu.errorCode || ourErrorCode,
             errorMessage = responceSberAcqu.errorMessage || ourErrorMessage;
         var data = {
@@ -239,11 +247,14 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
             status: orderStatus.EQ_ORDER_NOT_CREATED
         };
         await (OrderService.updateInfo(sberAcquOrderNumber, data));
-        var textError = 'errorCode: "'+errorCode+'", errorMessage: "'+errorMessage+'"';
-        throw new errors.HttpError(
-            'Failed create order in Sberbank acquiring. '+textError,
-            503
+        var textError = i18n.__(
+            "Failed create order in Sberbank acquiring. "+
+            "errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",{
+                errorCode,
+                errorMessage
+             }
         );
+        throw new errors.HttpError(textError, 503);
     }
 }
 
