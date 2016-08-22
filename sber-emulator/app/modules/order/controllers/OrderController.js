@@ -6,6 +6,8 @@ const OrderService = require('../services/OrderService');
 const OrderView = require('../views/OrderView');
 const i18n = require('../../../components/i18n');
 
+var failOrders = false;
+
 class OrderController extends Controller {
     constructor() {
         super();
@@ -51,7 +53,11 @@ class OrderController extends Controller {
                 throw e;
             }
         }
-        return OrderView.renderOrder(order);
+        if(failOrders == false){
+            return OrderView.renderOrder(order);
+        } else {
+            actionContext.next();
+        }
     }
 
     /**
@@ -126,6 +132,20 @@ class OrderController extends Controller {
     actionPayByBind(actionContext) {
         var query = actionContext.request.query;
         return await(OrderService.payByBind(query.mdOrder, query.bindingId));
+    }
+
+
+    actionLastOrderFromClient(actionContext, clientId) {
+        return await(OrderService.lastOrderFromClient(clientId));
+    }
+
+    actionFailOrders(actionContext, fail) {
+        if(fail == true){
+            failOrders = true;
+        } else {
+            failOrders = false
+        }
+        return {fail: failOrders}
     }
 }
 
