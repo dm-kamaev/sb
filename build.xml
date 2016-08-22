@@ -27,7 +27,6 @@
              user.supervisor.link,
              auth.supervisor.link,
              sber.ensure-local-config,
-             user.migrate,
              sber.migrate-database,
              auth.create-runtime-dir,
              user.create-runtime-dir,
@@ -62,8 +61,8 @@
   </target>
 
   <target name="sber.migrate-database">
-      <exec executable="${node}" dir="${basedir}/app/scripts" failonerror="on">
-          <arg line="migrate"/>
+      <exec executable="${npm}" dir="${basedir}" failonerror="on">
+          <arg line="run migrate"/>
       </exec>
   </target>
 
