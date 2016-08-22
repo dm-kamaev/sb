@@ -1,5 +1,6 @@
 {
     "host": "localhost",
     "scheme": "default",
-    "port": 3001
+    "port": 3001,
+    "logFile":"/opt/sber-together-api/current/runtime/user-service.log"
 }
