@@ -27,6 +27,7 @@
 
     <target name="packaging.release.switch"
       depends="packaging.shared-folders,
+             packaging.shared-folders.media,
              packaging.supervisor.link,
              user.supervisor.link,
              auth.supervisor.link,
