@@ -40,8 +40,7 @@
              packaging.rollback-script,
              packaging.supervisor.restart,
              packaging.crontab.install,
-             sber.change-owner,
-             sber.allow-create-files"/>
+             sber.change-owner"/>
 
   <target name="packaging.release.clean"
             depends="packaging.shared-folders.unlink"/>
