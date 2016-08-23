@@ -10,5 +10,9 @@ module.exports = {
     'express': {
         'handlers': ['fileRotate'],
         'level': 'INFO',
-    }
+    },
+    'monthlyPayments': {
+        'handlers': ['fileRotate'],
+        'level': 'INFO'
+    },
 };
