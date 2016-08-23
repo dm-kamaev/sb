@@ -84,7 +84,7 @@ OrderService.firstPayOrSendMessage = function(params) {
                 }))
             }))
         console.log(new Date() - start);
-        
+
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
@@ -107,7 +107,6 @@ OrderService.firstPayOrSendMessage = function(params) {
                 clientId: params.sberUserId,
             });
         } catch (err) {
-<<<<<<< HEAD
             await(OrderService.updateInfo(sberAcquOrderNumber, {
                   status: orderStatus.EQ_ORDER_NOT_CREATED
               })
@@ -115,13 +114,6 @@ OrderService.firstPayOrSendMessage = function(params) {
             var textError = i18n.__(
                 'Failed connection with sberbank acquiring (first pay). {{error}}',
                 { error: JSON.stringify(err) }
-=======
-            await (OrderService.updateInfo(sberAcquOrderNumber, {
-                status: orderStatus.EQ_ORDER_NOT_CREATED
-            }));
-            throw new errors.AcquiringError(
-                'Failed connection with sberbank acquiring (first pay) ' + JSON.stringify(err)
->>>>>>> SV-217 added crontab configs
             );
             throw new errors.AcquiringError(textError);
         }
@@ -185,7 +177,6 @@ OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
 }
 
 function getAcquiringOrderStatus_(order) {
-<<<<<<< HEAD
   try {
       return sberAcquiring.getStatusAndGetBind({
           sberAcquOrderNumber: order.sberAcquOrderNumber,
@@ -202,22 +193,6 @@ function getAcquiringOrderStatus_(order) {
       );
       throw new errors.AcquiringError(textError);
   }
-=======
-    try {
-        return sberAcquiring.getStatusAndGetBind({
-            sberAcquOrderNumber: order.sberAcquOrderNumber,
-            orderId: order.sberAcquOrderId,
-            clientId: order.userFundSubscription.sberUser.id
-        });
-    } catch (err) {
-        await (OrderService.updateInfo(order.sberAcquOrderNumber, {
-            status: orderStatus.WAITING_FOR_PAY
-        }));
-        throw new errors.AcquiringError(
-            'Failed connection with sberbank acquiring (get order status) ' + JSON.stringify(err)
-        );
-    }
->>>>>>> SV-217 added crontab configs
 }
 
 
@@ -276,20 +251,12 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
             status: orderStatus.EQ_ORDER_NOT_CREATED
         };
         await (OrderService.updateInfo(sberAcquOrderNumber, data));
-<<<<<<< HEAD
         var textError = i18n.__(
             "Failed create order in Sberbank acquiring. "+
             "errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",{
                 errorCode,
                 errorMessage
-             }
-=======
-        var textError = 'errorCode: "' + errorCode + '", errorMessage: "' + errorMessage + '"';
-        throw new errors.HttpError(
-            'Failed create order in Sberbank acquiring. ' + textError,
-            503
->>>>>>> SV-217 added crontab configs
-        );
+             });
         throw new errors.HttpError(textError, 503);
     }
 }
