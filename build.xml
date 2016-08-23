@@ -17,8 +17,8 @@
     <property name="packaging.source.supervisor"
             value="${packaging.target.current-path}/environment/supervisord/${packaging.project}.conf"/>
 
-    <property name="packaging.source.media.path" value="${basedir}/public/uploads/entity_pics"/>
-    <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entity_pics"/>
+    <property name="packaging.source.media.path" value="${basedir}/public/uploads/entities"/>
+    <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entities"/>
 
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>

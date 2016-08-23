@@ -9,11 +9,11 @@ const checkQuery = require('../../components/server/middleware/checkQuery');
 const checkToken = require('nodules/checkAuth').CheckToken(SECRET)
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, path.join(__dirname, '../../../public/uploads/entity_pics'));
+        cb(null, path.join(__dirname, '../../../public/uploads/entities'));
     },
     filename: function(req, file, cb) {
         var filename = `entity-${Date.now()}.${file.mimetype.split('/')[1]}`;
-        req.body.imgUrl = `entity_pics/${filename}`;
+        req.body.imgUrl = `entities/${filename}`;
         cb(null, filename);
     }
 });
