@@ -12,9 +12,13 @@
     <property name="packaging.project" value="${ant.project.name}"/>
     <property name="packaging.target.basedir" value="/opt/${packaging.project}"/>
     <property name="packaging.target.current-path" value="${packaging.target.basedir}/current"/>
+    <property name="packaging.target.shared.path" value="/opt/${packaging.project}/shared"/>
 
     <property name="packaging.source.supervisor"
             value="${packaging.target.current-path}/environment/supervisord/${packaging.project}.conf"/>
+
+    <property name="packaging.source.media.path" value="${basedir}/public/uploads/entity_pics"/>
+    <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entity_pics"/>
 
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>
@@ -26,7 +30,6 @@
              packaging.supervisor.link,
              user.supervisor.link,
              auth.supervisor.link,
-             sber.ensure-local-config,
              sber.make-tmp-dir,
              user.migrate,
              sber.migrate-database,
@@ -85,5 +88,28 @@
           <arg line="app/components/sequelize/tmp"/>
       </exec>
   </target>
-  
+
+  <target name="packaging.shared-folders.link.media" depends="packaging.shared-folders.unlink.media">
+        <symlink link="${packaging.source.media.path}" resource="${packaging.target.shared.media}"/>
+    </target>
+
+    <target name="packaging.shared-folders.unlink.media">
+        <symlink action="delete" link="${packaging.source.media.path}"/>
+    </target>
+
+    <target name="packaging.shared-folders.create.media">
+        <mkdir dir="${packaging.target.shared.media}"/>
+    </target>
+
+    <target name="packaging.shared-folders.set-permissions.media">
+        <shellscript shell="bash">
+            find ${packaging.target.shared.media} -type d -exec chmod -c 777 \{\} \;
+        </shellscript>
+    </target>
+
+    <target name="packaging.shared-folders.media"
+            depends="packaging.shared-folders.create.media,
+            packaging.shared-folders.set-permissions.media,
+            packaging.shared-folders.link.media"/>
+
 </project>

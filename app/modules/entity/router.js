@@ -2,9 +2,11 @@
 
 const entityRouter = require('express').Router();
 const multer = require('multer');
+const SECRET = require('../../../config/admin-config').secret;
 const path = require('path');
 const errors = require('../../components/errors');
 const checkQuery = require('../../components/server/middleware/checkQuery');
+const checkToken = require('nodules/checkAuth').CheckToken(SECRET)
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, path.join(__dirname, '../../../public/uploads/entity_pics'));
@@ -23,8 +25,8 @@ var EntityController = require('./controllers/EntityController');
 var entityController = new EntityController();
 
 entityRouter.use((req, res, next) => {
-    // req.published = token ? true : { $or: [true, false] };
-    req.published = true;
+    req.published = req.header('Token-Header') != SECRET ? true : { $or: [true, false] };
+    // req.published = true;
     next();
 });
 entityRouter.use(checkQuery);
@@ -44,10 +46,7 @@ entityRouter.post('/publishall',
     entityController.actionPublishAll);
 
 // admin routes
-entityRouter.use((req, res, next) => {
-    // check auth here
-    next();
-});
+entityRouter.use(checkToken);
 
 entityRouter.get('/all',
     entityController.actionGetEntitiesWithNested);
