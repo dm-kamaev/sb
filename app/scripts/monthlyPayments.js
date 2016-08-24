@@ -3,50 +3,24 @@
 // recurrent monthly payments (start every day)
 
 const logger = require('../components/logger').getLogger('monthlyPayments');
-const axios  = require('axios');
+const orderService = require('../modules/orders/services/orderService.js');
 const moment  = require('moment');
-const sequelize = require('../components/sequelize');
+const log = console.log;
 
-// console.log(moment('2016-02-29').endOf('month').format('YYYY-MM-DD'));
-logger.info('recurrent monthly payments...');
+const NumberDays = 5; // take 5 days before now
 
-getListDates();
-function getListDates () {
-    var res = [];
-    // var now = moment('2016-02-29');
-    var now = moment('2016-02-29');
-    var lastDayMonth = moment('2016-02-29').endOf('month'),
-        // formatLastDayMonth = lastDayMonth.format('YYYY-MM-DD');
-        formatLastDayMonth = lastDayMonth.format('DD');
-    // res.push(now.format('YYYY-MM-DD'));
-    res.push(now.format('DD'));
+logger.info('START: recurrent monthly payments');
 
+(function () {
+    // var dates = orderService.getListDatesBefore(NumberDays, '2016-02-29');
+    // var dates = orderService.getListDatesBefore(NumberDays, '2016-03-02');
+    // var dates = orderService.getListDatesBefore(NumberDays,'2016-03-29');
+    // var dates = orderService.getListDatesBefore(NumberDays, '2016-03-30');
+    // var dates = orderService.getListDatesBefore(NumberDays, '2016-03-31');
+    var dates = orderService.getListDatesBefore(NumberDays);
+    // log(dates);
+    var allDates = [];
+    dates.forEach(date => orderService.getMissingDays(allDates, date) );
 
-    for (var i = 0; i < 5; i++) {
-      now = now.subtract(1, 'day');
-      res.push(now.format('DD'));
-      // res.push(now.format('YYYY-MM-DD'));
-    }
-
-    for (var j = 0, l1 = res.length; j < l1; j++) {
-      // console.log(res[j], formatLastDayMonth);
-      if (formatLastDayMonth === res[j]) {
-        res = res.concat(getMissingDays(formatLastDayMonth));
-      }
-    }
-    console.log(res);
-}
-
-
-function getMissingDays (formatLastDayMonth) {
-    var digitLastDay = parseInt(formatLastDayMonth, 10),
-        diff = 31 - digitLastDay,
-        res = [];
-    if (diff) {
-        for (var i = 1; i <= diff; i++) {
-          res.push(digitLastDay+i);
-        }
-    }
-    return res;
-}
-
+    // log(allDates);
+})();
