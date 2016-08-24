@@ -56,7 +56,7 @@ class OrderController extends Controller {
         if(failOrders == false){
             return OrderView.renderOrder(order);
         } else {
-            actionContext.next();
+            actionContext.status = 500;
         }
     }
 

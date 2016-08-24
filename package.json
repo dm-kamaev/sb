@@ -8,6 +8,8 @@
     "config": "node app/scripts/createConfig.js",
     "start-users": "node app/scripts/startUserService.js",
     "start-auth": "node app/scripts/startAuthService.js",
+    "start-users-dev": "node app/scripts/startUserServiceDev.js",
+    "start-auth-dev": "node app/scripts/startAuthServiceDev.js",
     "lint-fix": "node_modules/.bin/eslint app/** --fix --config ./node_modules/nodules/.eslintrc || true",
     "drop-all": "psql -d sber-together-api -c \"DROP SCHEMA IF EXISTS \"public\" CASCADE;CREATE SCHEMA \"public\";\"",
     "update": "node node_modules/nodules/npmUpdate",
@@ -35,6 +37,7 @@
     "deployment": "git+ssh://git@github.com:c7s/deployment.git#dev",
     "express": "^4.13.4",
     "express-session": "^1.14.0",
+    "fs-extra": "0.28.0",
     "gulp": "^3.9.1",
     "gulp-eslint": "^2.0.0",
     "i18n": "^0.8.3",
@@ -53,9 +56,15 @@
     "sber-together": "git+ssh://git@github.com:c7s/sber-together.git#dev",
     "sequelize": "^3.23.3",
     "sequelize-cli": "^1.9.1",
-    "user-service": "git+ssh://git@github.com/c7s/user-service.git#dev"
+    "user-service": "git+ssh://git@github.com/c7s/user-service.git#dev",
+    "uuid": "^2.0.2"
   },
   "devDependencies": {
-    "gulp-apidoc": "^0.2.4"
+    "gulp-apidoc": "^0.2.4",
+    "chakram": "^1.4.0",    
+    "mocha": "^3.0.2",
+    "query-string": "^4.2.3",
+    "randomstring": "^1.1.5",
+    "chance": "^1.0.4"
   }
 }

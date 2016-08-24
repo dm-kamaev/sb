@@ -1,0 +1,16 @@
+{
+    "userName": "aventica-api",
+    "password": "aventica",
+
+    "userNameSsl":  "aventica_ssl-api",
+    "passwordSsl": "aventica_ssl",
+
+    "hostname":   "http://localhost:3005",
+
+    "registerOrder":  "/payment/rest/register.do?",
+    "getStatusOrder": "/payment/rest/getOrderStatusExtended.do?",
+    "payByBind":      "/payment/rest/paymentOrderBinding.do",
+
+    "recurringFrequency": "28",
+    "recurringExpiry": "21000101"
+}

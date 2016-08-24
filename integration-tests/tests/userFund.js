@@ -12,8 +12,17 @@ var extend = require('util')._extend;
 const services = require('../services');
 
 chakram.setRequestDefaults({
-    jar: true
+    jar: true,
+    har: {
+        headers: [
+            {
+                name: 'Token-Header',
+                value: 'superSecretTokenString'
+            }
+        ]
+    }
 });
+
 
 describe('User fund Actions Test', function() {
     var entitiesIdList = [];
@@ -50,8 +59,7 @@ describe('User fund Actions Test', function() {
             });
         });
     });
-
-    before('Register', function() {
+    before('Should register', function() {
         var url = services.url.concatUrl('auth/register');
         var user = services.user.genRandomUser();
         var response = chakram.post(url, user);
@@ -59,7 +67,7 @@ describe('User fund Actions Test', function() {
         return chakram.wait();
     });
 
-    before('Load entities', function() {
+    before('Should Load entities', function() {
         var entities = services.entity.generateEntities(3);
         var url = services.url.concatUrl('entity');
         entities.forEach(function(entity) {
@@ -122,7 +130,7 @@ describe('Success first payment test', function() {
         chakram.addMethod('fundEnabledAndIdSaved', function(respObj) {
             var user = respObj.body;
             this.assert(
-                user.userFund.enabled,
+                user.userFund.enabled == true,
                 'User fund is not enabled!'
             )
             userFundId = user.userFund.id;
@@ -226,7 +234,11 @@ describe('Success first payment test', function() {
                 expect(response).is.checkStatus('paid'),
                 done()
             ]);
-        }).catch(e => console.log(e));
+        }).catch(e => {
+            chakram.waitFor([
+                done(e)
+            ])
+        });
     });
 });
 

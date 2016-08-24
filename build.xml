@@ -9,6 +9,7 @@
     <property name="user.runtime-path" value="${packaging.source.frontend-app.runtime.path}"/>
     <property name="auth.runtime-path" value="${packaging.source.frontend-app.runtime.path}"/>
     <property name="node" value="/usr/bin/node"/>
+    <property name="npm" value="/usr/bin/npm"/>
     <property name="packaging.project" value="${ant.project.name}"/>
     <property name="packaging.target.basedir" value="/opt/${packaging.project}"/>
     <property name="packaging.target.current-path" value="${packaging.target.basedir}/current"/>
@@ -24,6 +25,11 @@
     <import file="${basedir}/node_modules/deployment/node.xml"/>
     <import file="${basedir}/node_modules/user-service/build.xml"/>
     <import file="${basedir}/node_modules/auth-service/build.xml"/>
+    <import file="${basedir}/sber-emulator/build.xml"/>
+
+    <condition property="integration-tests">
+        <contains string="${env}" substring="emul"/>
+    </condition>
 
     <target name="packaging.release.switch"
       depends="packaging.shared-folders,
@@ -36,11 +42,14 @@
              sber.migrate-database,
              auth.create-runtime-dir,
              user.create-runtime-dir,
+             sber.build-test-environment,
              packaging.release.folder.link,
              packaging.rollback-script,
              packaging.supervisor.restart,
-             packaging.crontab.install,
-             sber.change-owner"/>
+	         packaging.crontab.install,
+             sber.change-owner,
+             sber.run-integration-tests
+             "/>
 
   <target name="packaging.release.clean"
             depends="packaging.shared-folders.unlink"/>
@@ -73,7 +82,7 @@
 
   <target name="sber.change-owner">
       <exec executable="chown" dir="${basedir}">
-          <arg line="-R svmeste ${basedir}"/>
+          <arg line="-R gorod ${basedir}"/>
       </exec>
   </target>
 
@@ -111,5 +120,27 @@
             depends="packaging.shared-folders.create.media,
             packaging.shared-folders.set-permissions.media,
             packaging.shared-folders.link.media"/>
+
+    <target name="sber.build-test-environment" if="integration-tests"
+            depends="emulator.supervisor.link,
+            emulator.make-tmp-dir,
+            emulator.migrate"/>
+
+    <target name="sber.run-integration-tests" if="integration-tests"
+            depends="sber.integration-tests"/>
+            
+    <target name="sber.integration-tests">
+        <waitfor maxwait="10" maxwaitunit="second">
+            <and>
+                <socket server="localhost" port="3000"/>
+                <socket server="localhost" port="3001"/>
+                <socket server="localhost" port="3002"/>
+                <socket server="localhost" port="3005"/>
+            </and>
+        </waitfor>
+        <exec executable="${npm}" dir="${basedir}/integration-tests" failonerror="on">
+            <arg line="run tests"/>
+        </exec>
+    </target>
 
 </project>

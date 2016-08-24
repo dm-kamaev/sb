@@ -70,7 +70,7 @@ OrderService.sendCallback = async(function(orderId, delay) {
         }
     }));
     setTimeout(function() {
-        axios.get('http://www60.lan:3000/callback', {
+        axios.get('http://localhost:3000/callback', {
             params: {
                 mdOrder: order.dataValues.orderId,
                 orderNumber: order.dataValues.orderNumber,

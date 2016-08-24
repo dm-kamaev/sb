@@ -1,0 +1,6 @@
+{
+    "host": "localhost",
+    "scheme": "default",
+    "port": 3001,
+    "logFile":""
+}
