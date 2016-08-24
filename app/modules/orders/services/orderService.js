@@ -11,6 +11,7 @@ const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
 const os = require('os');
 const i18n = require('../../../components/i18n');
+const moment  = require('moment');
 const _ = require('lodash');
 
 
@@ -280,6 +281,43 @@ function insertPay_(data) {
         status: data.status,
         // orderItems:
     }));
+}
+
+
+/**
+ * [getListDatesBefore description]
+ * @param  {[digit]}  NumberDays number days before "date"
+ * @param  {[string]} date       opitonal
+ * @return {[array]}            [ '2016-02-29', '2016-02-28','2016-02-27', '2016-02-26', '2016-02-25', '2016-02-24' ]
+ */
+OrderService.getListDatesBefore = function (NumberDays, date) {
+    var dates = [];
+    var now = (date) ? moment(date) : moment();
+
+    dates.push(now.format('YYYY-MM-DD'));
+    for (var i = 0; i < NumberDays; i++) {
+        now = now.subtract(1, 'day');
+        dates.push(now.format('YYYY-MM-DD'));
+    }
+    return dates;
+}
+
+
+// if last day in month then push '28', '30', '31'
+OrderService.getMissingDays = function (allDates, date) {
+    var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
+    var dateObjTime = moment(date);
+    if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
+        var dd = formatLastDayMonth.replace(/^\d{4}-\d{2}-/, '');
+        var digitLastDay = parseInt(dd, 10),
+            diff = 31 - digitLastDay;
+        if (diff) {
+            for (var i = diff; i >= 1; i--) {
+              allDates.push((digitLastDay+i).toString());
+            }
+        }
+    }
+    allDates.push(dateObjTime.format('DD'));
 }
 
 module.exports = OrderService;
