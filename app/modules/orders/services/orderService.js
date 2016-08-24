@@ -300,10 +300,15 @@ OrderService.getListDatesBefore = function (NumberDays, date) {
         dates.push(now.format('YYYY-MM-DD'));
     }
     return dates;
-}
+};
 
 
-// if last day in month then push '28', '30', '31'
+/**
+ * if last day in month then push '28', '30', '31'
+ * @param  {[aarray]} allDates [ '2016-02-29', '2016-02-28','2016-02-27', '2016-02-26', '2016-02-25', '2016-02-24' ]
+ * @param  {[string]} date     '2016-02-29'
+ * @return {[array]}          ['29', '28','27', ... ]
+ */
 OrderService.getMissingDays = function (allDates, date) {
     var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
     var dateObjTime = moment(date);
@@ -318,6 +323,6 @@ OrderService.getMissingDays = function (allDates, date) {
         }
     }
     allDates.push(dateObjTime.format('DD'));
-}
+};
 
 module.exports = OrderService;
