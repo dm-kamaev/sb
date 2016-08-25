@@ -1,4 +1,5 @@
 {
+  "Money is not written off, check your card. {{error}}": "Деньги не списались, проверьте вашу карточку. {{error}}",
   "Wrong status: {{status}}. CurrentStatus: {{currentStatus}}": "Неверный статус: {{status}}. Текущий статус: {{currentStatus}}",
   "UserFund OR Entity": "Юзер фонд или Фонд",
   "Relation exists": "Связь существует",

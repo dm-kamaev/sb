@@ -2,7 +2,6 @@
 
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
-const config = require('../../../../config/mail-config');
 const sequelize = require('../../../components/sequelize');
 const MailSender = require('nodules/mail').MailSender;
 const Letter = require('nodules/mail').Letter;
@@ -33,6 +32,24 @@ MailService.sendMailCron = function(email, emailData) {
     var letter = new Letter(
       'Отработал cron: '+emailData.cronName,
       '<div>'+(emailData.error || emailData.data)+'</div>',
+      'html'
+    );
+    await(mailSender.sendMail(email, letter));
+    // need for debug
+    return emailData;
+};
+
+
+/**
+ * send email to user about problems with recurrent payments
+ * @param  {[str]}  email      adress
+ * @param  {[obj]}  emailData
+ * @return {[obj]}
+ */
+MailService.sendUserRecurrentPayments = function(email, emailData) {
+    var letter = new Letter(
+      'Ежемесячные списания',
+      '<div>'+emailData.data+'</div>',
       'html'
     );
     await(mailSender.sendMail(email, letter));
