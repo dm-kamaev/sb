@@ -22,4 +22,22 @@ MailService.sendMail = function(email, emailData) {
     return emailData;
 };
 
+
+/**
+ * send email for cron
+ * @param  {[str]}  email      adress
+ * @param  {[obj]}  emailData
+ * @return {[obj]}
+ */
+MailService.sendMailCron = function(email, emailData) {
+    var letter = new Letter(
+      'Отработал cron: '+emailData.cronName,
+      '<div>'+(emailData.error || emailData.data)+'</div>',
+      'html'
+    );
+    await(mailSender.sendMail(email, letter));
+    // need for debug
+    return emailData;
+};
+
 module.exports = MailService;
