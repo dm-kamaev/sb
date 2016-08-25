@@ -1,13 +1,13 @@
 'use strict';
 
 // recurrent monthly payments (start every day)
-
+const technicalSupport = require('../../config/technicalSupport.json');
 const logger = require('../components/logger').getLogger('monthlyPayments');
 const orderService = require('../modules/orders/services/orderService.js');
 const mailService = require('../modules/auth/services/mailService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
-const path    = require('path');
+const path = require('path');
 const log = console.log;
 
 const NumberDays = 5; // take 5 days before now
@@ -37,7 +37,7 @@ function ifFailed() {
         logger.critical(errorLog);
         async(() =>
             mailService.sendMailCron(
-                'dkamaev@changers.team',
+                technicalSupport.cronEmail,
                 { cronName: path.basename(__filename), error: errorMail }
             )
         )();

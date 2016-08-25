@@ -2,7 +2,6 @@
 
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
-const config = require('../../../../config/mail-config');
 const sequelize = require('../../../components/sequelize');
 const MailSender = require('nodules/mail').MailSender;
 const Letter = require('nodules/mail').Letter;
