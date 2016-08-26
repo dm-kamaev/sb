@@ -366,26 +366,22 @@ OrderService.getMissingDays = function (allDates, date) {
  */
 OrderService.findOrderWithProblemWithCardInPreviousMonth = function (userFundSubscriptionId) {
     var previousMonth = moment().subtract(1, 'month').format('YYYY-MM');
-    var checkDateAndStatus = function (order) {
-        var orderMonth = moment(order.updatedAt).format('YYYY-MM');
-        if (previousMonth === orderMonth) { return true; }
-        return false;
-    };
-
     return await(sequelize.models.Order.findAll({
             where: {
                 userFundSubscriptionId,
                 status: orderStatus.PROBLEM_WITH_CARD
              }
         }).filter(function(order) {
-            return checkDateAndStatus(order);
+            var orderMonth = moment(order.updatedAt).format('YYYY-MM');
+            if (previousMonth === orderMonth) { return true; }
+            return false;
         })
     );
 };
 
 
 /**
- *
+ * if payment failed
  * @param  {[int]} sberAcquOrderNumber
  * @param  {[int]} userFundSubscriptionId
  * @param  {[str]} error                   text from sberbank accuring
@@ -399,17 +395,18 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
     );
 
+    // TODO: to private module
     var authId= await(OrderService.getAuthId(userFundSubscriptionId));
     var resp  = await(axios.get(`/user/${authId}`));
     var userEmail = resp.data.email;
     if (!userEmail) { throw new errors.NotFoundError('email', authId); }
     console.log('userEmail', userEmail);
 
-    // !!! NEXT LINE COMMENT ON PRODUCTION
     // sberAcquOrderNumber 464
+    // !!! NEXT LINE COMMENT ON PRODUCTION
     // problemOrderInPreviousMonth.length = 0;
 
-    //this is the first time the payment failed
+    // this is the first time the payment failed
     if (!problemOrderInPreviousMonth.length) {
         var data = i18n.__(
             'Money is not written off, check your card. {{error}}', {
@@ -421,20 +418,19 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         console.log('SEND')
     // this is the second time the payment failed
     } else {
-        // TODO: get all UserFund
-        // TODO: send email
+        // TODO: get all user subscription and turn off their
+        // turn off subscription for current id
+        await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
+            enabled:false,
+        }));
+        // TODO: maybe turn off user fund
     }
     console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
-
-    // turn off subscription for current id
-    await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
-        enabled:false,
-    }));
 };
 
-async(() => {
-    OrderService.failedReccurentPayment(465, 10, 'Денег нет');
-})();
+// async(() => {
+//     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
+// })();
 
 
 
