@@ -325,4 +325,11 @@ OrderService.getMissingDays = function (allDates, date) {
     allDates.push(dateObjTime.format('DD'));
 };
 
+OrderService.makeMonthlyPayment = function(params) {
+    return;
+    //TODO
+    var payment = sberAcquiring.createPayByBind(params);
+
+}
+
 module.exports = OrderService;

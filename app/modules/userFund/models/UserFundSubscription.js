@@ -67,6 +67,10 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'userFund',
                     foreignKey: 'userFundId'
                 });
+                UserFundSubsription.hasMany(models.PayDayHistory, {
+                    as: 'payDayHistory',
+                    foreignKey: 'subscriptionId'
+                });
             }
         }
     });

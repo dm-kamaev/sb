@@ -4,6 +4,8 @@
 const technicalSupport = require('../../config/technicalSupport.json');
 const logger = require('../components/logger').getLogger('monthlyPayments');
 const orderService = require('../modules/orders/services/orderService.js');
+const userFundService = require('../modules/userFund/services/userFundService');
+const sberAcquiring = require('../modules/sberAcquiring/services/sberAcquiring')
 const mailService = require('../modules/auth/services/mailService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
@@ -15,7 +17,7 @@ const NumberDays = 5; // take 5 days before now
 logger.info('START: recurrent monthly payments');
 
 
-(function () {
+(async(function () {
     ifFailed();
     // null.lenght;
     // var dates = orderService.getListDatesBefore(NumberDays, '2016-02-29');
@@ -27,7 +29,19 @@ logger.info('START: recurrent monthly payments');
     // log(dates);
     var allDates = [];
     dates.forEach(date => orderService.getMissingDays(allDates, date) );
-})();
+    // console.log(allDates);
+    var subscriptions = userFundService.getUnhandledSubscriptions(allDates);
+    // var order = orderService.createOrder
+
+    console.log(subscriptions);
+    subscriptions.forEach(subscription => {
+        orderService.makeMonthlyPayment({
+            subscriptionId: subscription.id,
+            sberUserId: subscription.sberUserId,
+
+        })
+    })
+}))();
 
 
 function ifFailed() {

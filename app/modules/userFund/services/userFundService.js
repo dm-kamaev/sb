@@ -137,6 +137,7 @@ UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, pa
                 });
             })
             .then(amount => {
+                console.log(amount);
                 return sequelize.models.UserFundSubsription.update({
                     currentAmountId: amount.id
                 }, {
@@ -212,5 +213,36 @@ UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId
         }
     }
 };
-
+ /**
+  * return unhandled subscriptions in this month
+  * @param {int[]} allDates dates need to handle
+  * @return {}
+  */
+UserFundService.getUnhandledSubscriptions = function(allDates) {
+  return await(sequelize.sequelize.query(`
+    SELECT DISTINCT ON ("UserFundSubsription"."id")
+        "UserFundSubsription"."id",
+        "payDayHistory"."payDate" AS "payDate",
+        "DesiredAmountHistory"."amount" AS "amount",
+        "SberUser"."id" as "sberUserId",
+         CURRENT_DATE AS "realDate"
+    FROM "UserFundSubsription" AS "UserFundSubsription"
+    INNER JOIN "UserFund" AS "userFund" ON "UserFundSubsription"."userFundId" = "userFund"."id"
+    AND ("userFund"."deletedAt" IS NULL
+          AND "userFund"."enabled" = TRUE)
+    JOIN "PayDayHistory" AS "payDayHistory" ON "payDayHistory"."id" = (SELECT "id" FROM "PayDayHistory" WHERE "PayDayHistory"."subscriptionId" = "UserFundSubsription"."id"
+                                                                                  AND date_part('day', "payDayHistory"."payDate") IN (:allDates)
+                                                                                  ORDER BY "PayDayHistory"."createdAt" DESC LIMIT 1)
+    JOIN "Order" ON "Order"."userFundSubscriptionId" = "UserFundSubsription"."id"
+        AND "Order"."createdAt" NOT IN (SELECT "Order"."createdAt" FROM "Order"
+              WHERE date_trunc('month',"Order"."createdAt") = date_trunc('month', CURRENT_DATE) LIMIT 1)
+    JOIN "DesiredAmountHistory" ON "DesiredAmountHistory"."id" = "UserFundSubsription"."currentAmountId"
+    JOIN "SberUser" ON "SberUser"."id" = "UserFundSubsription"."id"
+    WHERE "UserFundSubsription"."enabled" = TRUE`, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            allDates
+        }
+    }));
+}
 module.exports = UserFundService;

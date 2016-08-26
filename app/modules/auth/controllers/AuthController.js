@@ -175,7 +175,6 @@ class AuthController extends Controller {
             var authUser = await(authService.register(userData));
             var token = await(authService.generateToken(userData.email));
             await(mailService.sendMail(userData.email, VERIFY_LINK + token));
-
             var sberUser = ctx.request.user;
             await(userService.setAuthId(sberUser.id, authUser.id));
 
