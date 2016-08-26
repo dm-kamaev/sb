@@ -55,7 +55,7 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
  * @param  {[int]} userFundSubscriptionId
  * @return {[type]}
  */
-OrderService.getAuthId = function(userFundSubscriptionId) {
+OrderService.getSberUser = function(userFundSubscriptionId) {
     var res = await(sequelize.models.Order.findOne({
         where: {
             userFundSubscriptionId
@@ -70,7 +70,8 @@ OrderService.getAuthId = function(userFundSubscriptionId) {
         }]
     }));
     // TODO: Add handler for error
-    return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
+    // return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
+    return res.userFundSubscription.sberUser;
 };
 
 
@@ -403,12 +404,13 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
     );
 
-    // TODO: to private module
-    var authId= await(OrderService.getAuthId(userFundSubscriptionId));
-    var resp  = await(axios.get(`/user/${authId}`));
-    var userEmail = resp.data.email;
+    var sberUser   = await(OrderService.getSberUser(userFundSubscriptionId)),
+        sberUserId = sberUser.id,
+        authId     = sberUser.authId;
+
+    var userEmail = restGetUserData_(authId).email;
     if (!userEmail) { throw new errors.NotFoundError('email', authId); }
-    console.log('userEmail', userEmail);
+    console.log('userEmail', userEmail, 'authId', authId, 'sberUserId', sberUserId);
 
     // sberAcquOrderNumber 464
     // !!! NEXT LINE COMMENT ON PRODUCTION
@@ -423,21 +425,82 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         mailService.sendUserRecurrentPayments(
             userEmail, { data }
         );
-        console.log('SEND')
     // this is the second time the payment failed
     } else {
+        var data = i18n.__(
+            'Money is not written off(for the second month in a row), check your card, '+
+            'write-downs will be no more. {{error}}', {
+            error
+        });
+        mailService.sendUserRecurrentPayments(
+            userEmail, { data }
+        );
+
         // TODO: get all user subscription and turn off their
+        // then get list user fund which haven't subscribers and disable their
+        // and send email owner
+
         // turn off subscription for current id
         await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
             enabled:false,
         }));
-        // TODO: maybe turn off user fund
-    }
-    console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
-};
 
+        // TESTING: if subscribers left then turn off userFund
+        disableUserFunds_([74, 73]);
+        sendEmailOwnerUserFund_([74, 73]);
+    }
+    // console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
+};
 // async(() => {
 //     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
 // })();
+
+
+/**
+ * @param  {[array]} listUserFundId [74, 73]
+ * @return {[type]}
+ */
+function disableUserFunds_ (listUserFundId) {
+    listUserFundId.forEach(function(userFundId) {
+        await(userFundService.updateUserFund(userFundId, {
+            enabled:false
+        }));
+    });
+}
+// async(() => {
+//     disableUserFunds_([74, 73]);
+// })();
+
+
+/**
+ * send email to author UserFund
+ * @param  {[array]} listUserFundId [74, 73]
+ * @return {[type]}
+ */
+function sendEmailOwnerUserFund_ (listUserFundId) {
+    listUserFundId.map(function (userFundId) {
+        return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
+    }).map(function(authId) {
+        return restGetUserData_(authId).email;
+    }).forEach(function(userEmail) {
+        if (!userEmail) { return; }
+        var data = i18n.__(
+            'Your User Fund deactivated.'
+        );
+        mailService.sendUserRecurrentPayments(
+            userEmail, { data }
+        );
+    });
+    // console.log('HERE', listUserEmail);
+}
+// async(() => {
+//     sendEmailOwnerUserFund_([74, 73]);
+// })();
+
+
+function restGetUserData_ (authId) {
+    var resp  = await(axios.get(`/user/${authId}`));
+    return resp.data || {};
+}
 
 module.exports = OrderService;
