@@ -24,6 +24,13 @@ module.exports = function(sequelize, DataTypes) {
             },
             allowNull: false
         },
+        parentId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'OrderItem',
+                key: 'id'
+            }
+        },
         uncovered: {
             type: DataTypes.BOOLEAN,
             allowNull: false
@@ -65,6 +72,14 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'entity',
                     foreignKey: 'entityId'
                 });
+                OrderItem.belongsTo(OrderItem, {
+                    as: 'parent',
+                    foreignKey: 'parentId'
+                });
+                OrderItem.hasMany(OrderItem, {
+                    as: 'child',
+                    foreignKey: 'parentId'
+                })
             }
         }
     });

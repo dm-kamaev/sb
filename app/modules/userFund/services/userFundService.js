@@ -137,7 +137,6 @@ UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, pa
                 });
             })
             .then(amount => {
-                console.log(amount);
                 return sequelize.models.UserFundSubsription.update({
                     currentAmountId: amount.id
                 }, {
@@ -216,7 +215,7 @@ UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId
  /**
   * return unhandled subscriptions in this month
   * @param {int[]} allDates dates need to handle
-  * @return {}
+  * @return {Object[]} array of UserFundSubscriptions
   */
 UserFundService.getUnhandledSubscriptions = function(allDates) {
   return await(sequelize.sequelize.query(`
@@ -245,4 +244,17 @@ UserFundService.getUnhandledSubscriptions = function(allDates) {
         }
     }));
 }
+
+/**
+  * @param {int} subscriptionId id of subscription
+  * @param {Object} payDate Date object, desired payDate
+  * @return {Object} PayDate sequelize object
+  */ 
+UserFundService.setPayDate = function(subscriptionId, payDate) {
+    return await(sequelize.models.PayDayHistory.create({
+        subscriptionId,
+        payDate
+    }))
+}
+
 module.exports = UserFundService;

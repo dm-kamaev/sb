@@ -10,20 +10,12 @@ const userView = require('../views/userView');
 
 class UserController extends Controller {
     /**
-     * @api {post} /user/user-fund create user-fund for this user
+     * @api {post} /user/user-fund enable user-fund for this user(test)
      * @apiName create user-fund
      * @apiGroup User
      *
      * @apiParam {String} title title name of user-fund
      * @apiParam {String} description userfund description
-     *
-     * @apiParamExample {json} Example Request:
-     * {
-     *     "title": "sample userfund",
-     *     "description": "sample description",
-     *     "entities": [1, 2, 3, 4],
-     *     "creatorId": null
-     * }
      *
      * @apiError (Error 400) HttpError user already have fund or user not found
      *
@@ -51,7 +43,7 @@ class UserController extends Controller {
         return userView.renderUser(authUser, sberUser);
     };
     /**
-     * @api {delete} /user/user-fund delete user-fund
+     * @api {delete} /user/user-fund disable user-fund
      * @apiName deleted user-fund
      * @apiGroup User
      *
@@ -98,7 +90,7 @@ class UserController extends Controller {
      *     		"id": 11,
      *       	"title": null,
      *        "description": null,
-     *        "draft": true,
+     *        "enabled": true,
      *        "creatorId": 11,
      *        "createdAt": "2016-07-15T11:57:13.909Z",
      *        "updatedAt": "2016-07-15T11:57:13.909Z"

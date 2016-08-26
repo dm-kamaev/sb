@@ -77,6 +77,7 @@ class UserFundController extends Controller {
     actionUpdateUserFund(actionContext, id) {
         var data = actionContext.request.body;
         delete data.id;
+        delete data.enabled;
         var updatedCount = await(userFundService.updateUserFund(id, data));
         if (!updatedCount[0]) throw new errors.NotFoundError(i18n.__('UserFund'), id);
         return null;

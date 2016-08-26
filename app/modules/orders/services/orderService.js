@@ -12,7 +12,7 @@ const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
 const os = require('os');
 const i18n = require('../../../components/i18n');
-const moment  = require('moment');
+const moment = require('moment');
 const _ = require('lodash');
 
 const userConfig = require('../../../../config/user-config/config');
@@ -103,30 +103,21 @@ OrderService.firstPayOrSendMessage = function(params) {
         if (!entities.length) {
             throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
-        var res = getListDirectionTopicFunds_(entities),
-            listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
-            listFunds = res.listFunds;
-
-        var start = new Date();
-        entities.map(entity => Object.assign(entity, {
-                uncovered: false,
-                fund: entity.fund.map(fund => Object.assign(fund, {
-                    uncovered: true,
-                    parentId: entity.id
-                }))
-            }))
-        console.log(new Date() - start);
+        // var res = getListDirectionTopicFunds_(entities),
+        //     listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
+        //     listFunds = res.listFunds;
 
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
-            listDirectionsTopicsFunds,
-            listFunds,
-            fundInfo: entities,
+            // listDirectionsTopicsFunds,
+            // listFunds,
+            entities,
             status: orderStatus.NEW
         };
-        var resInsert = await (insertPay_(data));
-        var sberAcquOrderNumber = resInsert.dataValues.sberAcquOrderNumber;
+        var orderItems = createOrderWithOrderItems_(data);
+        var payDate = createPayDate_(params.userFundSubscriptionId, new Date())
+        var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
@@ -139,13 +130,13 @@ OrderService.firstPayOrSendMessage = function(params) {
                 clientId: params.sberUserId,
             });
         } catch (err) {
-            await(OrderService.updateInfo(sberAcquOrderNumber, {
-                  status: orderStatus.EQ_ORDER_NOT_CREATED
-              })
-            );
+            await (OrderService.updateInfo(sberAcquOrderNumber, {
+                status: orderStatus.EQ_ORDER_NOT_CREATED
+            }));
             var textError = i18n.__(
-                'Failed connection with sberbank acquiring (first pay). {{error}}',
-                { error: JSON.stringify(err) }
+                'Failed connection with sberbank acquiring (first pay). {{error}}', {
+                    error: JSON.stringify(err)
+                }
             );
             throw new errors.AcquiringError(textError);
         }
@@ -194,22 +185,23 @@ OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
 }
 
 function getAcquiringOrderStatus_(order) {
-  try {
-      return sberAcquiring.getStatusAndGetBind({
-          sberAcquOrderNumber: order.sberAcquOrderNumber,
-          orderId: order.sberAcquOrderId,
-          clientId: order.userFundSubscription.sberUser.id
-      });
-  } catch (err) {
-      await (OrderService.updateInfo(order.sberAcquOrderNumber, {
-          status: orderStatus.WAITING_FOR_PAY
-      }));
-      var textError = i18n.__(
-          'Failed connection with sberbank acquiring (get order status). {{error}}',
-          { error: JSON.stringify(err) }
-      );
-      throw new errors.AcquiringError(textError);
-  }
+    try {
+        return sberAcquiring.getStatusAndGetBind({
+            sberAcquOrderNumber: order.sberAcquOrderNumber,
+            orderId: order.sberAcquOrderId,
+            clientId: order.userFundSubscription.sberUser.id
+        });
+    } catch (err) {
+        await (OrderService.updateInfo(order.sberAcquOrderNumber, {
+            status: orderStatus.WAITING_FOR_PAY
+        }));
+        var textError = i18n.__(
+            'Failed connection with sberbank acquiring (get order status). {{error}}', {
+                error: JSON.stringify(err)
+            }
+        );
+        throw new errors.AcquiringError(textError);
+    }
 }
 
 
@@ -269,11 +261,11 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
         };
         await (OrderService.updateInfo(sberAcquOrderNumber, data));
         var textError = i18n.__(
-            "Failed create order in Sberbank acquiring. "+
-            "errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",{
+            "Failed create order in Sberbank acquiring. " +
+            "errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'", {
                 errorCode,
                 errorMessage
-             });
+            });
         throw new errors.HttpError(textError, 503);
     }
 }
@@ -287,16 +279,57 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
  * @param  {[array]}    data.fundInfo  [ entities as in database ]
  * @return {[object]}   [ get id insert ]
  */
-function insertPay_(data) {
-    return await (sequelize.models.Order.create({
-        userFundSubscriptionId: data.userFundSubscriptionId,
-        amount: data.amount,
-        directionsTopicsFunds: data.listDirectionsTopicsFunds,
-        funds: data.listFunds,
-        fundInfo: data.fundInfo,
-        status: data.status,
-        // orderItems:
-    }));
+function createOrderWithOrderItems_(data) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.Order.create({
+                userFundSubscriptionId: data.userFundSubscriptionId,
+                amount: data.amount,
+                directionsTopicsFunds: data.listDirectionsTopicsFunds,
+                funds: data.listFunds,
+                fundInfo: data.fundInfo,
+                status: data.status
+            })
+            .then(order => {
+                return Promise.all(data.entities.map(entity => {
+                    var orderItem = {
+                        title: entity.title,
+                        description: entity.description,
+                        entityId: entity.id,
+                        imgUrl: entity.imgUrl,
+                        type: entity.type,
+                        sberAcquOrderNumber: order.sberAcquOrderNumber,
+                        uncovered: false,
+                        child: entity.fund.map(fund => {
+                            return {
+                                title: fund.title,
+                                description: fund.description,
+                                entityId: fund.id,
+                                imgUrl: fund.imgUrl,
+                                type: fund.type,
+                                sberAcquOrderNumber: order.sberAcquOrderNumber,
+                                uncovered: true
+                            }
+                        })
+                    }
+
+                    return sequelize.models.OrderItem.create(orderItem, {
+                        include: [{
+                            model: sequelize.models.OrderItem,
+                            as: 'child'
+                        }]
+                    })
+                }));
+            })
+    }))
+}
+
+function createPayDate_(subscriptionId, payDate) {
+  var res =  await(sequelize.models.PayDayHistory.create({
+      subscriptionId,
+      payDate
+  }))
+
+  console.log(res);
 }
 
 
@@ -306,7 +339,7 @@ function insertPay_(data) {
  * @param  {[string]} date       opitonal
  * @return {[array]}            [ '2016-02-29', '2016-02-28','2016-02-27', '2016-02-26', '2016-02-25', '2016-02-24' ]
  */
-OrderService.getListDatesBefore = function (NumberDays, date) {
+OrderService.getListDatesBefore = function(NumberDays, date) {
     var dates = [];
     var now = (date) ? moment(date) : moment();
 
@@ -325,7 +358,7 @@ OrderService.getListDatesBefore = function (NumberDays, date) {
  * @param  {[string]} date     '2016-02-29'
  * @return {[array]}          ['29', '28','27', ... ]
  */
-OrderService.getMissingDays = function (allDates, date) {
+OrderService.getMissingDays = function(allDates, date) {
     var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
     var dateObjTime = moment(date);
     if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
@@ -334,7 +367,7 @@ OrderService.getMissingDays = function (allDates, date) {
             diff = 31 - digitLastDay;
         if (diff) {
             for (var i = diff; i >= 1; i--) {
-              allDates.push((digitLastDay+i).toString());
+                allDates.push((digitLastDay + i).toString());
             }
         }
     }
