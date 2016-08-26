@@ -11,12 +11,17 @@ const transporter = transporterGenerator.createSMTPTransporter({
     name: 'cochanges.com'
 });
 const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbank.com>');
+const logger = require('../../../components/logger').getLogger('main')
 
 var MailService = {};
 
 MailService.sendMail = function(email, emailData) {
     var letter = new Letter('Подтвердите ваш почтовый ящик', `<div style = "color: red">${emailData}</div>`, 'html');
-    await(mailSender.sendMail(email, letter));
+    try {
+        await (mailSender.sendMail(email, letter));
+    } catch (err) {
+        logger.critical('ERROR AT SENDING MAIL ', err.message)
+    }
     // need for debug
     return emailData;
 };
