@@ -7,12 +7,18 @@ const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
+const mailService = require('../../auth/services/mailService.js');
 const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
 const os = require('os');
 const i18n = require('../../../components/i18n');
 const moment  = require('moment');
 const _ = require('lodash');
+
+const userConfig = require('../../../../config/user-config/config');
+const axios = require('axios').create({
+    baseURL: `http://${userConfig.host}:${userConfig.port}`
+});
 
 
 var OrderService = {};
@@ -45,6 +51,30 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
 
 
 /**
+ * get authId
+ * @param  {[int]} userFundSubscriptionId
+ * @return {[type]}
+ */
+OrderService.getAuthId = function(userFundSubscriptionId) {
+    var res = await(sequelize.models.Order.findOne({
+        where: {
+            userFundSubscriptionId
+        },
+        include: [{
+            model: sequelize.models.UserFundSubsription,
+            as: 'userFundSubscription',
+            include: [{
+                model: sequelize.models.SberUser,
+                as: 'sberUser',
+            }]
+        }]
+    }));
+    // TODO: Add handler for error
+    return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
+};
+
+
+/**
  * update info in Orders(table) for order
  * @param  {[int]}  sberAcquOrderNumber
  * @param  {[obj]}  data
@@ -57,6 +87,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
         }
     }));
 };
+
 
 /**
  * if first pay for user
@@ -128,21 +159,6 @@ OrderService.firstPayOrSendMessage = function(params) {
         };
     }
 }
-
-
-/**
- * update info in Orders(table) for order
- * @param  {[int]}  sberAcquOrderNumber
- * @param  {[obj]}  data
- * @return {[type]}
- */
-OrderService.updateInfo = function(sberAcquOrderNumber, data) {
-    return await (sequelize.models.Order.update(data, {
-        where: {
-            sberAcquOrderNumber,
-        }
-    }));
-};
 
 
 OrderService.isAvalibleForPayment = function(order) {
@@ -325,11 +341,103 @@ OrderService.getMissingDays = function (allDates, date) {
     allDates.push(dateObjTime.format('DD'));
 };
 
+
 OrderService.makeMonthlyPayment = function(params) {
     return;
     //TODO
     var payment = sberAcquiring.createPayByBind(params);
 
 }
+
+
+OrderService.getMissingDays = function (allDates, date) {
+    var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
+    var dateObjTime = moment(date);
+    if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
+        var dd = formatLastDayMonth.replace(/^\d{4}-\d{2}-/, '');
+        var digitLastDay = parseInt(dd, 10),
+            diff = 31 - digitLastDay;
+        if (diff) {
+            for (var i = diff; i >= 1; i--) {
+              allDates.push((digitLastDay+i).toString());
+            }
+        }
+    }
+    allDates.push(dateObjTime.format('DD'));
+};
+
+
+/**
+ * find orders with status "problemWithCard" in previous month
+ * @param  {[int]} userFundSubscriptionId
+ * @return {[type]}
+ */
+OrderService.findOrderWithProblemWithCardInPreviousMonth = function (userFundSubscriptionId) {
+    var previousMonth = moment().subtract(1, 'month').format('YYYY-MM');
+    return await(sequelize.models.Order.findAll({
+            where: {
+                userFundSubscriptionId,
+                status: orderStatus.PROBLEM_WITH_CARD
+             }
+        }).filter(function(order) {
+            var orderMonth = moment(order.updatedAt).format('YYYY-MM');
+            if (previousMonth === orderMonth) { return true; }
+            return false;
+        })
+    );
+};
+
+
+/**
+ * if payment failed
+ * @param  {[int]} sberAcquOrderNumber
+ * @param  {[int]} userFundSubscriptionId
+ * @param  {[str]} error                   text from sberbank accuring
+ * @return {[type]}
+ */
+OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSubscriptionId, error) {
+    await(OrderService.updateInfo(sberAcquOrderNumber, {
+        status: orderStatus.PROBLEM_WITH_CARD
+    }));
+    var problemOrderInPreviousMonth = await(
+        OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
+    );
+
+    // TODO: to private module
+    var authId= await(OrderService.getAuthId(userFundSubscriptionId));
+    var resp  = await(axios.get(`/user/${authId}`));
+    var userEmail = resp.data.email;
+    if (!userEmail) { throw new errors.NotFoundError('email', authId); }
+    console.log('userEmail', userEmail);
+
+    // sberAcquOrderNumber 464
+    // !!! NEXT LINE COMMENT ON PRODUCTION
+    // problemOrderInPreviousMonth.length = 0;
+
+    // this is the first time the payment failed
+    if (!problemOrderInPreviousMonth.length) {
+        var data = i18n.__(
+            'Money is not written off, check your card. {{error}}', {
+            error
+        });
+        mailService.sendUserRecurrentPayments(
+            userEmail, { data }
+        );
+        console.log('SEND')
+    // this is the second time the payment failed
+    } else {
+        // TODO: get all user subscription and turn off their
+        // turn off subscription for current id
+        await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
+            enabled:false,
+        }));
+        // TODO: maybe turn off user fund
+    }
+    console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
+};
+
+// async(() => {
+//     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
+// })();
 
 module.exports = OrderService;

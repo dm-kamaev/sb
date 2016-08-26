@@ -44,4 +44,22 @@ MailService.sendMailCron = function(email, emailData) {
     return emailData;
 };
 
+
+/**
+ * send email to user about problems with recurrent payments
+ * @param  {[str]}  email      adress
+ * @param  {[obj]}  emailData
+ * @return {[obj]}
+ */
+MailService.sendUserRecurrentPayments = function(email, emailData) {
+    var letter = new Letter(
+      'Ежемесячные списания',
+      '<div>'+emailData.data+'</div>',
+      'html'
+    );
+    await(mailSender.sendMail(email, letter));
+    // need for debug
+    return emailData;
+};
+
 module.exports = MailService;
