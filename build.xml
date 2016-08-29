@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<project name="sber-together-api" basedir=".">
+<project name="sber-together-api" basedir="."
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless">
     <property name="initd_script" value="${ant.project.name}-node"/>
     <property name="project.node-modules.path" value="${basedir}/node_modules"/>
     <property name="packaging.source.frontend-app.path" value="${basedir}/app"/>
@@ -82,7 +84,8 @@
 
   <target name="sber.change-owner">
       <exec executable="chown" dir="${basedir}">
-          <arg line="-R gorod ${basedir}"/>
+          <arg line="-R gorod ${basedir}" if:set="integration-tests"/>
+          <arg line="-R svmeste ${basedir}" unless:set="integration-tests"/>
       </exec>
   </target>
 
@@ -128,7 +131,7 @@
 
     <target name="sber.run-integration-tests" if="integration-tests"
             depends="sber.integration-tests"/>
-            
+
     <target name="sber.integration-tests">
         <waitfor maxwait="10" maxwaitunit="second">
             <and>
