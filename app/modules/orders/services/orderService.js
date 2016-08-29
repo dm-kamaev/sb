@@ -416,9 +416,10 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
     // !!! NEXT LINE COMMENT ON PRODUCTION
     // problemOrderInPreviousMonth.length = 0;
 
+    var data = '';
     // this is the first time the payment failed
     if (!problemOrderInPreviousMonth.length) {
-        var data = i18n.__(
+        data = i18n.__(
             'Money is not written off, check your card. {{error}}', {
             error
         });
@@ -427,7 +428,7 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         );
     // this is the second time the payment failed
     } else {
-        var data = i18n.__(
+        data = i18n.__(
             'Money is not written off(for the second month in a row), check your card, '+
             'write-downs will be no more. {{error}}', {
             error
@@ -478,11 +479,11 @@ function disableUserFunds_ (listUserFundId) {
  * @return {[type]}
  */
 function sendEmailOwnerUserFund_ (listUserFundId) {
-    listUserFundId.map(function (userFundId) {
+    listUserFundId.map((userFundId) => {
         return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
-    }).map(function(authId) {
+    }).map((authId) => {
         return restGetUserData_(authId).email;
-    }).forEach(function(userEmail) {
+    }).forEach((userEmail) => {
         if (!userEmail) { return; }
         var data = i18n.__(
             'Your User Fund deactivated.'
@@ -491,13 +492,17 @@ function sendEmailOwnerUserFund_ (listUserFundId) {
             userEmail, { data }
         );
     });
-    // console.log('HERE', listUserEmail);
 }
 // async(() => {
 //     sendEmailOwnerUserFund_([74, 73]);
 // })();
 
 
+/**
+ * HTTP request for get user data
+ * @param  {[int]} authId
+ * @return {[obj]}
+ */
 function restGetUserData_ (authId) {
     var resp  = await(axios.get(`/user/${authId}`));
     return resp.data || {};
