@@ -23,7 +23,7 @@ UserFundService.updateUserFund = function(id, data) {
         where: {
             id,
             deletedAt: null
-        }
+        },
     }));
 };
 
@@ -34,6 +34,21 @@ UserFundService.getUserFund = function(id) {
         }
     }));
 };
+
+
+UserFundService.getUserFundWithSberUser = function(id) {
+    return await(sequelize.models.UserFund.findOne({
+        where: {
+            id
+        },
+        include: {
+            model: sequelize.models.SberUser,
+            as: 'owner',
+            required: false,
+        }
+    }));
+};
+
 
 UserFundService.getUserFunds = function() {
     return await(sequelize.models.UserFund.findAll());
