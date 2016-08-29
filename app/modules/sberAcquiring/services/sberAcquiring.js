@@ -151,9 +151,9 @@ sberAcquiring.createPayByBind = function(params) {
                 userName: params.userName || configSberAcquiring.userNameSsl,
                 password: params.password || configSberAcquiring.passwordSsl,
                 amount: params.amount,
-                orderNumber: params.orderNumber,
-                returnUrl: params.returnUrl,
-                failUrl: params.failUrl,
+                orderNumber: params.sberAcquOrderNumber,
+                returnUrl: params.returnUrl || 'http://google.com',
+                failUrl: params.failUrl || 'http://google.com',
                 language: 'ru',
                 clientId: params.clientId,
             }
@@ -186,7 +186,7 @@ sberAcquiring.payByBind = function(params) {
     return requestPromise.post(
       configSberAcquiring.hostname+configSberAcquiring.payByBind,
       data
-    );
+    ).body;
 };
 
 

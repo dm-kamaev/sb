@@ -35,11 +35,7 @@ logger.info('START: recurrent monthly payments');
 
     console.log(subscriptions);
     subscriptions.forEach(subscription => {
-        orderService.makeMonthlyPayment({
-            subscriptionId: subscription.id,
-            sberUserId: subscription.sberUserId,
-
-        })
+        await(orderService.makeMonthlyPayment(subscription))
     })
 }))();
 

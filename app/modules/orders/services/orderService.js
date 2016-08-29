@@ -100,7 +100,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
 OrderService.firstPayOrSendMessage = function(params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
-        var entities = await (userFundService.getEntities(params.userFundId));
+        var entities = await(userFundService.getEntities(params.userFundId));
         if (!entities.length) {
             throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
@@ -116,9 +116,9 @@ OrderService.firstPayOrSendMessage = function(params) {
             entities,
             status: orderStatus.NEW
         };
-        var orderItems = createOrderWithOrderItems_(data);
+        var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date())
-        var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
+        // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
@@ -273,21 +273,19 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
 
 /**
  * create order in our base
- * @param  {[int]}      data.SberUserUserFundId
+ * @param  {[int]}      data.userFundSubscriptionId
  * @param  {[int]}      data.amount
- * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
- * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
- * @param  {[array]}    data.fundInfo  [ entities as in database ]
+ * @param  {[array]}    data.entities  [ entities as in database ]
  * @return {[object]}   [ get id insert ]
  */
-function createOrderWithOrderItems_(data) {
+OrderService.createOrder = function(data) {
     return await(sequelize.sequelize.transaction(t => {
         return sequelize.models.Order.create({
                 userFundSubscriptionId: data.userFundSubscriptionId,
                 amount: data.amount,
-                directionsTopicsFunds: data.listDirectionsTopicsFunds,
-                funds: data.listFunds,
-                fundInfo: data.fundInfo,
+                // directionsTopicsFunds: data.listDirectionsTopicsFunds,
+                // funds: data.listFunds,
+                // fundInfo: data.fundInfo,
                 status: data.status
             })
             .then(order => {
@@ -321,16 +319,14 @@ function createOrderWithOrderItems_(data) {
                     })
                 }));
             })
-    }))
+    }))[0].sberAcquOrderNumber;
 }
 
 function createPayDate_(subscriptionId, payDate) {
-  var res =  await(sequelize.models.PayDayHistory.create({
+  return await(sequelize.models.PayDayHistory.create({
       subscriptionId,
       payDate
   }))
-
-  console.log(res);
 }
 
 
@@ -377,10 +373,21 @@ OrderService.getMissingDays = function(allDates, date) {
 
 
 OrderService.makeMonthlyPayment = function(params) {
-    return;
-    //TODO
-    var payment = sberAcquiring.createPayByBind(params);
+    var entities = await(userFundService.getEntities(params.userFundId));
 
+    if (!entities.length) {
+        // this should never happened
+    }
+
+    params.entities = entities;
+    var sberAcquOrderNumber = OrderService.createOrder(params)
+
+    params.sberAcquOrderNumber = sberAcquOrderNumber;
+    var sberAcquPayment = sberAcquiring.createPayByBind(params);
+
+    sberAcquPayment.bindingId = params.bindingId;
+    var result = sberAcquiring.payByBind(sberAcquPayment)
+    console.log(result);
 }
 
 
