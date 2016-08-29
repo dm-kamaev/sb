@@ -482,20 +482,34 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         // and send email owner
 
         // turn off subscription for current id
-        await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
-            enabled:false,
-        }));
-
+        // await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
+        //     enabled:false,
+        // }));
+        console.log(disableUserFundSubsription(sberUserId));
         // TESTING: if subscribers left then turn off userFund
-        disableUserFunds_([74, 73]);
-        sendEmailOwnerUserFund_([74, 73]);
+        // disableUserFunds_([74, 73]);
+        // sendEmailOwnerUserFund_([74, 73]);
     }
     // console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
 };
-// async(() => {
-//     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
-// })();
+async(() => {
+    OrderService.failedReccurentPayment(465, 10, 'Денег нет');
+})();
 
+// async(()=>{
+
+//     // console.log(listUserFundSubsription);
+// })()
+
+
+function disableUserFundSubsription () {
+    var listUserFundSubsription =
+    userFundService.updatUserFundSubsriptionBySberUserId(73, { enabled:false });
+
+    return listUserFundSubsription.map((UserFundSubsription) => {
+        return UserFundSubsription.userFundId;
+    });
+}
 
 /**
  * @param  {[array]} listUserFundId [74, 73]
