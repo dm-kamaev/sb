@@ -5,7 +5,7 @@ const OrderView = {};
 OrderView.renderOrder = function(orderData) {
     var result = {
         orderId: orderData.orderId,
-        formUrl: 'http://www60.lan:3005/pay/' + orderData.orderId + '/wait/1'
+        formUrl: 'http://localhost:3005/pay/' + orderData.orderId + '/wait/1'
     };
     return result;
 };

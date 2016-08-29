@@ -20,6 +20,10 @@ else
 fi
 npm run config $env
 
+cd sber-emulator
+npm run config
+cd ..
+
 echo "Build frontend"
 $gulp frontend
 $gulp apidoc

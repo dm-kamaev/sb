@@ -1,7 +1,8 @@
 'use strict';
 
 const randomstring = require('randomstring');
-const faker = require('faker/locale/ru');
+const Chance = require('chance');
+const chance = new Chance();
 
 const TYPE = ['fund', 'topic', 'direction'];
 
@@ -12,9 +13,9 @@ module.exports = service;
 service.generateEntities = function(number) {
     var result = [];
     for (var i = 0; i < number; i++) {
-        var entity = {}
-        entity.title = faker.hacker.verb();
-        entity.description = faker.hacker.phrase();
+        var entity = {};
+        entity.title = chance.word();
+        entity.description = chance.sentence();
         entity.type = service.getRandomType();
         entity.published = true;
         entity.entities = [];
