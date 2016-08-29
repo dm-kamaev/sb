@@ -55,7 +55,7 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
  * @param  {[int]} userFundSubscriptionId
  * @return {[type]}
  */
-OrderService.getAuthId = function(userFundSubscriptionId) {
+OrderService.getSberUser = function(userFundSubscriptionId) {
     var res = await(sequelize.models.Order.findOne({
         where: {
             userFundSubscriptionId
@@ -70,7 +70,8 @@ OrderService.getAuthId = function(userFundSubscriptionId) {
         }]
     }));
     // TODO: Add handler for error
-    return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
+    // return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
+    return res.userFundSubscription.sberUser;
 };
 
 
@@ -99,7 +100,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
 OrderService.firstPayOrSendMessage = function(params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
-        var entities = await (userFundService.getEntities(params.userFundId));
+        var entities = await(userFundService.getEntities(params.userFundId));
         if (!entities.length) {
             throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
@@ -115,9 +116,9 @@ OrderService.firstPayOrSendMessage = function(params) {
             entities,
             status: orderStatus.NEW
         };
-        var orderItems = createOrderWithOrderItems_(data);
+        var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date())
-        var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
+        // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
@@ -272,21 +273,19 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
 
 /**
  * create order in our base
- * @param  {[int]}      data.SberUserUserFundId
+ * @param  {[int]}      data.userFundSubscriptionId
  * @param  {[int]}      data.amount
- * @param  {[array]}    data.directionsTopicsFunds [ [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ] ]
- * @param  {[array]}    data.funds [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
- * @param  {[array]}    data.fundInfo  [ entities as in database ]
+ * @param  {[array]}    data.entities  [ entities as in database ]
  * @return {[object]}   [ get id insert ]
  */
-function createOrderWithOrderItems_(data) {
+OrderService.createOrder = function(data) {
     return await(sequelize.sequelize.transaction(t => {
         return sequelize.models.Order.create({
                 userFundSubscriptionId: data.userFundSubscriptionId,
                 amount: data.amount,
-                directionsTopicsFunds: data.listDirectionsTopicsFunds,
-                funds: data.listFunds,
-                fundInfo: data.fundInfo,
+                // directionsTopicsFunds: data.listDirectionsTopicsFunds,
+                // funds: data.listFunds,
+                // fundInfo: data.fundInfo,
                 status: data.status
             })
             .then(order => {
@@ -320,16 +319,14 @@ function createOrderWithOrderItems_(data) {
                     })
                 }));
             })
-    }))
+    }))[0].sberAcquOrderNumber;
 }
 
 function createPayDate_(subscriptionId, payDate) {
-  var res =  await(sequelize.models.PayDayHistory.create({
+  return await(sequelize.models.PayDayHistory.create({
       subscriptionId,
       payDate
   }))
-
-  console.log(res);
 }
 
 
@@ -376,10 +373,21 @@ OrderService.getMissingDays = function(allDates, date) {
 
 
 OrderService.makeMonthlyPayment = function(params) {
-    return;
-    //TODO
-    var payment = sberAcquiring.createPayByBind(params);
+    var entities = await(userFundService.getEntities(params.userFundId));
 
+    if (!entities.length) {
+        // this should never happened
+    }
+
+    params.entities = entities;
+    var sberAcquOrderNumber = OrderService.createOrder(params)
+
+    params.sberAcquOrderNumber = sberAcquOrderNumber;
+    var sberAcquPayment = sberAcquiring.createPayByBind(params);
+
+    sberAcquPayment.bindingId = params.bindingId;
+    var result = sberAcquiring.payByBind(sberAcquPayment)
+    console.log(result);
 }
 
 
@@ -436,41 +444,108 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
     );
 
-    // TODO: to private module
-    var authId= await(OrderService.getAuthId(userFundSubscriptionId));
-    var resp  = await(axios.get(`/user/${authId}`));
-    var userEmail = resp.data.email;
+    var sberUser   = await(OrderService.getSberUser(userFundSubscriptionId)),
+        sberUserId = sberUser.id,
+        authId     = sberUser.authId;
+
+    var userEmail = restGetUserData_(authId).email;
     if (!userEmail) { throw new errors.NotFoundError('email', authId); }
-    console.log('userEmail', userEmail);
+    console.log('userEmail', userEmail, 'authId', authId, 'sberUserId', sberUserId);
 
     // sberAcquOrderNumber 464
     // !!! NEXT LINE COMMENT ON PRODUCTION
     // problemOrderInPreviousMonth.length = 0;
 
+    var data = '';
     // this is the first time the payment failed
     if (!problemOrderInPreviousMonth.length) {
-        var data = i18n.__(
+        data = i18n.__(
             'Money is not written off, check your card. {{error}}', {
             error
         });
         mailService.sendUserRecurrentPayments(
             userEmail, { data }
         );
-        console.log('SEND')
     // this is the second time the payment failed
     } else {
+        data = i18n.__(
+            'Money is not written off(for the second month in a row), check your card, '+
+            'write-downs will be no more. {{error}}', {
+            error
+        });
+        mailService.sendUserRecurrentPayments(
+            userEmail, { data }
+        );
+
         // TODO: get all user subscription and turn off their
+        // then get list user fund which haven't subscribers and disable their
+        // and send email owner
+
         // turn off subscription for current id
         await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
             enabled:false,
         }));
-        // TODO: maybe turn off user fund
-    }
-    console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
-};
 
+        // TESTING: if subscribers left then turn off userFund
+        disableUserFunds_([74, 73]);
+        sendEmailOwnerUserFund_([74, 73]);
+    }
+    // console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
+};
 // async(() => {
 //     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
 // })();
+
+
+/**
+ * @param  {[array]} listUserFundId [74, 73]
+ * @return {[type]}
+ */
+function disableUserFunds_ (listUserFundId) {
+    listUserFundId.forEach(function(userFundId) {
+        await(userFundService.updateUserFund(userFundId, {
+            enabled:false
+        }));
+    });
+}
+// async(() => {
+//     disableUserFunds_([74, 73]);
+// })();
+
+
+/**
+ * send email to author UserFund
+ * @param  {[array]} listUserFundId [74, 73]
+ * @return {[type]}
+ */
+function sendEmailOwnerUserFund_ (listUserFundId) {
+    listUserFundId.map((userFundId) => {
+        return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
+    }).map((authId) => {
+        return restGetUserData_(authId).email;
+    }).forEach((userEmail) => {
+        if (!userEmail) { return; }
+        var data = i18n.__(
+            'Your User Fund deactivated.'
+        );
+        mailService.sendUserRecurrentPayments(
+            userEmail, { data }
+        );
+    });
+}
+// async(() => {
+//     sendEmailOwnerUserFund_([74, 73]);
+// })();
+
+
+/**
+ * HTTP request for get user data
+ * @param  {[int]} authId
+ * @return {[obj]}
+ */
+function restGetUserData_ (authId) {
+    var resp  = await(axios.get(`/user/${authId}`));
+    return resp.data || {};
+}
 
 module.exports = OrderService;

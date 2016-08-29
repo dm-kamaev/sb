@@ -23,7 +23,7 @@ UserFundService.updateUserFund = function(id, data) {
         where: {
             id,
             deletedAt: null
-        }
+        },
     }));
 };
 
@@ -34,6 +34,21 @@ UserFundService.getUserFund = function(id) {
         }
     }));
 };
+
+
+UserFundService.getUserFundWithSberUser = function(id) {
+    return await(sequelize.models.UserFund.findOne({
+        where: {
+            id
+        },
+        include: {
+            model: sequelize.models.SberUser,
+            as: 'owner',
+            required: false,
+        }
+    }));
+};
+
 
 UserFundService.getUserFunds = function() {
     return await(sequelize.models.UserFund.findAll());
@@ -220,10 +235,12 @@ UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId
 UserFundService.getUnhandledSubscriptions = function(allDates) {
   return await(sequelize.sequelize.query(`
     SELECT DISTINCT ON ("UserFundSubsription"."id")
-        "UserFundSubsription"."id",
+        "UserFundSubsription"."id" AS "userFundSubscriptionId",
         "payDayHistory"."payDate" AS "payDate",
         "DesiredAmountHistory"."amount" AS "amount",
-        "SberUser"."id" as "sberUserId",
+        "SberUser"."id" AS "sberUserId",
+        "UserFund"."id" AS "userFundId",
+        "Card"."bindingId" AS "bindingId",
          CURRENT_DATE AS "realDate"
     FROM "UserFundSubsription" AS "UserFundSubsription"
     INNER JOIN "UserFund" AS "userFund" ON "UserFundSubsription"."userFundId" = "userFund"."id"
@@ -232,12 +249,13 @@ UserFundService.getUnhandledSubscriptions = function(allDates) {
     JOIN "PayDayHistory" AS "payDayHistory" ON "payDayHistory"."id" = (SELECT "id" FROM "PayDayHistory" WHERE "PayDayHistory"."subscriptionId" = "UserFundSubsription"."id"
                                                                                   AND date_part('day', "payDayHistory"."payDate") IN (:allDates)
                                                                                   ORDER BY "PayDayHistory"."createdAt" DESC LIMIT 1)
-    JOIN "Order" ON "Order"."userFundSubscriptionId" = "UserFundSubsription"."id"
-        AND "Order"."createdAt" NOT IN (SELECT "Order"."createdAt" FROM "Order"
-              WHERE date_trunc('month',"Order"."createdAt") = date_trunc('month', CURRENT_DATE) LIMIT 1)
     JOIN "DesiredAmountHistory" ON "DesiredAmountHistory"."id" = "UserFundSubsription"."currentAmountId"
-    JOIN "SberUser" ON "SberUser"."id" = "UserFundSubsription"."id"
-    WHERE "UserFundSubsription"."enabled" = TRUE`, {
+    JOIN "SberUser" ON "SberUser"."id" = "UserFundSubsription"."sberUserId"
+    JOIN "UserFund" ON "UserFund"."id" = "UserFundSubsription"."userFundId"
+    JOIN "Card" ON "SberUser"."currentCardId" = "Card"."id"
+    WHERE "UserFundSubsription"."enabled" = TRUE
+    AND "UserFundSubsription"."id" NOT IN (SELECT "id" FROM "UserFundSubsription" JOIN "Order" ON "UserFundSubsription"."id" = "Order"."userFundSubscriptionId"
+                                                WHERE date_trunc('month', "Order"."createdAt") = date_trunc('month', CURRENT_DATE))`, {
         type: sequelize.sequelize.QueryTypes.SELECT,
         replacements: {
             allDates
@@ -249,7 +267,7 @@ UserFundService.getUnhandledSubscriptions = function(allDates) {
   * @param {int} subscriptionId id of subscription
   * @param {Object} payDate Date object, desired payDate
   * @return {Object} PayDate sequelize object
-  */ 
+  */
 UserFundService.setPayDate = function(subscriptionId, payDate) {
     return await(sequelize.models.PayDayHistory.create({
         subscriptionId,

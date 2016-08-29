@@ -1,4 +1,6 @@
 {
+  "Your User Fund deactivated.": "Ваш Юзер фонд деактивирован.",
+  "Money is not written off(for the second month in a row), check your card, write-downs will be no more. {{error}}": "Деньги не списались(второй месяц подряд), проверьте вашу карточку, списаний больше не будет. {{error}}",
   "Money is not written off, check your card. {{error}}": "Деньги не списались, проверьте вашу карточку. {{error}}",
   "Wrong status: {{status}}. CurrentStatus: {{currentStatus}}": "Неверный статус: {{status}}. Текущий статус: {{currentStatus}}",
   "UserFund OR Entity": "Юзер фонд или Фонд",
