@@ -3,6 +3,8 @@
 <project name="sber-together-api" basedir="."
     xmlns:if="ant:if"
     xmlns:unless="ant:unless">
+    <property environment="env-test"/>
+    <property name="env" value="${env-test.env}"/>
     <property name="initd_script" value="${ant.project.name}-node"/>
     <property name="project.node-modules.path" value="${basedir}/node_modules"/>
     <property name="packaging.source.frontend-app.path" value="${basedir}/app"/>
