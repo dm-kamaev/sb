@@ -27,6 +27,7 @@
     <property name="user.config-path" value="${basedir}/config/user-config"/>
     <property name="auth.path" value="${project.node-modules.path}/auth-service"/>
     <property name="auth.config-path" value="${basedir}/config/auth-config"/>
+    <property name="emulator.path" value="${basedir}/sber-emulator"/>
 
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>
@@ -38,7 +39,6 @@
 
     <target name="packaging.release.switch"
       depends="
-            sber.echo.env,
         packaging.shared-folders,
              packaging.shared-folders.media,
              packaging.supervisor.link,
@@ -150,12 +150,6 @@
         </waitfor>
         <exec executable="${npm}" dir="${basedir}/integration-tests" failonerror="on">
             <arg line="run tests"/>
-        </exec>
-    </target>
-
-    <target name="sber.echo.env">
-        <exec executable="echo" dir="${basedir}">
-            <arg line="${env}"/>
         </exec>
     </target>
 </project>

@@ -9,6 +9,7 @@
     <property name="emulator.sequelize" value="${emulator.path}/node_modules/.bin/sequelize"/>
     <property name="apidoc" value="../node_modules/.bin/apidoc"/>
     <property name="node" value="/usr/bin/node"/>
+    <property name="npm" value="/usr/bin/npm"/>
     <property name="emulator.config-path" value="./config"/>
 
     <!-- Supervisor properties -->
@@ -17,8 +18,8 @@
 
 
     <target name="emulator.migrate" if="integration-tests">
-        <exec executable="${node}" dir="${emulator.path}/app/scripts" failonerror="on">
-            <arg line="migrate"/>
+        <exec executable="${npm}" dir="${emulator.path}" failonerror="on">
+            <arg line="run migrate"/>
         </exec>
     </target>
 
