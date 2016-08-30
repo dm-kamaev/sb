@@ -570,14 +570,6 @@ function checkExistSubscribers_ (listUserFundId) {
     });
 }
 
-// async(() => {
-//     var ar = [ 73, 74, 1 ];
-//     var listUserFundId = checkExistSubscribers_(ar);
-//     if (listUserFundId.length) {
-//         disableUserFunds_(ar);
-//         sendEmailOwnerUserFund_(ar);
-//     }
-// })();
 
 /**
  * @param  {[array]} listUserFundId [74, 73]
@@ -598,17 +590,24 @@ function disableUserFunds_ (listUserFundId) {
  * @return {[type]}
  */
 function sendEmailOwnerUserFund_ (listUserFundId) {
-    listUserFundId.map((userFundId) => {
-        return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
-    }).map((authId) => {
-        return restGetUserData_(authId).email;
-    }).forEach((userEmail) => {
-        if (!userEmail) { return; }
+    var listUserFundWithSberUser = await(
+        userFundService.getUserFundsWithSberUser(listUserFundId)
+    );
+    listUserFundWithSberUser.map((userFund) => {
+        return { authId: userFund.owner.authId, userFundName: userFund.title };
+    }).map((user) => {
+        user.email = restGetUserData_(user.authId).email;
+        return user;
+    }).forEach((user) => {
+        var email = user.email, userFundName = user.userFundName;
+        if (!email) { return; }
         var data = i18n.__(
-            'Your User Fund deactivated.'
+            'Your User Fund "{{userFundName}}" deactivated.',{
+                userFundName
+            }
         );
         mailService.sendUserRecurrentPayments(
-            userEmail, { data }
+            email, { data }
         );
     });
 }
