@@ -513,25 +513,71 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
             userEmail, { data }
         );
 
-        // TODO: get all user subscription and turn off their
-        // then get list user fund which haven't subscribers and disable their
+        // get all user subscription and turn off their
+        var listUserFundId = disableUserFundSubsription_(sberUserId);
+        console.log('listUserFundId=', listUserFundId);
+        var listUserFundIdHasNotSubscribers = checkExistSubscribers_(listUserFundId);
+        // get list user fund which haven't subscribers and disable their
         // and send email owner
-
-        // turn off subscription for current id
-        await(userFundService.updateUserFundSubscription(userFundSubscriptionId, {
-            enabled:false,
-        }));
-
-        // TESTING: if subscribers left then turn off userFund
-        disableUserFunds_([74, 73]);
-        sendEmailOwnerUserFund_([74, 73]);
+        if (listUserFundIdHasNotSubscribers.length) {
+            console.log('listUserFundIdHasNotSubscribers=', listUserFundIdHasNotSubscribers);
+            disableUserFunds_(listUserFundIdHasNotSubscribers);
+            sendEmailOwnerUserFund_(listUserFundIdHasNotSubscribers);
+        }
     }
-    // console.log('LEN===', problemOrderInPreviousMonth.length, problemOrderInPreviousMonth);    // был ли платеж в прошлом месяце в статусе  orderStatus.PROBLEM_WITH_CARD
 };
 // async(() => {
 //     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
 // })();
 
+
+/**
+ * disable user's subsription and return list user fund id
+ * @param  {[int]} sberUserId
+ * @return {[array]}            [ 74, 73, ... ]
+ */
+function disableUserFundSubsription_ (sberUserId) {
+    var listUserFundSubsription =
+    userFundService.updatUserFundSubsriptionBySberUserId(sberUserId, { enabled:false });
+
+    return listUserFundSubsription.map((UserFundSubsription) => {
+        return UserFundSubsription.userFundId;
+    });
+}
+
+
+/**
+ * get list user fund id to deactive
+ * @param  {[array]} listUserFundId [ 73, 74, 1]
+ * @return {[array]}                [ 73, 74 ]
+ */
+function checkExistSubscribers_ (listUserFundId) {
+    var res = [];
+    var activeUserFundSubsription =
+    userFundService.searchActiveUserFundSubsriptionByUserFundId(listUserFundId);
+
+    var listUserFundIdHasSubscribers = {};
+    // { '1': true, '73': true, '74': true }
+    activeUserFundSubsription.forEach((userFundSubsription) => {
+        listUserFundIdHasSubscribers[userFundSubsription.UserFundId] = true;
+    });
+
+    return listUserFundId.filter((userFundId) => {
+        if (!listUserFundIdHasSubscribers[userFundId]) {
+          return true;
+        }
+        return false;
+    });
+}
+
+// async(() => {
+//     var ar = [ 73, 74, 1 ];
+//     var listUserFundId = checkExistSubscribers_(ar);
+//     if (listUserFundId.length) {
+//         disableUserFunds_(ar);
+//         sendEmailOwnerUserFund_(ar);
+//     }
+// })();
 
 /**
  * @param  {[array]} listUserFundId [74, 73]
@@ -544,9 +590,6 @@ function disableUserFunds_ (listUserFundId) {
         }));
     });
 }
-// async(() => {
-//     disableUserFunds_([74, 73]);
-// })();
 
 
 /**
@@ -569,9 +612,6 @@ function sendEmailOwnerUserFund_ (listUserFundId) {
         );
     });
 }
-// async(() => {
-//     sendEmailOwnerUserFund_([74, 73]);
-// })();
 
 
 /**

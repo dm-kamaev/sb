@@ -200,6 +200,21 @@ UserFundService.getUserFundSubscriptionId = function(sberUserId, userFundId) {
     }));
 };
 
+
+/**
+ * get user subscriptions by sberUserId
+ * @param  {[int]}  sberUserId
+ * @return {[type]}
+ */
+UserFundService.getUserFundSubsriptionsBySberUserId = function(sberUserId) {
+    return await(sequelize.models.UserFundSubsription.findAll({
+        where: {
+            sberUserId,
+        }
+    }));
+};
+
+
 UserFundService.updateDesiredAmountHistory = function(id, data) {
     return await(sequelize.models.DesiredAmountHistory.update(data, {
         where: {
@@ -213,6 +228,34 @@ UserFundService.updateUserFundSubscription = function(id, data) {
         where: {
             id
         }
+    }));
+};
+
+
+/**
+ * get user subscriptions by sberUserId and returning data after update
+ * @param  {[int]}  sberUserId
+ * @return {[type]}
+ */
+UserFundService.updatUserFundSubsriptionBySberUserId = function(sberUserId, data) {
+    return await(sequelize.models.UserFundSubsription.update(data, {
+        where: {
+            sberUserId,
+        },
+        returning: true,
+    }))[1];
+};
+
+
+
+UserFundService.searchActiveUserFundSubsriptionByUserFundId = function(listUserFundId) {
+    return await(sequelize.models.UserFundSubsription.findAll({
+        where: {
+            userFundId: {
+                $in: listUserFundId,
+            },
+            enabled:true
+        },
     }));
 };
 
