@@ -12,6 +12,6 @@ module.exports = {
   },
 
   down: function (queryInterface, Sequelize) {
-      return queryInterface.dropColumn('OrderItem', 'parentId')
+      return queryInterface.removeColumn('OrderItem', 'parentId')
   }
 };

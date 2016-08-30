@@ -116,6 +116,14 @@ UserFundService.getEntities = function(id) {
     return userFund.entity;
 };
 
+UserFundService.getEntitiesCount = function(id) {
+    return await(sequelize.models.UserFundEntity.count({
+        where: {
+            userFundId: id
+        }
+    }))
+}
+
 UserFundService.getUserFundsCount = function() {
     return await(sequelize.models.UserFund.count());
 };
@@ -230,7 +238,14 @@ UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId
  /**
   * return unhandled subscriptions in this month
   * @param {int[]} allDates dates need to handle
-  * @return {Object[]} array of UserFundSubscriptions
+  * @return {Object[]} UserFundSubscriptions array of UserFundSubscriptions
+  * @return {Number} UserFundSubscription.userFundSubscriptionId id of subscription
+  * @return {Object} UserFundSubscription.payDate date user desired to pay
+  * @return {Number} UserFundSubscription.amount amount desired to pay
+  * @return {Number} UserFundSubscription.sberUserId id of user
+  * @return {Number} UserFundSubscription.userFundId if of userFund
+  * @return {Number} UserFundSubscription.bindingId bindingId od of linked card
+  * @return {Object} UserFundSubscription.realDate current date
   */
 UserFundService.getUnhandledSubscriptions = function(allDates) {
   return await(sequelize.sequelize.query(`

@@ -1,5 +1,6 @@
 'use strict';
 const orderStatus = require('../enums/orderStatus');
+const orderTypes = require('../enums/orderTypes');
 const StatusError = require('../../../components/errors').StatusError;
 
 module.exports = function(sequelize, DataTypes) {
@@ -46,42 +47,21 @@ module.exports = function(sequelize, DataTypes) {
                 isIn: [ Object.keys(orderStatus)
                               .map(status => orderStatus[status]) ]
             },
-            // set: function(status) {
-            //     return;
-            //     // need to somehow get current status from database
-            //     // var currentStatus = this.getDataValue('status')
-            //     sequelize.query('SELECT "status" FROM "Order"')
-            //     switch(currentStatus){
-            //         case orderStatus.FAILED:
-            //         case orderStatus.PAID:
-            //         case orderStatus.EQ_ORDER_NOT_CREATED:
-            //               throw new StatusError(currentStatus, status)
-            //         case orderStatus.WAITING_FOR_PAY:
-            //               if (status != orderStatus.CONFIRMING_PAYMENT) {
-            //                   throw new StatusError(currentStatus, status)
-            //               }
-            //               this.setDataValue('status', status);
-            //               break;
-            //         case orderStatus.CONFIRMING_PAYMENT:
-            //               if (status != orderStatus.WAITING_FOR_PAY
-            //                          || status != orderStatus.PAID
-            //                          || status != orderStatus.FAILED) {
-            //                   throw new StatusError(currentStatus, status)
-            //               }
-            //               this.setDataValue('status', status);
-            //               break;
-            //         case orderStatus.NEW:
-            //               if (status != orderStatus.WAITING_FOR_PAY
-            //                   || status != orderStatus.EQ_ORDER_NOT_CREATED) {
-            //                   throw new StatusError(currentStatus, status)
-            //               }
-            //               this.setDataValue('status', status)
-            //               break;
-            //         default:
-            //               this.setDataValue('status', orderStatus.NEW)
-            //       }
-            //   },
-              defaultValue: orderStatus.NEW
+            defaultValue: orderStatus.NEW,
+            allowNull: false
+        },
+        scheduledPayDate: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
+        },
+        type: {
+            type: DataTypes.STRING,
+            validate: {
+                isIn: [ Object.keys(orderTypes)
+                              .map(type => orderTypes[type]) ]
+            },
+            defaultValue: orderTypes.FIRST,
+            allowNull: false
         },
         funds: {
             type: DataTypes.ARRAY(DataTypes.STRING),

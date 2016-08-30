@@ -30,9 +30,10 @@ logger.info('START: recurrent monthly payments');
     var allDates = [];
     dates.forEach(date => orderService.getMissingDays(allDates, date) );
     // console.log(allDates);
+    allDates = ['2', '1', '31']
     var subscriptions = userFundService.getUnhandledSubscriptions(allDates);
     // var order = orderService.createOrder
-
+    //
     console.log(subscriptions);
     subscriptions.forEach(subscription => {
         await(orderService.makeMonthlyPayment(subscription))

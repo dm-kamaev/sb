@@ -10,6 +10,7 @@ const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
+const orderTypes = require('../enums/orderTypes')
 const os = require('os');
 const i18n = require('../../../components/i18n');
 const moment = require('moment');
@@ -114,7 +115,8 @@ OrderService.firstPayOrSendMessage = function(params) {
             // listDirectionsTopicsFunds,
             // listFunds,
             entities,
-            status: orderStatus.NEW
+            status: orderStatus.NEW,
+            type: orderTypes.FIRST
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date())
@@ -175,7 +177,9 @@ OrderService.getAcquiringOrder = function(order) {
         sberAcquErrorMessage: eqOrderStatus.errorMessage,
         sberAcquActionCode: eqOrderStatus.actionCode,
         sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID : orderStatus.FAILED
+        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID :
+              eqOrderStatus.actionCode == -100 ? orderStatus.WAITING_FOR_PAY :
+                                                 orderStatus.FAILED
     }));
 
     return eqOrderStatus;
@@ -286,6 +290,7 @@ OrderService.createOrder = function(data) {
                 // directionsTopicsFunds: data.listDirectionsTopicsFunds,
                 // funds: data.listFunds,
                 // fundInfo: data.fundInfo,
+                type: data.type,
                 status: data.status
             })
             .then(order => {
@@ -372,22 +377,53 @@ OrderService.getMissingDays = function(allDates, date) {
 };
 
 
-OrderService.makeMonthlyPayment = function(params) {
-    var entities = await(userFundService.getEntities(params.userFundId));
+OrderService.makeMonthlyPayment = function(userFundSubscription) {
+    var entities = await(userFundService.getEntities(userFundSubscription.userFundId));
 
     if (!entities.length) {
         // this should never happened
     }
+    var payDate = userFundSubscription.payDate,
+        realDate = userFundSubscription.realDate,
+        scheduledPayDate = new Date().getMonth() == payDate.getMonth() ? scheduledPayDate : new Date(scheduledPayDate.setMonth(new Date().getMonth() - 1))
 
-    params.entities = entities;
-    var sberAcquOrderNumber = OrderService.createOrder(params)
+    console.log(scheduledPayDate);
+    console.log(payDate);    
 
-    params.sberAcquOrderNumber = sberAcquOrderNumber;
-    var sberAcquPayment = sberAcquiring.createPayByBind(params);
+    var sberAcquOrderNumber = OrderService.createOrder({
+        userFundSubscriptionId: userFundSubscription.userFundSubscriptionId,
+        entities,
+        amount: userFundSubscription.amount,
+        type: orderTypes.RECURRENT,
+        status: orderStatus.CONFIRMING_PAYMENT,
+        scheduledPayDate: userFundSubscription.payDate
+    })
 
-    sberAcquPayment.bindingId = params.bindingId;
-    var result = sberAcquiring.payByBind(sberAcquPayment)
-    console.log(result);
+    var sberAcquPayment = sberAcquiring.createPayByBind({
+        amount: userFundSubscription.amount,
+        sberAcquOrderNumber,
+        clientId: userFundSubscription.sberUserId
+    });
+
+    if (sberAcquPayment.errorCode) {
+        throw new errors.AcquiringError(sberAcquPayment.errorMessage);
+    }
+    // console.log(sberAcquPayment);
+
+    var paymentResult = sberAcquiring.payByBind({
+        orderId: sberAcquPayment.orderId,
+        bindingId: userFundSubscription.bindingId
+    });
+
+    if (paymentResult.errorCode) {
+        return OrderService.failedReccurentPayment(sberAcquOrderNumber,
+              userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage)
+    }
+
+    OrderService.updateInfo(sberAcquOrderNumber, {
+        status: orderStatus.PAID
+    });
+    console.log(paymentResult);
 }
 
 
