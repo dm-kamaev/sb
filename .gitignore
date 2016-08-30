@@ -30,6 +30,7 @@ deployment-config.json
 
 # shell-scripts
 create_file.sh
+clean_log.sh
 
 
 # test

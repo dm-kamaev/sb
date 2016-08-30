@@ -225,18 +225,30 @@ UserFundService.updateUserFundSubscription = function(id, data) {
 
 
 /**
- * get user subscriptions by sberUserId
+ * get user subscriptions by sberUserId and returning data after update
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
 UserFundService.updatUserFundSubsriptionBySberUserId = function(sberUserId, data) {
-    // var options = { returning: true, };
     return await(sequelize.models.UserFundSubsription.update(data, {
         where: {
             sberUserId,
         },
         returning: true,
     }))[1];
+};
+
+
+
+UserFundService.searchActiveUserFundSubsriptionByUserFundId = function(listUserFundId) {
+    return await(sequelize.models.UserFundSubsription.findAll({
+        where: {
+            userFundId: {
+                $in: listUserFundId,
+            },
+            enabled:true
+        },
+    }));
 };
 
 
