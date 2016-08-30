@@ -23,6 +23,11 @@
     <property name="packaging.source.media.path" value="${basedir}/public/uploads/entities"/>
     <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entities"/>
 
+    <property name="user.path" value="${project.node-modules.path}/user-service"/>
+    <property name="user.config-path" value="${basedir}/config/user-config"/>
+    <property name="auth.path" value="${project.node-modules.path}/auth-service"/>
+    <property name="auth.config-path" value="${basedir}/config/auth-config"/>
+
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>
     <import file="${basedir}/node_modules/user-service/build.xml"/>
