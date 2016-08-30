@@ -612,7 +612,7 @@ function disableUserFunds_(listUserFundId) {
  * @param  {[array]} listUserFundId [74, 73]
  * @return {[type]}
  */
-<<<<<<< HEAD
+
 function sendEmailOwnerUserFund_ (listUserFundId) {
     var listUserFundWithSberUser = await(
         userFundService.getUserFundsWithSberUser(listUserFundId)
@@ -625,30 +625,13 @@ function sendEmailOwnerUserFund_ (listUserFundId) {
     }).forEach((user) => {
         var email = user.email, userFundName = user.userFundName;
         if (!email) { return; }
-=======
-function sendEmailOwnerUserFund_(listUserFundId) {
-    listUserFundId.map((userFundId) => {
-        return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
-    }).map((authId) => {
-        return restGetUserData_(authId).email;
-    }).forEach((userEmail) => {
-        if (!userEmail) {
-            return;
-        }
->>>>>>> SV-259
         var data = i18n.__(
             'Your User Fund "{{userFundName}}" deactivated.',{
                 userFundName
             }
         );
         mailService.sendUserRecurrentPayments(
-<<<<<<< HEAD
             email, { data }
-=======
-            userEmail, {
-                data
-            }
->>>>>>> SV-259
         );
     });
 }
