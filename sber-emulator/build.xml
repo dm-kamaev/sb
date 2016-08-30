@@ -46,8 +46,14 @@
         <symlink link="${emulator.target.supervisor}" resource="${emulator.source.supervisor}"/>
     </target>
 
-    <target name="emulator.supervisor.unlink">
+    <target name="emulator.supervisor.unlink" if="integration-tests">
         <symlink action="delete" link="${emulator.target.supervisor}"/>
+    </target>
+
+    <target name="emulator.check.env">
+        <condition property="integration-tests">
+            <contains string="${env}" substring="emul"/>
+        </condition>
     </target>
 
 </project>
