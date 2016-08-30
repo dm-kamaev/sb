@@ -534,14 +534,6 @@ function checkExistSubscribers_ (listUserFundId) {
     });
 }
 
-// async(() => {
-//     var ar = [ 73, 74, 1 ];
-//     var listUserFundId = checkExistSubscribers_(ar);
-//     if (listUserFundId.length) {
-//         disableUserFunds_(ar);
-//         sendEmailOwnerUserFund_(ar);
-//     }
-// })();
 
 /**
  * @param  {[array]} listUserFundId [74, 73]
@@ -562,11 +554,14 @@ function disableUserFunds_ (listUserFundId) {
  * @return {[type]}
  */
 function sendEmailOwnerUserFund_ (listUserFundId) {
-    listUserFundId.map((userFundId) => {
-        var res = await(userFundService.getUserFundWithSberUser(userFundId));
-        return { authId: res.owner.authId, userFundName: res.title };
+    var listUserFundWithSberUser = await(
+        userFundService.getUserFundsWithSberUser(listUserFundId)
+    );
+    listUserFundWithSberUser.map((userFund) => {
+        return { authId: userFund.owner.authId, userFundName: userFund.title };
     }).map((user) => {
-        return { email: restGetUserData_(user.authId).email, userFundName: user.userFundName };
+        user.email = restGetUserData_(user.authId).email;
+        return user;
     }).forEach((user) => {
         var email = user.email, userFundName = user.userFundName;
         if (!email) { return; }

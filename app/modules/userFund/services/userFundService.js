@@ -50,6 +50,27 @@ UserFundService.getUserFundWithSberUser = function(id) {
 };
 
 
+/**
+ * get list user funds with data about user
+ * @param  {[array]} listId [ 74, 73 ]
+ * @return {[type]}
+ */
+UserFundService.getUserFundsWithSberUser = function(listId) {
+    return await(sequelize.models.UserFund.findAll({
+        where: {
+            id: {
+                $in: listId
+            }
+        },
+        include: {
+            model: sequelize.models.SberUser,
+            as: 'owner',
+            required: false,
+        }
+    }));
+};
+
+
 UserFundService.getUserFunds = function() {
     return await(sequelize.models.UserFund.findAll());
 };
