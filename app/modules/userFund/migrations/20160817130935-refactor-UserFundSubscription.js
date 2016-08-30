@@ -6,8 +6,8 @@ module.exports = {
                 'sberUserUserFundId', 'userFundSubscriptionId')
             .then(() => {
                 return queryInterface.renameColumn('Order', 'sberUserUserFundId',
-                    'userFundSubscriptionId')
-            })
+                    'userFundSubscriptionId');
+            });
     },
 
     down: function(queryInterface, Sequelize) {
@@ -15,7 +15,7 @@ module.exports = {
                 'userFundSubscriptionId', 'sberUserUserFundId')
             .then(() => {
                 return queryInterface.renameColumn('Order', 'userFundSubscriptionId',
-                    'sberUserUserFundId')
-            })
+                    'sberUserUserFundId');
+            });
     }
 };

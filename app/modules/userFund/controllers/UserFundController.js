@@ -4,7 +4,7 @@
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
-const i18n   = require('../../../components/i18n');
+const i18n = require('../../../components/i18n');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityView = require('../../entity/views/entityView');
@@ -159,7 +159,7 @@ class UserFundController extends Controller {
     actionRemoveEntity(actionContext, entityId) {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.removeEntity(id, entityId));
-        if (!res) throw new errors.HttpError(i18n.__("Relation don't exists"), 400);
+        if (!res) throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400);
         return null;
     };
 

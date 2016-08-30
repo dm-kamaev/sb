@@ -121,8 +121,8 @@ UserFundService.getEntitiesCount = function(id) {
         where: {
             userFundId: id
         }
-    }))
-}
+    }));
+};
 
 UserFundService.getUserFundsCount = function() {
     return await(sequelize.models.UserFund.count());
@@ -254,7 +254,7 @@ UserFundService.searchActiveUserFundSubsriptionByUserFundId = function(listUserF
             userFundId: {
                 $in: listUserFundId,
             },
-            enabled:true
+            enabled: true
         },
     }));
 };
@@ -266,7 +266,7 @@ UserFundService.searchActiveUserFundSubsriptionByUserFundId = function(listUserF
  * @param  {[int]} userFundId
  * @return {[type]}
  */
-UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId) {
+UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId) {
     // check whether userFund enabled if he is not the owner
     if (ownUserFundId !== userFundId) {
         var userFund = await(UserFundService.getUserFund(userFundId));
@@ -291,7 +291,7 @@ UserFundService.checkEnableAnotherUserFund = function (ownUserFundId, userFundId
   * @return {Object} UserFundSubscription.realDate current date
   */
 UserFundService.getUnhandledSubscriptions = function(allDates) {
-  return await(sequelize.sequelize.query(`
+    return await(sequelize.sequelize.query(`
     SELECT DISTINCT ON ("UserFundSubsription"."id")
         "UserFundSubsription"."id" AS "userFundSubscriptionId",
         "payDayHistory"."payDate" AS "payDate",
@@ -313,13 +313,13 @@ UserFundService.getUnhandledSubscriptions = function(allDates) {
     JOIN "Card" ON "SberUser"."currentCardId" = "Card"."id"
     WHERE "UserFundSubsription"."enabled" = TRUE
     AND "UserFundSubsription"."id" NOT IN (SELECT "id" FROM "UserFundSubsription" JOIN "Order" ON "UserFundSubsription"."id" = "Order"."userFundSubscriptionId"
-                                                WHERE date_trunc('month', "Order"."createdAt") = date_trunc('month', CURRENT_DATE))`, {
-        type: sequelize.sequelize.QueryTypes.SELECT,
-        replacements: {
-            allDates
-        }
-    }));
-}
+                                                WHERE date_trunc('month', "Order"."scheduledPayDate") = date_trunc('month', CURRENT_DATE))`, {
+                                                    type: sequelize.sequelize.QueryTypes.SELECT,
+                                                    replacements: {
+                                                        allDates
+                                                    }
+                                                }));
+};
 
 /**
   * @param {int} subscriptionId id of subscription
@@ -330,7 +330,7 @@ UserFundService.setPayDate = function(subscriptionId, payDate) {
     return await(sequelize.models.PayDayHistory.create({
         subscriptionId,
         payDate
-    }))
-}
+    }));
+};
 
 module.exports = UserFundService;

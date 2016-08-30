@@ -3,10 +3,10 @@
 module.exports = function(sequelize, DataTypes) {
     var OrderItem = sequelize.define('OrderItem', {
         id: {
-          allowNull: false,
-          autoIncrement: true,
-          primaryKey: true,
-          type: DataTypes.INTEGER,
+            allowNull: false,
+            autoIncrement: true,
+            primaryKey: true,
+            type: DataTypes.INTEGER,
         },
         entityId: {
             type: DataTypes.INTEGER,
@@ -20,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             references: {
                 model: 'Order',
-                key:'sberAcquOrderNumber'
+                key: 'sberAcquOrderNumber'
             },
             allowNull: false
         },
@@ -79,7 +79,7 @@ module.exports = function(sequelize, DataTypes) {
                 OrderItem.hasMany(OrderItem, {
                     as: 'child',
                     foreignKey: 'parentId'
-                })
+                });
             }
         }
     });

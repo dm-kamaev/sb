@@ -8,4 +8,4 @@ module.exports = {
     EQ_ORDER_NOT_CREATED: 'eqOrderNotCreated',
     CONFIRMING_PAYMENT: 'confirmingPayment',
     NEW: 'new'
-}
+};

@@ -5,7 +5,7 @@ const technicalSupport = require('../../config/technicalSupport.json');
 const logger = require('../components/logger').getLogger('monthlyPayments');
 const orderService = require('../modules/orders/services/orderService.js');
 const userFundService = require('../modules/userFund/services/userFundService');
-const sberAcquiring = require('../modules/sberAcquiring/services/sberAcquiring')
+const sberAcquiring = require('../modules/sberAcquiring/services/sberAcquiring');
 const mailService = require('../modules/auth/services/mailService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
@@ -17,7 +17,7 @@ const NumberDays = 5; // take 5 days before now
 logger.info('START: recurrent monthly payments');
 
 
-(async(function () {
+(async(function() {
     ifFailed();
     // null.lenght;
     // var dates = orderService.getListDatesBefore(NumberDays, '2016-02-29');
@@ -28,23 +28,23 @@ logger.info('START: recurrent monthly payments');
     var dates = orderService.getListDatesBefore(NumberDays);
     // log(dates);
     var allDates = [];
-    dates.forEach(date => orderService.getMissingDays(allDates, date) );
+    dates.forEach(date => orderService.getMissingDays(allDates, date));
     // console.log(allDates);
-    allDates = ['2', '1', '31']
+    // allDates = ['2', '1', '31', '30', '29', '28'];
     var subscriptions = userFundService.getUnhandledSubscriptions(allDates);
     // var order = orderService.createOrder
     //
     console.log(subscriptions);
     subscriptions.forEach(subscription => {
-        await(orderService.makeMonthlyPayment(subscription))
-    })
+        await(orderService.makeMonthlyPayment(subscription));
+    });
 }))();
 
 
 function ifFailed() {
     process.on('uncaughtException', (err) => {
-        var errorMail = 'Error: '+err+'<p>Stack: ' + err.stack+'</p>';
-        var errorLog = 'Error: '+err+'\nStack: ' + err.stack;
+        var errorMail = 'Error: ' + err + '<p>Stack: ' + err.stack + '</p>';
+        var errorLog = 'Error: ' + err + '\nStack: ' + err.stack;
         logger.critical(errorLog);
         async(() =>
             mailService.sendMailCron(

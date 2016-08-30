@@ -1,4 +1,4 @@
 const loggers = require('../../../config/loggers');
 var intel = require('intel');
-intel.config(loggers)
+intel.config(loggers);
 module.exports = intel;

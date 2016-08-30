@@ -6,7 +6,7 @@ const SECRET = require('../../../config/admin-config').secret;
 const path = require('path');
 const errors = require('../../components/errors');
 const checkQuery = require('../../components/server/middleware/checkQuery');
-const checkToken = require('nodules/checkAuth').CheckToken(SECRET)
+const checkToken = require('nodules/checkAuth').CheckToken(SECRET);
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, path.join(__dirname, '../../../public/uploads/entities'));

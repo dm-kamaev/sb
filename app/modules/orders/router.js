@@ -1,10 +1,10 @@
 'use strict';
 
 const orderRouter = require('express').Router();
-const orderService = require('./services/orderService')
-const await = require('asyncawait/await')
+const orderService = require('./services/orderService');
+const await = require('asyncawait/await');
 const Controller = require('nodules/controller').Controller;
-const errors = require('../../components/errors')
+const errors = require('../../components/errors');
 
 var orderController = new class extends Controller {
       /**
@@ -12,12 +12,12 @@ var orderController = new class extends Controller {
        * @apiName get order(test)
        * @apiGroup Order
        */
-      actionGetOrderStatus(ctx, id){
-          var order =  await(orderService.getOrderWithInludes(id))
-          if (!order) throw new errors.NotFoundError('Order', id)
-          return order
-      }
-}()
+    actionGetOrderStatus(ctx, id) {
+        var order = await(orderService.getOrderWithInludes(id));
+        if (!order) throw new errors.NotFoundError('Order', id);
+        return order;
+    }
+}();
 
 orderRouter.get('/:id', orderController.actionGetOrderStatus);
 
