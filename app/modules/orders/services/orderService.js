@@ -563,16 +563,20 @@ function disableUserFunds_ (listUserFundId) {
  */
 function sendEmailOwnerUserFund_ (listUserFundId) {
     listUserFundId.map((userFundId) => {
-        return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
-    }).map((authId) => {
-        return restGetUserData_(authId).email;
-    }).forEach((userEmail) => {
-        if (!userEmail) { return; }
+        var res = await(userFundService.getUserFundWithSberUser(userFundId));
+        return { authId: res.owner.authId, userFundName: res.title };
+    }).map((user) => {
+        return { email: restGetUserData_(user.authId).email, userFundName: user.userFundName };
+    }).forEach((user) => {
+        var email = user.email, userFundName = user.userFundName;
+        if (!email) { return; }
         var data = i18n.__(
-            'Your User Fund deactivated.'
+            'Your User Fund "{{userFundName}}" deactivated.',{
+                userFundName
+            }
         );
         mailService.sendUserRecurrentPayments(
-            userEmail, { data }
+            email, { data }
         );
     });
 }

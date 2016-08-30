@@ -54,6 +54,7 @@ UserFundService.getUserFunds = function() {
     return await(sequelize.models.UserFund.findAll());
 };
 
+
 UserFundService.getTodayCreatedUserFunds = function() {
     var today = new Date(),
         year = today.getFullYear(),
