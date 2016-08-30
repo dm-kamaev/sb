@@ -3,8 +3,6 @@
 <project name="sber-together-api" basedir="."
     xmlns:if="ant:if"
     xmlns:unless="ant:unless">
-    <property environment="env-test"/>
-    <property name="env" value="${env-test.env}"/>
     <property name="initd_script" value="${ant.project.name}-node"/>
     <property name="project.node-modules.path" value="${basedir}/node_modules"/>
     <property name="packaging.source.frontend-app.path" value="${basedir}/app"/>
@@ -39,7 +37,9 @@
 
 
     <target name="packaging.release.switch"
-      depends="packaging.shared-folders,
+      depends="
+            sber.echo.env,
+        packaging.shared-folders,
              packaging.shared-folders.media,
              packaging.supervisor.link,
              user.supervisor.link,
@@ -150,6 +150,12 @@
         </waitfor>
         <exec executable="${npm}" dir="${basedir}/integration-tests" failonerror="on">
             <arg line="run tests"/>
+        </exec>
+    </target>
+
+    <target name="sber.echo.env">
+        <exec executable="echo" dir="${basedir}">
+            <arg line="${env}"/>
         </exec>
     </target>
 </project>
