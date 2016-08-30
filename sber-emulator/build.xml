@@ -52,7 +52,7 @@
 
     <target name="emulator.check.env">
         <condition property="integration-tests">
-            <contains string="${env}" substring="emul"/>
+            <contains string="${params.env}" substring="emul"/>
         </condition>
     </target>
 
