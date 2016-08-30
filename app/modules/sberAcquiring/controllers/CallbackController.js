@@ -30,9 +30,9 @@ module.exports = class CallbackController extends Controller {
         if (orderService.isSuccessful(sberAcquiringOrderStatus)) {
             // create new card for user and set pay date
             var userFundSubscription = order.userFundSubscription,
-                sberUser             = userFundSubscription.sberUser,
-                userFund             = userFundSubscription.userFund,
-                ownUserFund          = sberUser.userFund;
+                sberUser = userFundSubscription.sberUser,
+                userFund = userFundSubscription.userFund,
+                ownUserFund = sberUser.userFund;
 
             await(userService.createCard(sberUser.id,
                         sberAcquiringOrderStatus.bindingInfo.bindingId));

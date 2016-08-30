@@ -10,7 +10,7 @@ const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
-const orderTypes = require('../enums/orderTypes')
+const orderTypes = require('../enums/orderTypes');
 const os = require('os');
 const i18n = require('../../../components/i18n');
 const moment = require('moment');
@@ -25,7 +25,7 @@ const axios = require('axios').create({
 var OrderService = {};
 
 OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
-    return await (sequelize.models.Order.findOne({
+    return await(sequelize.models.Order.findOne({
         where: {
             sberAcquOrderNumber
         },
@@ -83,7 +83,7 @@ OrderService.getSberUser = function(userFundSubscriptionId) {
  * @return {[type]}
  */
 OrderService.updateInfo = function(sberAcquOrderNumber, data) {
-    return await (sequelize.models.Order.update(data, {
+    return await(sequelize.models.Order.update(data, {
         where: {
             sberAcquOrderNumber,
         }
@@ -119,8 +119,8 @@ OrderService.firstPayOrSendMessage = function(params) {
             type: orderTypes.FIRST
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
-        var payDate = createPayDate_(params.userFundSubscriptionId, new Date())
-        // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
+        var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
+            // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
@@ -133,7 +133,7 @@ OrderService.firstPayOrSendMessage = function(params) {
                 clientId: params.sberUserId,
             });
         } catch (err) {
-            await (OrderService.updateInfo(sberAcquOrderNumber, {
+            await(OrderService.updateInfo(sberAcquOrderNumber, {
                 status: orderStatus.EQ_ORDER_NOT_CREATED
             }));
             var textError = i18n.__(
@@ -152,7 +152,7 @@ OrderService.firstPayOrSendMessage = function(params) {
             message: i18n.__('You changed the monthly payment amount.')
         };
     }
-}
+};
 
 
 OrderService.isAvalibleForPayment = function(order) {
@@ -162,7 +162,7 @@ OrderService.isAvalibleForPayment = function(order) {
 OrderService.getAcquiringOrder = function(order) {
     var sberAcquOrderNumber = order.sberAcquOrderNumber;
 
-    await (OrderService.updateInfo(sberAcquOrderNumber, {
+    await(OrderService.updateInfo(sberAcquOrderNumber, {
         status: orderStatus.CONFIRMING_PAYMENT
     }));
 
@@ -170,16 +170,14 @@ OrderService.getAcquiringOrder = function(order) {
         userFund = order.userFundSubscription.userFund,
         sberUser = order.userFundSubscription.sberUser;
 
-    var eqOrderStatus = getAcquiringOrderStatus_(order)
+    var eqOrderStatus = getAcquiringOrderStatus_(order);
 
-    await (OrderService.updateInfo(sberAcquOrderNumber, {
+    await(OrderService.updateInfo(sberAcquOrderNumber, {
         sberAcquErrorCode: eqOrderStatus.errorCode,
         sberAcquErrorMessage: eqOrderStatus.errorMessage,
         sberAcquActionCode: eqOrderStatus.actionCode,
         sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID :
-              eqOrderStatus.actionCode == -100 ? orderStatus.WAITING_FOR_PAY :
-                                                 orderStatus.FAILED
+        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID : eqOrderStatus.actionCode == -100 ? orderStatus.WAITING_FOR_PAY : orderStatus.FAILED
     }));
 
     return eqOrderStatus;
@@ -187,7 +185,7 @@ OrderService.getAcquiringOrder = function(order) {
 
 OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
     return sberAcquiringOrderStatus.actionCode === 0;
-}
+};
 
 function getAcquiringOrderStatus_(order) {
     try {
@@ -197,7 +195,7 @@ function getAcquiringOrderStatus_(order) {
             clientId: order.userFundSubscription.sberUser.id
         });
     } catch (err) {
-        await (OrderService.updateInfo(order.sberAcquOrderNumber, {
+        await(OrderService.updateInfo(order.sberAcquOrderNumber, {
             status: orderStatus.WAITING_FOR_PAY
         }));
         var textError = i18n.__(
@@ -227,7 +225,7 @@ function getListDirectionTopicFunds_(entities) {
             type = entity.type;
         listDirectionsTopicsFunds.push([type, entity.title]);
         if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await (entityService.getListFundsName(entity.id)));
+            listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
         } else {
             listFunds.push(entity.title);
         }
@@ -247,7 +245,7 @@ function getListDirectionTopicFunds_(entities) {
  */
 function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
-        await (
+        await(
             OrderService.updateInfo(sberAcquOrderNumber, {
                 sberAcquOrderId: responceSberAcqu.orderId,
                 status: orderStatus.WAITING_FOR_PAY
@@ -264,10 +262,10 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
             sberAcquErrorMessage: errorMessage,
             status: orderStatus.EQ_ORDER_NOT_CREATED
         };
-        await (OrderService.updateInfo(sberAcquOrderNumber, data));
+        await(OrderService.updateInfo(sberAcquOrderNumber, data));
         var textError = i18n.__(
-            "Failed create order in Sberbank acquiring. " +
-            "errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'", {
+            'Failed create order in Sberbank acquiring. ' +
+            'errorCode: \'{{errorCode}}\', errorMessage: \'{{errorMessage}}\'', {
                 errorCode,
                 errorMessage
             });
@@ -285,14 +283,15 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
 OrderService.createOrder = function(data) {
     return await(sequelize.sequelize.transaction(t => {
         return sequelize.models.Order.create({
-                userFundSubscriptionId: data.userFundSubscriptionId,
-                amount: data.amount,
+            userFundSubscriptionId: data.userFundSubscriptionId,
+            amount: data.amount,
                 // directionsTopicsFunds: data.listDirectionsTopicsFunds,
                 // funds: data.listFunds,
                 // fundInfo: data.fundInfo,
-                type: data.type,
-                status: data.status
-            })
+            type: data.type,
+            status: data.status,
+            scheduledPayDate: data.scheduledPayDate
+        })
             .then(order => {
                 return Promise.all(data.entities.map(entity => {
                     var orderItem = {
@@ -312,26 +311,26 @@ OrderService.createOrder = function(data) {
                                 type: fund.type,
                                 sberAcquOrderNumber: order.sberAcquOrderNumber,
                                 uncovered: true
-                            }
+                            };
                         })
-                    }
+                    };
 
                     return sequelize.models.OrderItem.create(orderItem, {
                         include: [{
                             model: sequelize.models.OrderItem,
                             as: 'child'
                         }]
-                    })
+                    });
                 }));
-            })
+            });
     }))[0].sberAcquOrderNumber;
-}
+};
 
 function createPayDate_(subscriptionId, payDate) {
-  return await(sequelize.models.PayDayHistory.create({
-      subscriptionId,
-      payDate
-  }))
+    return await(sequelize.models.PayDayHistory.create({
+        subscriptionId,
+        payDate
+    }));
 }
 
 
@@ -383,12 +382,27 @@ OrderService.makeMonthlyPayment = function(userFundSubscription) {
     if (!entities.length) {
         // this should never happened
     }
+
+    const getScheduledDate = (realDate, payDate) => {
+        return  realDate.getDate() == payDate.getDate() ? realDate :
+                realDate.getDate() > payDate.getDate() ?
+                moment(realDate).set('date', payDate.getDate()).toDate() :
+                moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
+                moment(realDate).subtract(1, 'month').endOf('month').toDate() :
+                moment(realDate).set({
+                    'month': realDate.getMonth() - 1,
+                    'date': payDate.getDate()
+                }).toDate();
+    };
+
     var payDate = userFundSubscription.payDate,
         realDate = userFundSubscription.realDate,
-        scheduledPayDate = new Date().getMonth() == payDate.getMonth() ? scheduledPayDate : new Date(scheduledPayDate.setMonth(new Date().getMonth() - 1))
+        // realDate = new Date(2016, 2, 2),
+        scheduledPayDate = getScheduledDate(realDate, payDate);
 
-    console.log(scheduledPayDate);
-    console.log(payDate);    
+    console.log('sheduled: ', scheduledPayDate);
+    console.log('payDate: ', payDate.getDate());
+    console.log('now: ', realDate);
 
     var sberAcquOrderNumber = OrderService.createOrder({
         userFundSubscriptionId: userFundSubscription.userFundSubscriptionId,
@@ -396,8 +410,8 @@ OrderService.makeMonthlyPayment = function(userFundSubscription) {
         amount: userFundSubscription.amount,
         type: orderTypes.RECURRENT,
         status: orderStatus.CONFIRMING_PAYMENT,
-        scheduledPayDate: userFundSubscription.payDate
-    })
+        scheduledPayDate
+    });
 
     var sberAcquPayment = sberAcquiring.createPayByBind({
         amount: userFundSubscription.amount,
@@ -417,17 +431,17 @@ OrderService.makeMonthlyPayment = function(userFundSubscription) {
 
     if (paymentResult.errorCode) {
         return OrderService.failedReccurentPayment(sberAcquOrderNumber,
-              userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage)
+            userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage);
     }
 
     OrderService.updateInfo(sberAcquOrderNumber, {
         status: orderStatus.PAID
     });
     console.log(paymentResult);
-}
+};
 
 
-OrderService.getMissingDays = function (allDates, date) {
+OrderService.getMissingDays = function(allDates, date) {
     var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
     var dateObjTime = moment(date);
     if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
@@ -436,7 +450,7 @@ OrderService.getMissingDays = function (allDates, date) {
             diff = 31 - digitLastDay;
         if (diff) {
             for (var i = diff; i >= 1; i--) {
-              allDates.push((digitLastDay+i).toString());
+                allDates.push((digitLastDay + i).toString());
             }
         }
     }
@@ -449,19 +463,20 @@ OrderService.getMissingDays = function (allDates, date) {
  * @param  {[int]} userFundSubscriptionId
  * @return {[type]}
  */
-OrderService.findOrderWithProblemWithCardInPreviousMonth = function (userFundSubscriptionId) {
+OrderService.findOrderWithProblemWithCardInPreviousMonth = function(userFundSubscriptionId) {
     var previousMonth = moment().subtract(1, 'month').format('YYYY-MM');
     return await(sequelize.models.Order.findAll({
-            where: {
-                userFundSubscriptionId,
-                status: orderStatus.PROBLEM_WITH_CARD
-             }
-        }).filter(function(order) {
-            var orderMonth = moment(order.updatedAt).format('YYYY-MM');
-            if (previousMonth === orderMonth) { return true; }
-            return false;
-        })
-    );
+        where: {
+            userFundSubscriptionId,
+            status: orderStatus.PROBLEM_WITH_CARD
+        }
+    }).filter(function(order) {
+        var orderMonth = moment(order.updatedAt).format('YYYY-MM');
+        if (previousMonth === orderMonth) {
+            return true;
+        }
+        return false;
+    }));
 };
 
 
@@ -472,7 +487,7 @@ OrderService.findOrderWithProblemWithCardInPreviousMonth = function (userFundSub
  * @param  {[str]} error                   text from sberbank accuring
  * @return {[type]}
  */
-OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSubscriptionId, error) {
+OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubscriptionId, error) {
     await(OrderService.updateInfo(sberAcquOrderNumber, {
         status: orderStatus.PROBLEM_WITH_CARD
     }));
@@ -480,12 +495,14 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
     );
 
-    var sberUser   = await(OrderService.getSberUser(userFundSubscriptionId)),
+    var sberUser = await(OrderService.getSberUser(userFundSubscriptionId)),
         sberUserId = sberUser.id,
-        authId     = sberUser.authId;
+        authId = sberUser.authId;
 
     var userEmail = restGetUserData_(authId).email;
-    if (!userEmail) { throw new errors.NotFoundError('email', authId); }
+    if (!userEmail) {
+        throw new errors.NotFoundError('email', authId);
+    }
     console.log('userEmail', userEmail, 'authId', authId, 'sberUserId', sberUserId);
 
     // sberAcquOrderNumber 464
@@ -497,20 +514,24 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
     if (!problemOrderInPreviousMonth.length) {
         data = i18n.__(
             'Money is not written off, check your card. {{error}}', {
-            error
-        });
+                error
+            });
         mailService.sendUserRecurrentPayments(
-            userEmail, { data }
+            userEmail, {
+                data
+            }
         );
-    // this is the second time the payment failed
+        // this is the second time the payment failed
     } else {
         data = i18n.__(
-            'Money is not written off(for the second month in a row), check your card, '+
+            'Money is not written off(for the second month in a row), check your card, ' +
             'write-downs will be no more. {{error}}', {
-            error
-        });
+                error
+            });
         mailService.sendUserRecurrentPayments(
-            userEmail, { data }
+            userEmail, {
+                data
+            }
         );
 
         // get all user subscription and turn off their
@@ -536,9 +557,11 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
  * @param  {[int]} sberUserId
  * @return {[array]}            [ 74, 73, ... ]
  */
-function disableUserFundSubsription_ (sberUserId) {
+function disableUserFundSubsription_(sberUserId) {
     var listUserFundSubsription =
-    userFundService.updatUserFundSubsriptionBySberUserId(sberUserId, { enabled:false });
+        userFundService.updatUserFundSubsriptionBySberUserId(sberUserId, {
+            enabled: false
+        });
 
     return listUserFundSubsription.map((UserFundSubsription) => {
         return UserFundSubsription.userFundId;
@@ -551,10 +574,10 @@ function disableUserFundSubsription_ (sberUserId) {
  * @param  {[array]} listUserFundId [ 73, 74, 1]
  * @return {[array]}                [ 73, 74 ]
  */
-function checkExistSubscribers_ (listUserFundId) {
+function checkExistSubscribers_(listUserFundId) {
     var res = [];
     var activeUserFundSubsription =
-    userFundService.searchActiveUserFundSubsriptionByUserFundId(listUserFundId);
+        userFundService.searchActiveUserFundSubsriptionByUserFundId(listUserFundId);
 
     var listUserFundIdHasSubscribers = {};
     // { '1': true, '73': true, '74': true }
@@ -564,7 +587,7 @@ function checkExistSubscribers_ (listUserFundId) {
 
     return listUserFundId.filter((userFundId) => {
         if (!listUserFundIdHasSubscribers[userFundId]) {
-          return true;
+            return true;
         }
         return false;
     });
@@ -575,10 +598,10 @@ function checkExistSubscribers_ (listUserFundId) {
  * @param  {[array]} listUserFundId [74, 73]
  * @return {[type]}
  */
-function disableUserFunds_ (listUserFundId) {
+function disableUserFunds_(listUserFundId) {
     listUserFundId.forEach(function(userFundId) {
         await(userFundService.updateUserFund(userFundId, {
-            enabled:false
+            enabled: false
         }));
     });
 }
@@ -589,6 +612,7 @@ function disableUserFunds_ (listUserFundId) {
  * @param  {[array]} listUserFundId [74, 73]
  * @return {[type]}
  */
+<<<<<<< HEAD
 function sendEmailOwnerUserFund_ (listUserFundId) {
     var listUserFundWithSberUser = await(
         userFundService.getUserFundsWithSberUser(listUserFundId)
@@ -601,13 +625,30 @@ function sendEmailOwnerUserFund_ (listUserFundId) {
     }).forEach((user) => {
         var email = user.email, userFundName = user.userFundName;
         if (!email) { return; }
+=======
+function sendEmailOwnerUserFund_(listUserFundId) {
+    listUserFundId.map((userFundId) => {
+        return await(userFundService.getUserFundWithSberUser(userFundId)).owner.authId;
+    }).map((authId) => {
+        return restGetUserData_(authId).email;
+    }).forEach((userEmail) => {
+        if (!userEmail) {
+            return;
+        }
+>>>>>>> SV-259
         var data = i18n.__(
             'Your User Fund "{{userFundName}}" deactivated.',{
                 userFundName
             }
         );
         mailService.sendUserRecurrentPayments(
+<<<<<<< HEAD
             email, { data }
+=======
+            userEmail, {
+                data
+            }
+>>>>>>> SV-259
         );
     });
 }
@@ -618,8 +659,8 @@ function sendEmailOwnerUserFund_ (listUserFundId) {
  * @param  {[int]} authId
  * @return {[obj]}
  */
-function restGetUserData_ (authId) {
-    var resp  = await(axios.get(`/user/${authId}`));
+function restGetUserData_(authId) {
+    var resp = await(axios.get(`/user/${authId}`));
     return resp.data || {};
 }
 

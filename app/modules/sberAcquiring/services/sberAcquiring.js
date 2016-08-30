@@ -3,8 +3,8 @@
 const await = require('asyncawait/await');
 const configSberAcquiring = require('../../../../config/config-sberAcquiring.json');
 const axios = require('axios').create({
-  baseURL: configSberAcquiring.hostname,
-  validateStatus: (status) => { return status >= 200 && status < 500; },
+    baseURL: configSberAcquiring.hostname,
+    validateStatus: (status) => { return status >= 200 && status < 500; },
 });
 const errors = require('../../../components/errors');
 const requestPromise = require('../../../components/requestPromise');
@@ -147,17 +147,17 @@ sberAcquiring.getStatusAndGetBind = function(params) {
 // orderId is mdOrder for payByBind
 sberAcquiring.createPayByBind = function(params) {
     return await(axios.get(configSberAcquiring.registerOrder, {
-            params: {
-                userName: params.userName || configSberAcquiring.userNameSsl,
-                password: params.password || configSberAcquiring.passwordSsl,
-                amount: params.amount,
-                orderNumber: params.sberAcquOrderNumber,
-                returnUrl: params.returnUrl || 'http://google.com',
-                failUrl: params.failUrl || 'http://google.com',
-                language: 'ru',
-                clientId: params.clientId,
-            }
-        })).data;
+        params: {
+            userName: params.userName || configSberAcquiring.userNameSsl,
+            password: params.password || configSberAcquiring.passwordSsl,
+            amount: params.amount,
+            orderNumber: params.sberAcquOrderNumber,
+            returnUrl: params.returnUrl || 'http://google.com',
+            failUrl: params.failUrl || 'http://google.com',
+            language: 'ru',
+            clientId: params.clientId,
+        }
+    })).data;
 };
 
 
@@ -184,7 +184,7 @@ sberAcquiring.payByBind = function(params) {
         language: 'ru',
     };
     return requestPromise.post(
-      configSberAcquiring.hostname+configSberAcquiring.payByBind,
+      configSberAcquiring.hostname + configSberAcquiring.payByBind,
       data
     ).body;
 };

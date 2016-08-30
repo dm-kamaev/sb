@@ -42,7 +42,7 @@ UserService.findSberUserById = function(id) {
  * @param  {[int]} sberUserId [description]
  * @return {[type]}           [description]
  */
-UserService.findCardBySberUserId = function (sberUserId) {
+UserService.findCardBySberUserId = function(sberUserId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id: sberUserId

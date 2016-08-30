@@ -10,9 +10,9 @@ class NotFoundError extends Error {
    */
     constructor(modelName, id) {
         // super(`Can't find ${modelName} with id ${id}`);
-        super(i18n.__("Can't find {{modelName}} with id {{id}}", {
-          modelName,
-          id
+        super(i18n.__('Can\'t find {{modelName}} with id {{id}}', {
+            modelName,
+            id
         }));
 
         this.name = 'NotFoundError';

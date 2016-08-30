@@ -132,10 +132,10 @@ EntityService.getListFundsName = function(entityId) {
     }));
     var res = [];
     for (var i = 0, l = listFunds.length; i < l; i++) {
-      var record = listFunds[i].dataValues,
-          otherEntityId = record.otherEntityId;
-      var entity = await(getEntityByEntityId_(otherEntityId, 'fund', true));
-      if (entity) { res.push(entity.title); }
+        var record = listFunds[i].dataValues,
+            otherEntityId = record.otherEntityId;
+        var entity = await(getEntityByEntityId_(otherEntityId, 'fund', true));
+        if (entity) { res.push(entity.title); }
     }
     return res;
 };

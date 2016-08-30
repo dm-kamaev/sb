@@ -11,16 +11,16 @@ const transporter = transporterGenerator.createSMTPTransporter({
     name: 'cochanges.com'
 });
 const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbank.com>');
-const logger = require('../../../components/logger').getLogger('main')
+const logger = require('../../../components/logger').getLogger('main');
 
 var MailService = {};
 
 MailService.sendMail = function(email, emailData) {
     var letter = new Letter('Подтвердите ваш почтовый ящик', `<div style = "color: red">${emailData}</div>`, 'html');
     try {
-        await (mailSender.sendMail(email, letter));
+        await(mailSender.sendMail(email, letter));
     } catch (err) {
-        logger.critical('ERROR AT SENDING MAIL ', err.message)
+        logger.critical('ERROR AT SENDING MAIL ', err.message);
     }
     // need for debug
     return emailData;
@@ -35,8 +35,8 @@ MailService.sendMail = function(email, emailData) {
  */
 MailService.sendMailCron = function(email, emailData) {
     var letter = new Letter(
-      'Отработал cron: '+emailData.cronName,
-      '<div>'+(emailData.error || emailData.data)+'</div>',
+      'Отработал cron: ' + emailData.cronName,
+      '<div>' + (emailData.error || emailData.data) + '</div>',
       'html'
     );
     await(mailSender.sendMail(email, letter));
@@ -54,7 +54,7 @@ MailService.sendMailCron = function(email, emailData) {
 MailService.sendUserRecurrentPayments = function(email, emailData) {
     var letter = new Letter(
       'Ежемесячные списания',
-      '<div>'+emailData.data+'</div>',
+      '<div>' + emailData.data + '</div>',
       'html'
     );
     await(mailSender.sendMail(email, letter));
