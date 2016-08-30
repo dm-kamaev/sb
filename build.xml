@@ -132,7 +132,7 @@
     <target name="sber.run-integration-tests" if="integration-tests"
             depends="sber.integration-tests"/>
 
-    <target name="sber.integration-tests">
+    <target name="sber.integration-tests" if="integration-tests">
         <waitfor maxwait="10" maxwaitunit="second">
             <and>
                 <socket server="localhost" port="3000"/>

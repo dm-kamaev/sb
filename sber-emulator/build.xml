@@ -16,13 +16,13 @@
     <property name="emulator.source.supervisor" value="${packaging.target.current-path}/environment/supervisord/sber-emulator.conf"/>
 
 
-    <target name="emulator.migrate">
+    <target name="emulator.migrate" if="integration-tests">
         <exec executable="${node}" dir="${emulator.path}/app/scripts" failonerror="on">
             <arg line="migrate"/>
         </exec>
     </target>
 
-    <target name="emulator.apidoc">
+    <target name="emulator.apidoc" if="integration-tests">
         <exec executable="${apidoc}" dir="./">
             <arg line="-i ./controllers -o ./apidoc"/>
         </exec>
@@ -32,7 +32,7 @@
         <mkdir dir="${emulator.runtime-path}"/>
     </target>
 
-    <target name="emulator.make-tmp-dir">
+    <target name="emulator.make-tmp-dir" if="integration-tests">
         <exec executable="mkdir" dir="${emulator.path}">
             <arg line="app/components/sequelize/tmp"/>
         </exec>
@@ -41,7 +41,7 @@
 
     <!-- Supervisor support -->
 
-    <target name="emulator.supervisor.link" depends="emulator.supervisor.unlink">
+    <target name="emulator.supervisor.link" depends="emulator.supervisor.unlink" if="integration-tests">
         <echo message="Link ${emulator.source.supervisor} ${emulator.target.supervisor}"/>
         <symlink link="${emulator.target.supervisor}" resource="${emulator.source.supervisor}"/>
     </target>
