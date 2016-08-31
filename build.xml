@@ -23,18 +23,23 @@
     <property name="packaging.source.media.path" value="${basedir}/public/uploads/entities"/>
     <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entities"/>
 
+    <property name="user.path" value="${project.node-modules.path}/user-service"/>
+    <property name="user.config-path" value="${basedir}/config/user-config"/>
+    <property name="auth.path" value="${project.node-modules.path}/auth-service"/>
+    <property name="auth.config-path" value="${basedir}/config/auth-config"/>
+    <property name="emulator.path" value="${basedir}/sber-emulator"/>
+
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>
     <import file="${basedir}/node_modules/user-service/build.xml"/>
     <import file="${basedir}/node_modules/auth-service/build.xml"/>
     <import file="${basedir}/sber-emulator/build.xml"/>
 
-    <condition property="integration-tests">
-        <contains string="${env}" substring="emul"/>
-    </condition>
+
 
     <target name="packaging.release.switch"
-      depends="packaging.shared-folders,
+      depends="
+        packaging.shared-folders,
              packaging.shared-folders.media,
              packaging.supervisor.link,
              user.supervisor.link,
@@ -124,13 +129,15 @@
             packaging.shared-folders.set-permissions.media,
             packaging.shared-folders.link.media"/>
 
-    <target name="sber.build-test-environment" if="integration-tests"
-            depends="emulator.supervisor.link,
+    <target name="sber.build-test-environment"
+            depends="emulator.check.env,
+            emulator.supervisor.link,
             emulator.make-tmp-dir,
             emulator.migrate"/>
 
-    <target name="sber.run-integration-tests" if="integration-tests"
-            depends="sber.integration-tests"/>
+    <target name="sber.run-integration-tests"
+            depends="emulator.check.env,
+            sber.integration-tests"/>
 
     <target name="sber.integration-tests" if="integration-tests">
         <waitfor maxwait="10" maxwaitunit="second">
@@ -145,5 +152,4 @@
             <arg line="run tests"/>
         </exec>
     </target>
-
 </project>

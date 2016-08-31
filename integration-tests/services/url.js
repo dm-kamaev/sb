@@ -7,7 +7,7 @@ service.concatUrl = function(urlTail) {
 };
 
 service.concatEmulUrl = function(urlTail) {
-    var url = 'http://www60.lan:3005/' + urlTail;
+    var url = 'http://localhost:3005/' + urlTail;
     return url;
 }
 
