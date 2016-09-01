@@ -376,7 +376,7 @@ OrderService.getMissingDays = function(allDates, date) {
 };
 
 
-OrderService.makeMonthlyPayment = function(userFundSubscription) {
+OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     var entities = await(userFundService.getEntities(userFundSubscription.userFundId));
 
     if (!entities.length) {
@@ -384,7 +384,7 @@ OrderService.makeMonthlyPayment = function(userFundSubscription) {
     }
 
     const getScheduledDate = (realDate, payDate) => {
-        return  realDate.getDate() == payDate.getDate() ? realDate :
+        return realDate.getDate() == payDate.getDate() ? realDate :
                 realDate.getDate() > payDate.getDate() ?
                 moment(realDate).set('date', payDate.getDate()).toDate() :
                 moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
@@ -396,8 +396,9 @@ OrderService.makeMonthlyPayment = function(userFundSubscription) {
     };
 
     var payDate = userFundSubscription.payDate,
-        realDate = userFundSubscription.realDate,
-        // realDate = new Date(2016, 2, 2),
+        //needs for unit testing
+        realDate = nowDate || userFundSubscription.realDate,
+        // realDate = new Date(2016, 8, 1),
         scheduledPayDate = getScheduledDate(realDate, payDate);
 
     console.log('sheduled: ', scheduledPayDate);
@@ -613,7 +614,7 @@ function disableUserFunds_(listUserFundId) {
  * @return {[type]}
  */
 
-function sendEmailOwnerUserFund_ (listUserFundId) {
+function sendEmailOwnerUserFund_(listUserFundId) {
     var listUserFundWithSberUser = await(
         userFundService.getUserFundsWithSberUser(listUserFundId)
     );
@@ -626,7 +627,7 @@ function sendEmailOwnerUserFund_ (listUserFundId) {
         var email = user.email, userFundName = user.userFundName;
         if (!email) { return; }
         var data = i18n.__(
-            'Your User Fund "{{userFundName}}" deactivated.',{
+            'Your User Fund "{{userFundName}}" deactivated.', {
                 userFundName
             }
         );
