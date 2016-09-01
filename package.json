@@ -4,7 +4,7 @@
   "description": "",
   "main": "app/app.js",
   "scripts": {
-    "migrate": "cd node_modules/user-service && ant -f build.xml user.migrate -Duser.sequelize=../.bin/sequelize -Duser.config-path=../../config/user-config && cd ../.. && node app/scripts/migrate.js",
+    "migrate": "cd node_modules/user-service && ant -f build.xml user.migrate -Duser.sequelize=../.bin/sequelize -Duser.config-path=../../config/user-config-dev && cd ../.. && node app/scripts/migrate.js",
     "config": "node app/scripts/createConfig.js",
     "start-users": "node app/scripts/startUserService.js",
     "start-auth": "node app/scripts/startAuthService.js",
@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "gulp-apidoc": "^0.2.4",
-    "chakram": "^1.4.0",    
+    "chakram": "^1.4.0",
     "mocha": "^3.0.2",
     "query-string": "^4.2.3",
     "randomstring": "^1.1.5",

@@ -4,7 +4,7 @@ const userFundView = require('../../userFund/views/userFundView');
 exports.renderUser = function(authUser, sberUser) {
     return {
         id: sberUser.id,
-        phone: authUser.phone,
+        email: authUser.email,
         firstName: authUser.firstName,
         lastName: authUser.lastName,
         userFund: sberUser.userFund ?
