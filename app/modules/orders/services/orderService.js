@@ -429,7 +429,7 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     // console.log(sberAcquPayment);
 
     var paymentResultResponse = sberAcquiring.payByBind({
-        orderId: '123123' || sberAcquPayment.orderId,
+        orderId: sberAcquPayment.orderId,
         bindingId: userFundSubscription.bindingId
     });
 
