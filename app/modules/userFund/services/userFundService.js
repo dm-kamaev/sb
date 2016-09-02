@@ -312,7 +312,8 @@ UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId)
   * @return {Number} UserFundSubscription.bindingId bindingId od of linked card
   * @return {Object} UserFundSubscription.realDate current date
   */
-UserFundService.getUnhandledSubscriptions = function(allDates) {
+UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
+    console.log('nowDate: ', nowDate);
     return await(sequelize.sequelize.query(`
     SELECT DISTINCT ON ("UserFundSubsription"."id")
         "UserFundSubsription"."id" AS "userFundSubscriptionId",
@@ -321,7 +322,7 @@ UserFundService.getUnhandledSubscriptions = function(allDates) {
         "SberUser"."id" AS "sberUserId",
         "UserFund"."id" AS "userFundId",
         "Card"."bindingId" AS "bindingId",
-         CURRENT_DATE AS "realDate"
+         :currentDate::timestamp AS "realDate"
     FROM "UserFundSubsription" AS "UserFundSubsription"
     INNER JOIN "UserFund" AS "userFund" ON "UserFundSubsription"."userFundId" = "userFund"."id"
     AND ("userFund"."deletedAt" IS NULL
@@ -335,10 +336,11 @@ UserFundService.getUnhandledSubscriptions = function(allDates) {
     JOIN "Card" ON "SberUser"."currentCardId" = "Card"."id"
     WHERE "UserFundSubsription"."enabled" = TRUE
     AND "UserFundSubsription"."id" NOT IN (SELECT "id" FROM "UserFundSubsription" JOIN "Order" ON "UserFundSubsription"."id" = "Order"."userFundSubscriptionId"
-                                                WHERE date_trunc('month', "Order"."scheduledPayDate") = date_trunc('month', CURRENT_DATE))`, {
+                                                WHERE date_trunc('month', "Order"."scheduledPayDate") = date_trunc('month', :currentDate::date))`, {
                                                     type: sequelize.sequelize.QueryTypes.SELECT,
                                                     replacements: {
-                                                        allDates
+                                                        allDates,
+                                                        currentDate: nowDate || new Date().toISOString()
                                                     }
                                                 }));
 };

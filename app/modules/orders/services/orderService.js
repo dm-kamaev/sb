@@ -25,7 +25,7 @@ const axios = require('axios').create({
 var OrderService = {};
 
 OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
-    return await(sequelize.models.Order.findOne({
+    return await (sequelize.models.Order.findOne({
         where: {
             sberAcquOrderNumber
         },
@@ -57,7 +57,7 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
  * @return {[type]}
  */
 OrderService.getSberUser = function(userFundSubscriptionId) {
-    var res = await(sequelize.models.Order.findOne({
+    var res = await (sequelize.models.Order.findOne({
         where: {
             userFundSubscriptionId
         },
@@ -83,7 +83,7 @@ OrderService.getSberUser = function(userFundSubscriptionId) {
  * @return {[type]}
  */
 OrderService.updateInfo = function(sberAcquOrderNumber, data) {
-    return await(sequelize.models.Order.update(data, {
+    return await (sequelize.models.Order.update(data, {
         where: {
             sberAcquOrderNumber,
         }
@@ -101,7 +101,7 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
 OrderService.firstPayOrSendMessage = function(params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
-        var entities = await(userFundService.getEntities(params.userFundId));
+        var entities = await (userFundService.getEntities(params.userFundId));
         if (!entities.length) {
             throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
@@ -120,7 +120,7 @@ OrderService.firstPayOrSendMessage = function(params) {
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
-            // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
+        // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
@@ -133,7 +133,7 @@ OrderService.firstPayOrSendMessage = function(params) {
                 clientId: params.sberUserId,
             });
         } catch (err) {
-            await(OrderService.updateInfo(sberAcquOrderNumber, {
+            await (OrderService.updateInfo(sberAcquOrderNumber, {
                 status: orderStatus.EQ_ORDER_NOT_CREATED
             }));
             var textError = i18n.__(
@@ -162,7 +162,7 @@ OrderService.isAvalibleForPayment = function(order) {
 OrderService.getAcquiringOrder = function(order) {
     var sberAcquOrderNumber = order.sberAcquOrderNumber;
 
-    await(OrderService.updateInfo(sberAcquOrderNumber, {
+    await (OrderService.updateInfo(sberAcquOrderNumber, {
         status: orderStatus.CONFIRMING_PAYMENT
     }));
 
@@ -172,7 +172,7 @@ OrderService.getAcquiringOrder = function(order) {
 
     var eqOrderStatus = getAcquiringOrderStatus_(order);
 
-    await(OrderService.updateInfo(sberAcquOrderNumber, {
+    await (OrderService.updateInfo(sberAcquOrderNumber, {
         sberAcquErrorCode: eqOrderStatus.errorCode,
         sberAcquErrorMessage: eqOrderStatus.errorMessage,
         sberAcquActionCode: eqOrderStatus.actionCode,
@@ -195,7 +195,7 @@ function getAcquiringOrderStatus_(order) {
             clientId: order.userFundSubscription.sberUser.id
         });
     } catch (err) {
-        await(OrderService.updateInfo(order.sberAcquOrderNumber, {
+        await (OrderService.updateInfo(order.sberAcquOrderNumber, {
             status: orderStatus.WAITING_FOR_PAY
         }));
         var textError = i18n.__(
@@ -225,7 +225,7 @@ function getListDirectionTopicFunds_(entities) {
             type = entity.type;
         listDirectionsTopicsFunds.push([type, entity.title]);
         if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
+            listFunds = listFunds.concat(await (entityService.getListFundsName(entity.id)));
         } else {
             listFunds.push(entity.title);
         }
@@ -245,7 +245,7 @@ function getListDirectionTopicFunds_(entities) {
  */
 function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
     if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
-        await(
+        await (
             OrderService.updateInfo(sberAcquOrderNumber, {
                 sberAcquOrderId: responceSberAcqu.orderId,
                 status: orderStatus.WAITING_FOR_PAY
@@ -262,7 +262,7 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
             sberAcquErrorMessage: errorMessage,
             status: orderStatus.EQ_ORDER_NOT_CREATED
         };
-        await(OrderService.updateInfo(sberAcquOrderNumber, data));
+        await (OrderService.updateInfo(sberAcquOrderNumber, data));
         var textError = i18n.__(
             'Failed create order in Sberbank acquiring. ' +
             'errorCode: \'{{errorCode}}\', errorMessage: \'{{errorMessage}}\'', {
@@ -281,18 +281,21 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
  * @return {[object]}   [ get id insert ]
  */
 OrderService.createOrder = function(data) {
-    return await(sequelize.sequelize.transaction(t => {
+    return await (sequelize.sequelize.transaction(t => {
         return sequelize.models.Order.create({
-            userFundSubscriptionId: data.userFundSubscriptionId,
-            amount: data.amount,
+                userFundSubscriptionId: data.userFundSubscriptionId,
+                amount: data.amount,
                 // directionsTopicsFunds: data.listDirectionsTopicsFunds,
                 // funds: data.listFunds,
                 // fundInfo: data.fundInfo,
-            type: data.type,
-            status: data.status,
-            scheduledPayDate: data.scheduledPayDate
-        })
+                type: data.type,
+                status: data.status,
+                scheduledPayDate: data.scheduledPayDate
+            })
             .then(order => {
+                return [{
+                    sberAcquOrderNumber: order.sberAcquOrderNumber
+                }]
                 return Promise.all(data.entities.map(entity => {
                     var orderItem = {
                         title: entity.title,
@@ -327,7 +330,7 @@ OrderService.createOrder = function(data) {
 };
 
 function createPayDate_(subscriptionId, payDate) {
-    return await(sequelize.models.PayDayHistory.create({
+    return await (sequelize.models.PayDayHistory.create({
         subscriptionId,
         payDate
     }));
@@ -377,7 +380,7 @@ OrderService.getMissingDays = function(allDates, date) {
 
 
 OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
-    var entities = await(userFundService.getEntities(userFundSubscription.userFundId));
+    var entities = await (userFundService.getEntities(userFundSubscription.userFundId));
 
     if (!entities.length) {
         // this should never happened
@@ -385,14 +388,14 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
 
     const getScheduledDate = (realDate, payDate) => {
         return realDate.getDate() == payDate.getDate() ? realDate :
-                realDate.getDate() > payDate.getDate() ?
-                moment(realDate).set('date', payDate.getDate()).toDate() :
-                moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
-                moment(realDate).subtract(1, 'month').endOf('month').toDate() :
-                moment(realDate).set({
-                    'month': realDate.getMonth() - 1,
-                    'date': payDate.getDate()
-                }).toDate();
+            realDate.getDate() > payDate.getDate() ?
+            moment(realDate).set('date', payDate.getDate()).toDate() :
+            moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
+            moment(realDate).subtract(1, 'month').endOf('month').toDate() :
+            moment(realDate).set({
+                'month': realDate.getMonth() - 1,
+                'date': payDate.getDate()
+            }).toDate();
     };
 
     var payDate = userFundSubscription.payDate,
@@ -425,20 +428,26 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     }
     // console.log(sberAcquPayment);
 
-    var paymentResult = sberAcquiring.payByBind({
-        orderId: sberAcquPayment.orderId,
+    var paymentResultResponse = sberAcquiring.payByBind({
+        orderId: '123123' || sberAcquPayment.orderId,
         bindingId: userFundSubscription.bindingId
     });
 
-    if (paymentResult.errorCode) {
-        return OrderService.failedReccurentPayment(sberAcquOrderNumber,
+    var paymentResult = JSON.parse(paymentResultResponse);
+    // return
+    //
+    console.log(paymentResult);
+    if (paymentResult.errorCode != 0) {
+         OrderService.failedReccurentPayment(sberAcquOrderNumber,
             userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage);
+    } else {
+        OrderService.updateInfo(sberAcquOrderNumber, {
+            status: orderStatus.PAID
+        });
     }
 
-    OrderService.updateInfo(sberAcquOrderNumber, {
-        status: orderStatus.PAID
-    });
-    console.log(paymentResult);
+
+
 };
 
 
@@ -466,7 +475,7 @@ OrderService.getMissingDays = function(allDates, date) {
  */
 OrderService.findOrderWithProblemWithCardInPreviousMonth = function(userFundSubscriptionId) {
     var previousMonth = moment().subtract(1, 'month').format('YYYY-MM');
-    return await(sequelize.models.Order.findAll({
+    return await (sequelize.models.Order.findAll({
         where: {
             userFundSubscriptionId,
             status: orderStatus.PROBLEM_WITH_CARD
@@ -489,14 +498,14 @@ OrderService.findOrderWithProblemWithCardInPreviousMonth = function(userFundSubs
  * @return {[type]}
  */
 OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubscriptionId, error) {
-    await(OrderService.updateInfo(sberAcquOrderNumber, {
+    await (OrderService.updateInfo(sberAcquOrderNumber, {
         status: orderStatus.PROBLEM_WITH_CARD
     }));
-    var problemOrderInPreviousMonth = await(
+    var problemOrderInPreviousMonth = await (
         OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
     );
 
-    var sberUser = await(OrderService.getSberUser(userFundSubscriptionId)),
+    var sberUser = await (OrderService.getSberUser(userFundSubscriptionId)),
         sberUserId = sberUser.id,
         authId = sberUser.authId;
 
@@ -601,7 +610,7 @@ function checkExistSubscribers_(listUserFundId) {
  */
 function disableUserFunds_(listUserFundId) {
     listUserFundId.forEach(function(userFundId) {
-        await(userFundService.updateUserFund(userFundId, {
+        await (userFundService.updateUserFund(userFundId, {
             enabled: false
         }));
     });
@@ -615,24 +624,32 @@ function disableUserFunds_(listUserFundId) {
  */
 
 function sendEmailOwnerUserFund_(listUserFundId) {
-    var listUserFundWithSberUser = await(
+    var listUserFundWithSberUser = await (
         userFundService.getUserFundsWithSberUser(listUserFundId)
     );
     listUserFundWithSberUser.map((userFund) => {
-        return { authId: userFund.owner.authId, userFundName: userFund.title };
+        return {
+            authId: userFund.owner.authId,
+            userFundName: userFund.title
+        };
     }).map((user) => {
         user.email = restGetUserData_(user.authId).email;
         return user;
     }).forEach((user) => {
-        var email = user.email, userFundName = user.userFundName;
-        if (!email) { return; }
+        var email = user.email,
+            userFundName = user.userFundName;
+        if (!email) {
+            return;
+        }
         var data = i18n.__(
             'Your User Fund "{{userFundName}}" deactivated.', {
                 userFundName
             }
         );
         mailService.sendUserRecurrentPayments(
-            email, { data }
+            email, {
+                data
+            }
         );
     });
 }
@@ -644,7 +661,7 @@ function sendEmailOwnerUserFund_(listUserFundId) {
  * @return {[obj]}
  */
 function restGetUserData_(authId) {
-    var resp = await(axios.get(`/user/${authId}`));
+    var resp = await (axios.get(`/user/${authId}`));
     return resp.data || {};
 }
 

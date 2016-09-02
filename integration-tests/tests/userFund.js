@@ -5,6 +5,14 @@ const expect = chakram.expect;
 const exec = require('child_process').execSync;
 const path = require('path');
 const queryString = require('query-string');
+var pgp = require('pg-promise')();
+var db = pgp({
+    host: 'localhost',
+    port: 5432,
+    database: 'sber-together-api',
+    user: 'gorod',
+    password: '123qwe'
+});
 
 var extend = require('util')._extend;
 
@@ -14,15 +22,13 @@ const services = require('../services');
 chakram.setRequestDefaults({
     jar: true,
     har: {
-        headers: [
-            {
-                name: 'Token-Header',
-                value: 'superSecretTokenString'
-            }
-        ]
+        headers: [{
+            name: 'Token-Header',
+            value: 'superSecretTokenString'
+        }]
     }
 });
-
+/*
 
 describe('User fund Actions Test', function() {
     var entitiesIdList = [];
@@ -33,10 +39,9 @@ describe('User fund Actions Test', function() {
             var entities = respObj.body;
 
             var entityIds = entities.map((entity) => entity.id);
-            entitiesIdList.forEach(function (id) {
-                self.assert(
-                    !(id in entityIds),
-                    'Entity with id '+ id + ' is not added'
+            entitiesIdList.forEach(function(id) {
+                self.assert(!(id in entityIds),
+                    'Entity with id ' + id + ' is not added'
                 )
             });
         });
@@ -51,9 +56,8 @@ describe('User fund Actions Test', function() {
             var self = this;
             var entities = respObj.body;
             var entityIds = entities.map((entity) => entity.id);
-            entitiesIdList.forEach(function (id) {
-                self.assert(
-                    !(id in entityIds),
+            entitiesIdList.forEach(function(id) {
+                self.assert(!(id in entityIds),
                     'Entity with id ' + id + ' is not deleted'
                 )
             });
@@ -78,8 +82,8 @@ describe('User fund Actions Test', function() {
     });
 
     it('Should add entities', function() {
-        entitiesIdList.forEach(function (entityId) {
-            var url = services.url.concatUrl('user-fund/'+entityId);
+        entitiesIdList.forEach(function(entityId) {
+            var url = services.url.concatUrl('user-fund/' + entityId);
             var res = chakram.post(url);
             expect(res).to.have.status(200);
             chakram.wait();
@@ -87,7 +91,7 @@ describe('User fund Actions Test', function() {
         return chakram.wait();
     });
 
-    it('Should get added entities', function () {
+    it('Should get added entities', function() {
         var url = services.url.concatUrl('user-fund/entity');
         var response = chakram.get(url);
         expect(response).to.have.status(200);
@@ -95,16 +99,16 @@ describe('User fund Actions Test', function() {
         return chakram.wait();
     });
 
-    it('Should delete entities', function () {
-        entitiesIdList.forEach(function (entityId) {
-            var url = services.url.concatUrl('user-fund/'+entityId);
+    it('Should delete entities', function() {
+        entitiesIdList.forEach(function(entityId) {
+            var url = services.url.concatUrl('user-fund/' + entityId);
             var res = chakram.delete(url);
             expect(res).to.have.status(200);
         });
         return chakram.wait();
     });
 
-    it('Should not get deleted entities', function () {
+    it('Should not get deleted entities', function() {
         var url = services.url.concatUrl('user-fund/entity');
         var response = chakram.get(url);
         expect(response).to.have.status(200);
@@ -115,12 +119,12 @@ describe('User fund Actions Test', function() {
 
 describe('Success first payment test', function() {
     var userFundId,
-    paymentRedirectUrl,
-    orderId,
-    userId,
-    orderNumber;
+        paymentRedirectUrl,
+        orderId,
+        userId,
+        orderNumber;
 
-    before('Add methods', function () {
+    before('Add methods', function() {
         chakram.addMethod('orderNumberSaved', function(respObj) {
             var emulatorOrder = respObj.body;
             orderNumber = emulatorOrder.orderNumber;
@@ -153,8 +157,8 @@ describe('Success first payment test', function() {
         chakram.addMethod('checkStatus', function(respObj, status) {
             this.assert(
                 respObj.body.status == status,
-                'Incorrect status! Expected: ' + status + ' but recieved: '
-                    + respObj.body.status
+                'Incorrect status! Expected: ' + status + ' but recieved: ' +
+                respObj.body.status
             );
             return chakram.wait();
         });
@@ -176,7 +180,7 @@ describe('Success first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should add entity to userFund', function () {
+    it('Should add entity to userFund', function() {
         var url = services.url.concatUrl('user-fund/1');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
@@ -192,18 +196,18 @@ describe('Success first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should get orderNumber', function () {
+    it('Should get orderNumber', function() {
         var url = services.url.concatEmulUrl('payment/rest/' +
             'getOrderStatusExtended.do?orderId=' +
-                orderId + '&clientId=' + userId);
+            orderId + '&clientId=' + userId);
         var response = chakram.get(url);
         expect(response).to.have.status(200);
         expect(response).is.orderNumberSaved();
         return chakram.wait();
     });
 
-    it('Should get waitingForPay status', function () {
-        var url = services.url.concatUrl('order/'+orderNumber);
+    it('Should get waitingForPay status', function() {
+        var url = services.url.concatUrl('order/' + orderNumber);
         var response = chakram.get(url);
         expect(response).is.checkStatus('waitingForPay');
         return chakram.wait();
@@ -216,12 +220,12 @@ describe('Success first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should get paid status', function (done) {
-        var url = services.url.concatUrl('order/'+orderNumber);
+    it('Should get paid status', function(done) {
+        var url = services.url.concatUrl('order/' + orderNumber);
         //delay, because server need time to recieve callback from sber
         var request = new Promise(function(resolve, reject) {
             setTimeout(function() {
-                try{
+                try {
                     var response = chakram.get(url);
                     resolve(response);
                 } catch (e) {
@@ -244,12 +248,12 @@ describe('Success first payment test', function() {
 
 describe('Unsuccess first payment test', function() {
     var userFundId,
-    paymentRedirectUrl,
-    orderId,
-    orderNumber,
-    userId;
+        paymentRedirectUrl,
+        orderId,
+        orderNumber,
+        userId;
 
-    before('Add methods', function () {
+    before('Add methods', function() {
         chakram.addMethod('orderNumberSaved', function(respObj) {
             var emulatorOrder = respObj.body;
             orderNumber = emulatorOrder.orderNumber;
@@ -312,7 +316,7 @@ describe('Unsuccess first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should add entity to userFund', function () {
+    it('Should add entity to userFund', function() {
         var url = services.url.concatUrl('user-fund/1');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
@@ -328,51 +332,51 @@ describe('Unsuccess first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should get orderNumber', function () {
+    it('Should get orderNumber', function() {
         var url = services.url.concatEmulUrl('payment/rest/' +
             'getOrderStatusExtended.do?orderId=' +
-                orderId + '&clientId=' + userId);
+            orderId + '&clientId=' + userId);
         var response = chakram.get(url);
         expect(response).to.have.status(200);
         expect(response).is.orderNumberSaved();
         return chakram.wait();
     });
 
-    it('Should get waitingForPay status', function () {
-        var url = services.url.concatUrl('order/'+orderNumber);
+    it('Should get waitingForPay status', function() {
+        var url = services.url.concatUrl('order/' + orderNumber);
         var response = chakram.get(url);
         expect(response).is.checkStatus('waitingForPay');
         return chakram.wait();
     });
 
-    it('Should run cronscript', function () {
+    it('Should run cronscript', function() {
         //est. running time = 12000ms
         exec('node ../app/scripts/checkOrderStatus.js immediate',
-            (error, stdout,  stderr) => {
+            (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
                     return;
                 }
                 console.log(`stdout: ${stdout}`);
                 console.log(`stderr: ${stderr}`);
-        });
+            });
         return chakram.wait();
     });
 
-    it('Should get failed status', function () {
-        var url = services.url.concatUrl('order/'+orderNumber);
+    it('Should get failed status', function() {
+        var url = services.url.concatUrl('order/' + orderNumber);
         var response = chakram.get(url);
         expect(response).is.checkStatus('failed');
         return chakram.wait();
     });
 });
 
-describe('Payment with inactive user fund test', function () {
+describe('Payment with inactive user fund test', function() {
     var userFundId,
         orderId,
         userId;
 
-    before('Add methods', function () {
+    before('Add methods', function() {
         chakram.addMethod('orderNumberSaved', function(respObj) {
             var emulatorOrder = respObj.body;
             orderNumber = emulatorOrder.orderNumber;
@@ -414,7 +418,7 @@ describe('Payment with inactive user fund test', function () {
         return chakram.wait();
     });
 
-    it('Should not set amount', function () {
+    it('Should not set amount', function() {
         var url = services.url.concatUrl('user-fund/amount');
         var amount = services.userFund.generateAmount(userFundId);
         var response = chakram.post(url, amount);
@@ -427,7 +431,7 @@ describe('Payment with empty fund test', function() {
     var userFundId,
         userId;
 
-    before('Add methods', function () {
+    before('Add methods', function() {
         chakram.addMethod('fundEnabledAndIdSaved', function(respObj) {
             var user = respObj.body;
             this.assert(
@@ -467,12 +471,12 @@ describe('Payment with empty fund test', function() {
 
 describe('Sber acquiring fails test', function() {
     var userFundId,
-    paymentRedirectUrl,
-    orderId,
-    userId,
-    orderNumber;
+        paymentRedirectUrl,
+        orderId,
+        userId,
+        orderNumber;
 
-    before('Add methods', function () {
+    before('Add methods', function() {
         chakram.addMethod('orderNumberSaved', function(respObj) {
             var emulatorOrder = respObj.body;
             orderNumber = emulatorOrder.orderNumber;
@@ -506,7 +510,7 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 
-    before('Fail orders', function () {
+    before('Fail orders', function() {
         var url = services.url.concatEmulUrl('fail/1');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
@@ -529,7 +533,7 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 
-    it('Should add entity to userFund', function () {
+    it('Should add entity to userFund', function() {
         var url = services.url.concatUrl('user-fund/1');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
@@ -544,7 +548,7 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 
-    it('Should get orderNumber', function () {
+    it('Should get orderNumber', function() {
         var url = services.url.concatEmulUrl('client/' + userId + '/last');
         var response = chakram.get(url);
         expect(response).to.have.status(200);
@@ -552,17 +556,103 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 
-    it('Should get eqOrderNotCreated status', function () {
-        var url = services.url.concatUrl('order/'+orderNumber);
+    it('Should get eqOrderNotCreated status', function() {
+        var url = services.url.concatUrl('order/' + orderNumber);
         var response = chakram.get(url);
         expect(response).is.checkStatus('eqOrderNotCreated');
         return chakram.wait();
     });
 
-    after('Cancel ordrers failing', function () {
+    after('Cancel ordrers failing', function() {
         var url = services.url.concatEmulUrl('fail/0');
         var response = chakram.post(url);
         expect(response).to.have.status(200);
         return chakram.wait();
     });
 });
+*/
+describe('creates order for today active users', function() {
+    var entitiesIdList = [];
+
+
+    before('Add methods', function() {
+        chakram.addMethod('saveAddedEntity', function(respObj) {
+            this.assert(
+                respObj.body.id,
+                'Can\'t run test, entity not added'
+            )
+            entitiesIdList.push(respObj.body.id);
+        });
+    })
+
+    before('Logout', function() {
+        var url = services.url.concatUrl('auth/logout');
+        var response = chakram.post(url);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    before('Register', function() {
+        var url = services.url.concatUrl('auth/register');
+        var user = services.user.genRandomUser();
+        var response = chakram.post(url, user);
+        expect(response).to.have.status(200);
+        return chakram.wait();
+    });
+
+    before('Should create entities if not exists', function() {
+        var entities = services.entity.generateEntities(1);
+        var url = services.url.concatUrl('entity');
+        return chakram.get(services.url('entity'))
+            .then(res => {
+                if (res.body[0]) {
+                    return chakram.wait();
+                } else {
+                    return chakram.post(url, entities[0]);
+                }
+            })
+            .then(res => {
+                // console.log(res);
+                return chakram.wait();
+            })
+    });
+
+
+
+    it('Should set amount', function() {
+        var now = new Date(2016, 2, 2).toISOString();
+        var url = services.url.concatUrl('user-fund/amount');
+        return chakram.get(services.url('entity'))
+            .then(res => {
+                var entityId = res.body[0].id;
+                return chakram.post(services.url(`user-fund/${entityId}`))
+            })
+            .then(res => {
+                return chakram.post(services.url('user-fund/amount'), {
+                    amount: 20000
+                })
+            })
+            .then(res => {
+                return chakram.get(res.body.formUrl)
+            })
+            .then(res => {
+                //waitin for cb...
+                return new Promise((resolve, reject) => {
+                    setTimeout(resolve, 1000)
+                })
+            })
+            .then(() => {
+                return chakram.get(services.url('user'))
+            })
+            .then(res => {
+                console.log(res.body.id);
+                return db.one('UPDATE * FROM "PayDayHistory" SET "payDate" WHERE "subscriptionId" = {$now} (SELECT id FROM "UserFundSubsription" WHERE "sberUserId" = {$id})', {
+                    id: req.body.id,
+                    now
+                })
+            })
+            .then(res => {
+                console.log(res);
+            })
+    });
+})

@@ -19,7 +19,7 @@ logger.info('START: recurrent monthly payments');
 
 
 (async(function() {
-    return
+    // return
     ifFailed();
     // null.lenght;
     // var dates = orderService.getListDatesBefore(NumberDays, '2016-02-29');
@@ -33,9 +33,12 @@ logger.info('START: recurrent monthly payments');
     dates.forEach(date => orderService.getMissingDays(allDates, date));
     // console.log(allDates);
     // allDates = ['2', '1', '31', '30', '29', '28'];
-    var subscriptions = userFundService.getUnhandledSubscriptions(allDates);
+    var nowDate = argv.now ? new Date(argv.now) : undefined;
+    console.log(nowDate);
+    var subscriptions = userFundService.getUnhandledSubscriptions(allDates, nowDate);
+    // console.log(subscriptions);
     // var order = orderService.createOrder
-    var nowDate = argv.now ? new Date(argv.now) || undefined;
+    // return
     subscriptions.forEach(subscription => {
         await(orderService.makeMonthlyPayment(subscription, nowDate));
     });
