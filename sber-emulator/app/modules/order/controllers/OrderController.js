@@ -130,8 +130,10 @@ class OrderController extends Controller {
      *
      */
     actionPayByBind(actionContext) {
-        var query = actionContext.request.query;
-        return await(OrderService.payByBind(query.mdOrder, query.bindingId));
+        return {
+            errorCode: 0,
+            errorMessage: 'Success'
+        };
     }
 
 

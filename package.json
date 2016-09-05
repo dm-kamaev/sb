@@ -51,6 +51,7 @@
     "passport": "^0.3.2",
     "pg": "^5.1.0",
     "pg-hstore": "^2.3.2",
+    "pgpromise": "^0.1.1",
     "pug": "^0.1.0",
     "q": "^1.4.1",
     "sber-together": "git+ssh://git@github.com:c7s/sber-together.git#dev",
