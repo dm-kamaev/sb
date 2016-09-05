@@ -12,4 +12,5 @@ router.post('/payment/rest/paymentOrderBinding.do',
     orderController.actionPayByBind);
 router.get('/client/:clientId/last', orderController.actionLastOrderFromClient);
 router.post('/fail/:fail', orderController.actionFailOrders);
+router.post('/failBindings/:fail', orderController.actionFailBoundPayments);
 module.exports = router;

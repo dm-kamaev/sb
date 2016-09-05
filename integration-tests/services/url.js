@@ -1,10 +1,9 @@
 'use strict';
 
-var service = function(urlTail) {
+var service = {};
+service.concatUrl = function(urlTail) {
     return 'http://localhost:3000/' + urlTail;
 };
-
-service.concatUrl = service;
 
 service.concatEmulUrl = function(urlTail) {
     var url = 'http://localhost:3005/' + urlTail;
