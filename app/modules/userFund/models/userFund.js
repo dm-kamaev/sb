@@ -50,7 +50,7 @@ module.exports = function(sequelize, DataTypes) {
                 });
                 UserFund.belongsToMany(models.SberUser, {
                     as: 'users',
-                    through: 'UserFundSubsription',
+                    through: 'UserFundSubscription',
                     foreignKey: 'userFundId',
                     otherKey: 'sberUserId'
                 });

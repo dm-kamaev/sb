@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
         subscriptionId: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'UserFundSubsription',
+                model: 'UserFundSubscription',
                 key: 'id'
             },
             allowNull: false,

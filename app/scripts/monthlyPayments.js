@@ -20,7 +20,7 @@ logger.info('START: recurrent monthly payments');
 
 (async(function() {
     ifFailed();
-    
+
     var nowDate = argv.now ? new Date(argv.now) : undefined;
 
     var dates = orderService.getListDatesBefore(NumberDays, nowDate);
@@ -29,7 +29,6 @@ logger.info('START: recurrent monthly payments');
     dates.forEach(date => orderService.getMissingDays(allDates, date));
 
     var subscriptions = userFundService.getUnhandledSubscriptions(allDates, nowDate);
-
     subscriptions.forEach(subscription => {
         await(orderService.makeMonthlyPayment(subscription, nowDate));
     });

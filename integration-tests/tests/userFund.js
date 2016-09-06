@@ -2,7 +2,8 @@
 
 const chakram = require('chakram');
 const expect = chakram.expect;
-const exec = require('child_process').execSync;
+const execSync = require('child_process').execSync;
+const await = require('asyncawait/await');
 const path = require('path');
 const queryString = require('query-string');
 var pgp = require('pg-promise')();
@@ -351,7 +352,7 @@ describe('Unsuccess first payment test', function() {
 
     it('Should run cronscript', function() {
         //est. running time = 12000ms
-        exec('node ../app/scripts/checkOrderStatus.js immediate',
+        execSync('node ../app/scripts/checkOrderStatus.js immediate',
             (error, stdout, stderr) => {
                 if (error) {
                     console.error(`exec error: ${error}`);
@@ -633,10 +634,12 @@ describe('creates order for today active users', function() {
                 })
             })
             .then(res => {
+                console.log(res.body);
                 return chakram.get(res.body.formUrl)
             })
             .then(res => {
                 //waitin for cb...
+                console.log(res.body);
                 return new Promise((resolve, reject) => {
                     setTimeout(resolve, 1000)
                 })
@@ -644,15 +647,45 @@ describe('creates order for today active users', function() {
             .then(() => {
                 return chakram.get(services.url('user'))
             })
+            // .then(res => {
+            //     return db.one('UPDATE "PayDayHistory" SET "payDate" = {$now} WHERE "subscriptionId" = (SELECT id FROM "UserFundSubscription" WHERE "sberUserId" = {$id})', {
+            //         id: res.body.id,
+            //         now
+            //     })
+            // })
+            // .then(res => {
+            //     return db.one('UPDATE "Order" SET "scheduledPayDate" = "scheduledPayDate" - INTERVAL \'1 month\' WHERE "subs"')
+            // })
             .then(res => {
-                console.log(res.body.id);
-                return db.one('UPDATE * FROM "PayDayHistory" SET "payDate" WHERE "subscriptionId" = {$now} (SELECT id FROM "UserFundSubsription" WHERE "sberUserId" = {$id})', {
-                    id: req.body.id,
-                    now
-                })
+                // console.log();
+                return execSync(`node ../app/scripts/monthlyPayments.js --now "${new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10)}"`,
+                    (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`exec error: ${error}`);
+                            return;
+                        }
+                        console.log(`stdout: ${stdout}`);
+                        console.log(`stderr: ${stderr}`);
+                    });
+            })
+            .then(() => {
+                return chakram.get(services.url('user'))
             })
             .then(res => {
-                console.log(res);
+                // console.log(res);
+                return db.one('SELECT "UserFundSubscription"."id", "UserFundSubscription"."userFundId", "UserFundSubscription"."sberUserId"  ' +
+                'FROM "UserFundSubscription" '+
+                'INNER JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId" '+
+                                        'AND "UserFund"."enabled" = true '+
+                'INNER JOIN "Order" ON "Order"."subscriptionId" = "UserFundSubscription"."id" AND "Order"."type" = \'recurrent\' AND "Order"."status" = "paid"'+
+                'WHERE "UserFundSubscription"."sberUserId" = ${sberUserId}' +
+                'AND "userFundId" = ${userFundId} AND "UserFundSubscription".enabled = true', {
+                    sberUserId: res.body.id,
+                    userFundId: res.body.userFund.id
+                });
+            })
+            .then(subscription => {
+                console.log(subscription);
             })
     });
 })

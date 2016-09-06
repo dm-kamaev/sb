@@ -30,7 +30,7 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
             sberAcquOrderNumber
         },
         include: [{
-            model: sequelize.models.UserFundSubsription,
+            model: sequelize.models.UserFundSubscription,
             as: 'userFundSubscription',
             include: [{
                 model: sequelize.models.SberUser,
@@ -62,7 +62,7 @@ OrderService.getSberUser = function(userFundSubscriptionId) {
             userFundSubscriptionId
         },
         include: [{
-            model: sequelize.models.UserFundSubsription,
+            model: sequelize.models.UserFundSubscription,
             as: 'userFundSubscription',
             include: [{
                 model: sequelize.models.SberUser,
@@ -390,6 +390,8 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
         return realDate.getDate() == payDate.getDate() ? realDate :
             realDate.getDate() > payDate.getDate() ?
             moment(realDate).set('date', payDate.getDate()).toDate() :
+            moment(realDate).endOf('month').daysInMonth() == moment(realDate).toDate().getDate() ?
+            moment(realDate).toDate() :
             moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
             moment(realDate).subtract(1, 'month').endOf('month').toDate() :
             moment(realDate).set({
@@ -545,7 +547,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         );
 
         // get all user subscription and turn off their
-        var listUserFundId = disableUserFundSubsription_(sberUserId);
+        var listUserFundId = disableUserFundSubscription_(sberUserId);
         console.log('listUserFundId=', listUserFundId);
         var listUserFundIdHasNotSubscribers = checkExistSubscribers_(listUserFundId);
         // get list user fund which haven't subscribers and disable their
@@ -567,14 +569,14 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
  * @param  {[int]} sberUserId
  * @return {[array]}            [ 74, 73, ... ]
  */
-function disableUserFundSubsription_(sberUserId) {
-    var listUserFundSubsription =
-        userFundService.updatUserFundSubsriptionBySberUserId(sberUserId, {
+function disableUserFundSubscription_(sberUserId) {
+    var listUserFundSubscription =
+        userFundService.updatUserFundSubscriptionBySberUserId(sberUserId, {
             enabled: false
         });
 
-    return listUserFundSubsription.map((UserFundSubsription) => {
-        return UserFundSubsription.userFundId;
+    return listUserFundSubscription.map((UserFundSubscription) => {
+        return UserFundSubscription.userFundId;
     });
 }
 
@@ -586,12 +588,12 @@ function disableUserFundSubsription_(sberUserId) {
  */
 function checkExistSubscribers_(listUserFundId) {
     var res = [];
-    var activeUserFundSubsription =
-        userFundService.searchActiveUserFundSubsriptionByUserFundId(listUserFundId);
+    var activeUserFundSubscription =
+        userFundService.searchActiveUserFundSubscriptionByUserFundId(listUserFundId);
 
     var listUserFundIdHasSubscribers = {};
     // { '1': true, '73': true, '74': true }
-    activeUserFundSubsription.forEach((userFundSubsription) => {
+    activeUserFundSubscription.forEach((userFundSubsription) => {
         listUserFundIdHasSubscribers[userFundSubsription.UserFundId] = true;
     });
 
