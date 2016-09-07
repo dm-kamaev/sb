@@ -1,7 +1,0 @@
-{
-  "username": "gorod",
-  "database": "sber-together-api-test",
-  "host": "localhost",
-  "dialect": "postgres",
-  "password": "123qwe"
-}
