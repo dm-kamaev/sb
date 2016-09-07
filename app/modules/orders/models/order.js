@@ -8,7 +8,7 @@ module.exports = function(sequelize, DataTypes) {
         userFundSubscriptionId: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'UserFundSubsription',
+                model: 'UserFundSubscription',
                 key: 'id'
             },
             allowNull: false
@@ -89,7 +89,7 @@ module.exports = function(sequelize, DataTypes) {
         paranoid: true,
         classMethods: {
             associate: function(models) {
-                Order.belongsTo(models.UserFundSubsription, {
+                Order.belongsTo(models.UserFundSubscription, {
                     as: 'userFundSubscription',
                     foreignKey: 'userFundSubscriptionId'
                 });

@@ -11,6 +11,7 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const path = require('path');
 const log = console.log;
+const argv = require('yargs').argv;
 
 const NumberDays = 5; // take 5 days before now
 
@@ -19,25 +20,19 @@ logger.info('START: recurrent monthly payments');
 
 (async(function() {
     ifFailed();
-    // null.lenght;
-    // var dates = orderService.getListDatesBefore(NumberDays, '2016-02-29');
-    // var dates = orderService.getListDatesBefore(NumberDays, '2016-03-02');
-    // var dates = orderService.getListDatesBefore(NumberDays,'2016-03-29');
-    // var dates = orderService.getListDatesBefore(NumberDays, '2016-03-30');
-    // var dates = orderService.getListDatesBefore(NumberDays, '2016-03-31');
-    var dates = orderService.getListDatesBefore(NumberDays);
-    // log(dates);
+
+    var nowDate = argv.now ? new Date(argv.now) : undefined;
+
+    var dates = orderService.getListDatesBefore(NumberDays, nowDate);
+
     var allDates = [];
     dates.forEach(date => orderService.getMissingDays(allDates, date));
-    // console.log(allDates);
-    // allDates = ['2', '1', '31', '30', '29', '28'];
-    var subscriptions = userFundService.getUnhandledSubscriptions(allDates);
-    // var order = orderService.createOrder
-    //
-    console.log(subscriptions);
+
+    var subscriptions = userFundService.getUnhandledSubscriptions(allDates, nowDate);
     subscriptions.forEach(subscription => {
-        await(orderService.makeMonthlyPayment(subscription));
+        await(orderService.makeMonthlyPayment(subscription, nowDate));
     });
+
 }))();
 
 

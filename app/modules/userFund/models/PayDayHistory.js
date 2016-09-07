@@ -12,7 +12,7 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             type: DataTypes.INTEGER,
             references: {
-                model: 'UserFundSubsription',
+                model: 'UserFundSubscription',
                 key: 'id'
             },
         },
@@ -35,7 +35,7 @@ module.exports = function(sequelize, DataTypes) {
         paranoid: true,
         classMethods: {
             associate: function(models) {
-                PayDayHistory.belongsTo(models.UserFundSubsription, {
+                PayDayHistory.belongsTo(models.UserFundSubscription, {
                     as: 'subscription',
                     foreignKey: 'subscriptionId'
                 });

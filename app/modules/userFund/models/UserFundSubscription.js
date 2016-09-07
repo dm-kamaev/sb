@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-    var UserFundSubsription = sequelize.define('UserFundSubsription', {
+    var UserFundSubscription = sequelize.define('UserFundSubscription', {
         id: {
             allowNull: false,
             autoIncrement: true,
@@ -43,36 +43,36 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE
         }
     }, {
-        tableName: 'UserFundSubsription',
+        tableName: 'UserFundSubscription',
         unserscored: true,
         classMethods: {
             associate: function(models) {
-                UserFundSubsription.belongsTo(models.DesiredAmountHistory, {
+                UserFundSubscription.belongsTo(models.DesiredAmountHistory, {
                     as: 'currentAmount',
                     foreignKey: 'currentAmountId'
                 });
-                UserFundSubsription.hasMany(models.DesiredAmountHistory, {
+                UserFundSubscription.hasMany(models.DesiredAmountHistory, {
                     as: 'amountChangeHistory',
                     foreignKey: 'userFundSubscriptionId'
                 });
-                UserFundSubsription.hasMany(models.Order, {
+                UserFundSubscription.hasMany(models.Order, {
                     as: 'order',
                     foreignKey: 'userFundSubscriptionId'
                 });
-                UserFundSubsription.belongsTo(models.SberUser, {
+                UserFundSubscription.belongsTo(models.SberUser, {
                     as: 'sberUser',
                     foreignKey: 'sberUserId'
                 });
-                UserFundSubsription.belongsTo(models.UserFund, {
+                UserFundSubscription.belongsTo(models.UserFund, {
                     as: 'userFund',
                     foreignKey: 'userFundId'
                 });
-                UserFundSubsription.hasMany(models.PayDayHistory, {
+                UserFundSubscription.hasMany(models.PayDayHistory, {
                     as: 'payDayHistory',
                     foreignKey: 'subscriptionId'
                 });
             }
         }
     });
-    return UserFundSubsription;
+    return UserFundSubscription;
 };

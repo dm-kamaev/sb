@@ -7,6 +7,7 @@ const OrderView = require('../views/OrderView');
 const i18n = require('../../../components/i18n');
 
 var failOrders = false;
+var failBindings = false;
 
 class OrderController extends Controller {
     constructor() {
@@ -130,8 +131,18 @@ class OrderController extends Controller {
      *
      */
     actionPayByBind(actionContext) {
-        var query = actionContext.request.query;
-        return await(OrderService.payByBind(query.mdOrder, query.bindingId));
+        var res = {};
+
+        if(failBindings == false) {
+            res.errorCode = 0;
+            res.errorMessage = 'Success';
+        } else {
+            res.errorCode = 7;
+            res.errorCode = 'Ошибка';
+            actionContext.response.status = 500;
+        }
+
+        return res;
     }
 
 
@@ -146,6 +157,18 @@ class OrderController extends Controller {
             failOrders = false
         }
         return {fail: failOrders}
+    }
+
+    /**
+     *
+     */
+    actionFailBoundPayments(actionContext, fail) {
+        if(fail == true){
+            failBindings = true;
+        } else {
+            failBindings = false
+        }
+        return {fail: failBindings}
     }
 }
 

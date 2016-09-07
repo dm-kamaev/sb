@@ -166,7 +166,7 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
 
 UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
     return await(sequelize.sequelize_.transaction(t => {
-        return sequelize.models.UserFundSubsription.findOrCreate({
+        return sequelize.models.UserFundSubscription.findOrCreate({
             where: {
                 userFundId,
                 sberUserId
@@ -182,7 +182,7 @@ UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, pa
                 });
             })
             .then(amount => {
-                return sequelize.models.UserFundSubsription.update({
+                return sequelize.models.UserFundSubscription.update({
                     currentAmountId: amount.id
                 }, {
                     where: {
@@ -198,7 +198,7 @@ UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, pa
 };
 
 UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
-    var suuf = await(sequelize.models.UserFundSubsription.findOne({
+    var suuf = await(sequelize.models.UserFundSubscription.findOne({
         where: {
             sberUserId,
             userFundId
@@ -214,7 +214,7 @@ UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
 
 
 UserFundService.getUserFundSubscriptionId = function(sberUserId, userFundId) {
-    return await(sequelize.models.UserFundSubsription.findOne({
+    return await(sequelize.models.UserFundSubscription.findOne({
         where: {
             sberUserId,
             userFundId
@@ -228,8 +228,8 @@ UserFundService.getUserFundSubscriptionId = function(sberUserId, userFundId) {
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
-UserFundService.getUserFundSubsriptionsBySberUserId = function(sberUserId) {
-    return await(sequelize.models.UserFundSubsription.findAll({
+UserFundService.getUserFundSubscriptionsBySberUserId = function(sberUserId) {
+    return await(sequelize.models.UserFundSubscription.findAll({
         where: {
             sberUserId,
         }
@@ -246,7 +246,7 @@ UserFundService.updateDesiredAmountHistory = function(id, data) {
 };
 
 UserFundService.updateUserFundSubscription = function(id, data) {
-    return await(sequelize.models.UserFundSubsription.update(data, {
+    return await(sequelize.models.UserFundSubscription.update(data, {
         where: {
             id
         }
@@ -259,8 +259,8 @@ UserFundService.updateUserFundSubscription = function(id, data) {
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
-UserFundService.updatUserFundSubsriptionBySberUserId = function(sberUserId, data) {
-    return await(sequelize.models.UserFundSubsription.update(data, {
+UserFundService.updatUserFundSubscriptionBySberUserId = function(sberUserId, data) {
+    return await(sequelize.models.UserFundSubscription.update(data, {
         where: {
             sberUserId,
         },
@@ -270,8 +270,8 @@ UserFundService.updatUserFundSubsriptionBySberUserId = function(sberUserId, data
 
 
 
-UserFundService.searchActiveUserFundSubsriptionByUserFundId = function(listUserFundId) {
-    return await(sequelize.models.UserFundSubsription.findAll({
+UserFundService.searchActiveUserFundSubscriptionByUserFundId = function(listUserFundId) {
+    return await(sequelize.models.UserFundSubscription.findAll({
         where: {
             userFundId: {
                 $in: listUserFundId,
@@ -310,35 +310,62 @@ UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId)
   * @return {Number} UserFundSubscription.sberUserId id of user
   * @return {Number} UserFundSubscription.userFundId if of userFund
   * @return {Number} UserFundSubscription.bindingId bindingId od of linked card
+  * @return {Object} UserFundSubscription.processedMonth date with month we curently pay
   * @return {Object} UserFundSubscription.realDate current date
   */
-UserFundService.getUnhandledSubscriptions = function(allDates) {
+UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
+    console.log('nowDate: ', nowDate);
     return await(sequelize.sequelize.query(`
-    SELECT DISTINCT ON ("UserFundSubsription"."id")
-        "UserFundSubsription"."id" AS "userFundSubscriptionId",
-        "payDayHistory"."payDate" AS "payDate",
-        "DesiredAmountHistory"."amount" AS "amount",
-        "SberUser"."id" AS "sberUserId",
-        "UserFund"."id" AS "userFundId",
-        "Card"."bindingId" AS "bindingId",
-         CURRENT_DATE AS "realDate"
-    FROM "UserFundSubsription" AS "UserFundSubsription"
-    INNER JOIN "UserFund" AS "userFund" ON "UserFundSubsription"."userFundId" = "userFund"."id"
-    AND ("userFund"."deletedAt" IS NULL
-          AND "userFund"."enabled" = TRUE)
-    JOIN "PayDayHistory" AS "payDayHistory" ON "payDayHistory"."id" = (SELECT "id" FROM "PayDayHistory" WHERE "PayDayHistory"."subscriptionId" = "UserFundSubsription"."id"
-                                                                                  AND date_part('day', "payDayHistory"."payDate") IN (:allDates)
-                                                                                  ORDER BY "PayDayHistory"."createdAt" DESC LIMIT 1)
-    JOIN "DesiredAmountHistory" ON "DesiredAmountHistory"."id" = "UserFundSubsription"."currentAmountId"
-    JOIN "SberUser" ON "SberUser"."id" = "UserFundSubsription"."sberUserId"
-    JOIN "UserFund" ON "UserFund"."id" = "UserFundSubsription"."userFundId"
+    SELECT
+    "UserFundSubscription"."id"                                    AS "userFundSubscriptionId",
+    "payDayHistory"."payDate"                                      AS "payDate",
+    "DesiredAmountHistory"."amount"                                AS "amount",
+    "SberUser"."id"                                                AS "sberUserId",
+    "userFund"."id"                                                AS "userFundId",
+    "Card"."bindingId"                                             AS "bindingId",
+    "payDayHistory"."processedMonth"                               AS "processedMonth",
+    :currentDate::date                                             AS "realDate"
+    FROM "UserFundSubscription" AS "UserFundSubscription"
+    INNER JOIN "UserFund" AS "userFund" ON "UserFundSubscription"."userFundId" = "userFund"."id"
+                                           AND ("userFund"."deletedAt" IS NULL
+                                                AND "userFund"."enabled" = TRUE)
+    JOIN (SELECT DISTINCT ON ("subscriptionId", date_part('month', "createdAt"))
+            "subscriptionId",
+            "payDate",
+            CASE WHEN date_part('day', (date_trunc('month', :currentDate::date) + INTERVAL '1 month - 1 day')) = date_part('day', :currentDate::date)
+            AND date_part('day', "PayDayHistory"."payDate") > date_part('day', :currentDate::date)
+            OR date_part('day',  :currentDate::date) >= date_part('day', "PayDayHistory"."payDate")
+          THEN date_trunc('month', :currentDate::date)
+          ELSE date_trunc('month', :currentDate::date - INTERVAL '1 month') END AS "processedMonth",
+            "createdAt"
+          FROM "PayDayHistory"
+          WHERE
+            date_part('day', "PayDayHistory"."payDate") IN (:allDates)
+          ORDER BY "subscriptionId", date_part('month', "createdAt"), "createdAt" DESC) AS "payDayHistory"
+      ON "payDayHistory"."subscriptionId" = "UserFundSubscription"."id"
+    JOIN "DesiredAmountHistory" ON "DesiredAmountHistory"."id" = "UserFundSubscription"."currentAmountId"
+    JOIN "SberUser" ON "SberUser"."id" = "UserFundSubscription"."sberUserId"
     JOIN "Card" ON "SberUser"."currentCardId" = "Card"."id"
-    WHERE "UserFundSubsription"."enabled" = TRUE
-    AND "UserFundSubsription"."id" NOT IN (SELECT "id" FROM "UserFundSubsription" JOIN "Order" ON "UserFundSubsription"."id" = "Order"."userFundSubscriptionId"
-                                                WHERE date_trunc('month', "Order"."scheduledPayDate") = date_trunc('month', CURRENT_DATE))`, {
+  WHERE "UserFundSubscription"."enabled" = TRUE
+        AND ("UserFundSubscription"."id", "payDayHistory"."processedMonth") NOT IN (SELECT
+                                                                                          "id",
+                                                                                          date_trunc('month', "scheduledPayDate")
+                                                                                  FROM
+                                                                                     "UserFundSubscription"
+                                                                                  JOIN
+                                                                                     "Order"
+                                                                                  ON
+                                                                                     "UserFundSubscription"."id" = "Order"."userFundSubscriptionId"
+                                                                                  WHERE
+                                                                                      date_trunc('month', "Order"."scheduledPayDate")
+                                                                                           BETWEEN
+                                                                                           date_trunc('month',:currentDate::date - INTERVAL '5 days')
+                                                                                           AND date_trunc('month', :currentDate::date))
+  AND "UserFundSubscription"."createdAt" < "payDayHistory"."processedMonth"`, {
                                                     type: sequelize.sequelize.QueryTypes.SELECT,
                                                     replacements: {
-                                                        allDates
+                                                        allDates,
+                                                        currentDate: nowDate || new Date().toISOString()
                                                     }
                                                 }));
 };

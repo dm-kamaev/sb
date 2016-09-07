@@ -19,6 +19,6 @@ var orderController = new class extends Controller {
     }
 }();
 
-orderRouter.get('/:id', orderController.actionGetOrderStatus);
+orderRouter.get('/:id(\\d+)', orderController.actionGetOrderStatus);
 
 module.exports = orderRouter;
