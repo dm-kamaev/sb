@@ -441,7 +441,7 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     console.log(paymentResult);
     if (paymentResult.errorCode != 0) {
          OrderService.failedReccurentPayment(sberAcquOrderNumber,
-            userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage);
+            userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate);
     } else {
         OrderService.updateInfo(sberAcquOrderNumber, {
             status: orderStatus.PAID
@@ -473,21 +473,20 @@ OrderService.getMissingDays = function(allDates, date) {
 /**
  * find orders with status "problemWithCard" in previous month
  * @param  {[int]} userFundSubscriptionId
+ * @param {Object} [nowDate]
  * @return {[type]}
  */
-OrderService.findOrderWithProblemWithCardInPreviousMonth = function(userFundSubscriptionId) {
-    var previousMonth = moment().subtract(1, 'month').format('YYYY-MM');
+OrderService.findOrderWithProblemWithCardInPreviousMonth = function(userFundSubscriptionId, nowDate) {
+    var now = nowDate || new Date();
+    var previousMonth = moment(now).subtract(1, 'month').format('YYYY-MM');
     return await (sequelize.models.Order.findAll({
         where: {
             userFundSubscriptionId,
             status: orderStatus.PROBLEM_WITH_CARD
         }
     }).filter(function(order) {
-        var orderMonth = moment(order.updatedAt).format('YYYY-MM');
-        if (previousMonth === orderMonth) {
-            return true;
-        }
-        return false;
+        var orderMonth = moment(order.scheduledPayDate).format('YYYY-MM');
+        return previousMonth === orderMonth
     }));
 };
 
@@ -497,14 +496,15 @@ OrderService.findOrderWithProblemWithCardInPreviousMonth = function(userFundSubs
  * @param  {[int]} sberAcquOrderNumber
  * @param  {[int]} userFundSubscriptionId
  * @param  {[str]} error                   text from sberbank accuring
+ * @param  {Object} [nowDate]
  * @return {[type]}
  */
-OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubscriptionId, error) {
+OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubscriptionId, error, nowDate) {
     await (OrderService.updateInfo(sberAcquOrderNumber, {
         status: orderStatus.PROBLEM_WITH_CARD
     }));
     var problemOrderInPreviousMonth = await (
-        OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId)
+        OrderService.findOrderWithProblemWithCardInPreviousMonth(userFundSubscriptionId, nowDate)
     );
 
     var sberUser = await (OrderService.getSberUser(userFundSubscriptionId)),

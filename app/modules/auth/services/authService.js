@@ -41,13 +41,20 @@ AuthService.register = function(userData) {
     var firstName = userData.firstName,
         lastName = userData.lastName,
         email = userData.email,
-        password = userData.password;
+        password = userData.password,
+        mailRegex = new RegExp(['^[a-z0-9\u007F-\uffff!#$%&\'*+\/=?^_`{|}~-]+(?:\.'+
+                                '[a-z0-9\u007F-\uffff!#$%&\'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9]'+
+                                '(?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$'].join(''), 'i')
+
+    console.log(mailRegex.test(email))
 
     if (!email || !password || password.length < 6 || !firstName || !lastName ||
-        firstName.length > 20 || lastName.length > 20) {
+        firstName.length > 20 || lastName.length > 20 || !mailRegex.test(email)) {
         var valErrors = [];
 
-        email ? null : valErrors.push({
+        email ? mailRegex.test(email) ? null : valErrors.push({
+            email: 'Non valid email address'
+        }) : valErrors.push({
             email: 'Поле email не может быть пустым'
         });
 

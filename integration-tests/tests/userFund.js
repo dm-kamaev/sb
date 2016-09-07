@@ -28,8 +28,11 @@ chakram.setRequestDefaults({
             value: 'superSecretTokenString'
         }]
     }
-});
-/*
+})
+
+describe('Recurrent payments', function () {
+
+})
 
 describe('User fund Actions Test', function() {
     var entitiesIdList = [];
@@ -181,11 +184,14 @@ describe('Success first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should add entity to userFund', function() {
-        var url = services.url.concatUrl('user-fund/1');
-        var response = chakram.post(url);
-        expect(response).to.have.status(200);
-        return chakram.wait();
+    it('Should add entity to userFund', function () {
+        return chakram.get(services.url('entity'))
+            .then(res => {
+                var url = services.url.concatUrl(`user-fund/${res.body[0].id}`);
+                var response = chakram.post(url);
+                expect(response).to.have.status(200);
+                return chakram.wait();
+            })
     });
 
     it('Should set amount', function() {
@@ -317,11 +323,14 @@ describe('Unsuccess first payment test', function() {
         return chakram.wait();
     });
 
-    it('Should add entity to userFund', function() {
-        var url = services.url.concatUrl('user-fund/1');
-        var response = chakram.post(url);
-        expect(response).to.have.status(200);
-        return chakram.wait();
+    it('Should add entity to userFund', function () {
+        return chakram.get(services.url('entity'))
+            .then(res => {
+                var url = services.url.concatUrl(`user-fund/${res.body[0].id}`);
+                var response = chakram.post(url);
+                expect(response).to.have.status(200);
+                return chakram.wait();
+            })
     });
 
     it('Should set amount', function() {
@@ -375,6 +384,7 @@ describe('Unsuccess first payment test', function() {
 describe('Payment with inactive user fund test', function() {
     var userFundId,
         orderId,
+        orderNumber,
         userId;
 
     before('Add methods', function() {
@@ -534,11 +544,14 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 
-    it('Should add entity to userFund', function() {
-        var url = services.url.concatUrl('user-fund/1');
-        var response = chakram.post(url);
-        expect(response).to.have.status(200);
-        return chakram.wait();
+    it('Should add entity to userFund', function () {
+        return chakram.get(services.url('entity'))
+            .then(res => {
+                var url = services.url.concatUrl(`user-fund/${res.body[0].id}`);
+                var response = chakram.post(url);
+                expect(response).to.have.status(200);
+                return chakram.wait();
+            })
     });
 
     it('Should not set amount', function() {
@@ -571,121 +584,5 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 });
-*/
-describe('creates order for today active users', function() {
-    var entitiesIdList = [];
 
 
-    before('Add methods', function() {
-        chakram.addMethod('saveAddedEntity', function(respObj) {
-            this.assert(
-                respObj.body.id,
-                'Can\'t run test, entity not added'
-            )
-            entitiesIdList.push(respObj.body.id);
-        });
-    })
-
-    before('Logout', function() {
-        var url = services.url.concatUrl('auth/logout');
-        var response = chakram.post(url);
-        expect(response).to.have.status(200);
-        return chakram.wait();
-    });
-
-    before('Register', function() {
-        var url = services.url.concatUrl('auth/register');
-        var user = services.user.genRandomUser();
-        var response = chakram.post(url, user);
-        expect(response).to.have.status(200);
-        return chakram.wait();
-    });
-
-    before('Should create entities if not exists', function() {
-        var entities = services.entity.generateEntities(1);
-        var url = services.url.concatUrl('entity');
-        return chakram.get(services.url('entity'))
-            .then(res => {
-                if (res.body[0]) {
-                    return chakram.wait();
-                } else {
-                    return chakram.post(url, entities[0]);
-                }
-            })
-            .then(res => {
-                // console.log(res);
-                return chakram.wait();
-            })
-    });
-
-
-
-    it('Should set amount', function() {
-        var now = new Date(2016, 2, 2).toISOString();
-        var url = services.url.concatUrl('user-fund/amount');
-        return chakram.get(services.url('entity'))
-            .then(res => {
-                var entityId = res.body[0].id;
-                return chakram.post(services.url(`user-fund/${entityId}`))
-            })
-            .then(res => {
-                return chakram.post(services.url('user-fund/amount'), {
-                    amount: 20000
-                })
-            })
-            .then(res => {
-                console.log(res.body);
-                return chakram.get(res.body.formUrl)
-            })
-            .then(res => {
-                //waitin for cb...
-                console.log(res.body);
-                return new Promise((resolve, reject) => {
-                    setTimeout(resolve, 1000)
-                })
-            })
-            .then(() => {
-                return chakram.get(services.url('user'))
-            })
-            // .then(res => {
-            //     return db.one('UPDATE "PayDayHistory" SET "payDate" = {$now} WHERE "subscriptionId" = (SELECT id FROM "UserFundSubscription" WHERE "sberUserId" = {$id})', {
-            //         id: res.body.id,
-            //         now
-            //     })
-            // })
-            // .then(res => {
-            //     return db.one('UPDATE "Order" SET "scheduledPayDate" = "scheduledPayDate" - INTERVAL \'1 month\' WHERE "subs"')
-            // })
-            .then(res => {
-                // console.log();
-                return execSync(`node ../app/scripts/monthlyPayments.js --now "${new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10)}"`,
-                    (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`exec error: ${error}`);
-                            return;
-                        }
-                        console.log(`stdout: ${stdout}`);
-                        console.log(`stderr: ${stderr}`);
-                    });
-            })
-            .then(() => {
-                return chakram.get(services.url('user'))
-            })
-            .then(res => {
-                // console.log(res);
-                return db.one('SELECT "UserFundSubscription"."id", "UserFundSubscription"."userFundId", "UserFundSubscription"."sberUserId"  ' +
-                'FROM "UserFundSubscription" '+
-                'INNER JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId" '+
-                                        'AND "UserFund"."enabled" = true '+
-                'INNER JOIN "Order" ON "Order"."subscriptionId" = "UserFundSubscription"."id" AND "Order"."type" = \'recurrent\' AND "Order"."status" = "paid"'+
-                'WHERE "UserFundSubscription"."sberUserId" = ${sberUserId}' +
-                'AND "userFundId" = ${userFundId} AND "UserFundSubscription".enabled = true', {
-                    sberUserId: res.body.id,
-                    userFundId: res.body.userFund.id
-                });
-            })
-            .then(subscription => {
-                console.log(subscription);
-            })
-    });
-})

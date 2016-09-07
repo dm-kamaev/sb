@@ -13,6 +13,8 @@ const transporter = transporterGenerator.createSMTPTransporter({
 const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbank.com>');
 const logger = require('../../../components/logger').getLogger('main');
 
+process.on('unhandledRejection', err => logger.error(err));
+
 var MailService = {};
 
 MailService.sendMail = function(email, emailData) {
