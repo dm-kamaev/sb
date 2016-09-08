@@ -38,9 +38,6 @@ module.exports = function(sequelize, DataTypes) {
         sberAcquActionCodeDescription: {
             type: DataTypes.STRING,
         },
-        sberAcquActionCodeDescription: {
-            type: DataTypes.TEXT
-        },
         status: {
             type: DataTypes.STRING,
             validate: {

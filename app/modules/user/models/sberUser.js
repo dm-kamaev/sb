@@ -61,6 +61,10 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'currentCard',
                     foreignKey: 'currentCardId'
                 });
+                SberUser.hasMany(models.UserFundSubscription, {
+                    as: 'userFundSubscription',
+                    foreignKey: 'sberUserId'
+                })
             }
         }
     });

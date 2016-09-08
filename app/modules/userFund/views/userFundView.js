@@ -8,7 +8,10 @@ exports.renderUserFund = function(userFund) {
         enabled: userFund.enabled,
         creatorId: userFund.creatorId,
         createdAt: userFund.createdAt,
-        updatedAt: userFund.updatedAt
+        updatedAt: userFund.updatedAt,
+        fund: userFund.fund,
+        direction: userFund.direction,
+        topic: userFund.topic
     };
 };
 
