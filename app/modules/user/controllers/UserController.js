@@ -29,18 +29,21 @@ class UserController extends Controller {
      * @api {get} /user/:id get user by id
      * @apiName get user by id
      * @apiGroup User
+     * @apiHeader (AdminToken) {String} Token-Header Authorization value
      *
      * @apiSuccess {Object} User
      *
      */
     actionGetUserById(actionContext, id) {
-        var sberUser = await(userService.findSberUserById(id));
+        var sberUser = await(userService.findSberUserById(id, true));
         if (!sberUser || !sberUser.authId) {
             throw new errors.NotFoundError('User', id);
         }
         var authId = sberUser.authId;
         var authUser = await(userService.findAuthUserByAuthId(authId));
-        return userView.renderUser(authUser, sberUser);
+        var renderedUser = userView.renderUser(authUser, sberUser);
+        delete renderedUser.loggedIn
+        return renderedUser
     };
     /**
      * @api {delete} /user/user-fund disable user-fund
@@ -98,7 +101,7 @@ class UserController extends Controller {
      *     "loggedIn": true
      * }
      */
-    actionGetUser(actionContext, id) {
+    actionGetUser(actionContext) {
         var sberUser = actionContext.request.user,
             email = actionContext.request.query.email;
         if (email) {
@@ -112,6 +115,37 @@ class UserController extends Controller {
             return userView.renderUser(authUser, sberUser);
         }
     };
+
+    /**
+     * @api {get} /user/all get all users
+     * @apiName Get all users
+     * @apiGroup User
+     * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     */
+    actionGetUsers(ctx) {
+        var sberUsers = userService.getSberUsers(),
+            ids = sberUsers.map(sberUser => sberUser.authId).join(','),
+            authUsers = userService.getAuthUsersByIds(ids);
+
+        return sberUsers.map(sberUser => {
+            var authUser = authUsers.find(authUser => authUser.id == sberUser.authId)
+            var renderedUser = userView.renderUser(authUser, sberUser)
+            delete renderedUser.loggedIn
+            delete renderedUser.userFund
+            return renderedUser
+        })
+    }
+
+    /**
+     * @api {get} /user/:id/order get orders
+     * @apiName Get orders
+     * @apiGroup User
+     * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     */
+    actionGetOrders(ctx, id) {
+        var orders = userService.getOrders(id);
+        return orders;
+    }
 };
 
 module.exports = UserController;

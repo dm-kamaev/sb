@@ -10,7 +10,7 @@ const axios = require('axios').create({
 
 var UserService = {};
 
-UserService.findSberUserById = function(id) {
+UserService.findSberUserById = function (id, include) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id
@@ -18,31 +18,62 @@ UserService.findSberUserById = function(id) {
         include: [{
             model: sequelize.models.UserFund,
             as: 'userFund',
-            required: false
-        }, {
-            model: sequelize.models.Phone,
-            as: 'phone',
-            required: false
-        }],
-        order: [
-            [{
-                model: sequelize.models.Phone,
-                as: 'phone'
-            },
-                'updatedAt',
-                'DESC'
-            ]
-        ]
+            required: false,
+            include: include ? [{
+                model: sequelize.models.Entity,
+                as: 'fund',
+                required: false
+            }, {
+                model: sequelize.models.Entity,
+                as: 'topic',
+                required: false
+            }, {
+                model: sequelize.models.Entity,
+                as: 'direction',
+                required: false
+            }] : []
+        }]
     }));
 };
 
+UserService.getOrders = function (id) {
+    var sberUser = await(sequelize.models.SberUser.findOne({
+        where: {
+            id
+        },
+        include: {
+            model: sequelize.models.UserFundSubscription,
+            as: 'userFundSubscription',
+            required: false,
+            include: [{
+                model: sequelize.models.Order,
+                as: 'order',
+                required: false,
+                include: {
+                    model: sequelize.models.OrderItem,
+                    as: 'orderItem'
+                }
+            }, {
+                model: sequelize.models.UserFund,
+                as: 'userFund'
+            }]
+        }
+    }))
+
+    return sberUser.userFundSubscription.map(sub => Object.assign({}, sub.dataValues, {
+        order: sub.order.map(order => Object.assign({}, order.dataValues, {
+            userFund: sub.userFund.dataValues
+        }))
+    }))
+        .reduce((prev, curr) => prev.order.concat(curr.order));
+}
 
 /**
  * if verify card user then exist data else null
  * @param  {[int]} sberUserId [description]
  * @return {[type]}           [description]
  */
-UserService.findCardBySberUserId = function(sberUserId) {
+UserService.findCardBySberUserId = function (sberUserId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id: sberUserId
@@ -50,7 +81,7 @@ UserService.findCardBySberUserId = function(sberUserId) {
     }));
 };
 
-UserService.findSberUserByAuthId = function(authId) {
+UserService.findSberUserByAuthId = function (authId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             authId
@@ -63,7 +94,7 @@ UserService.findSberUserByAuthId = function(authId) {
     }));
 };
 
-UserService.findAuthUserByPhone = function(phoneNumber) {
+UserService.findAuthUserByPhone = function (phoneNumber) {
     var authUsers = await(axios.get('/users', {
         params: {
             phone: phoneNumber
@@ -73,7 +104,7 @@ UserService.findAuthUserByPhone = function(phoneNumber) {
     return authUsers.data[0];
 };
 
-UserService.createAuthUser = function(userData) {
+UserService.createAuthUser = function (userData) {
     var response = await(axios.post('/user', {
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -83,7 +114,7 @@ UserService.createAuthUser = function(userData) {
     return response.data;
 };
 
-UserService.createSberUser = function(authId) {
+UserService.createSberUser = function (authId) {
     return await(sequelize.models.SberUser.create({
         authId,
         userFund: {
@@ -97,12 +128,12 @@ UserService.createSberUser = function(authId) {
     }));
 };
 
-UserService.findAuthUserByAuthId = function(authId) {
+UserService.findAuthUserByAuthId = function (authId) {
     var response = await(axios.get(`/user/${authId}`));
     return response.data;
 };
 
-UserService.setAuthId = function(id, authId) {
+UserService.setAuthId = function (id, authId) {
     return await(sequelize.models.SberUser.update({
         authId
     }, {
@@ -112,7 +143,7 @@ UserService.setAuthId = function(id, authId) {
     }));
 };
 
-UserService.updateAuthUser = function(authId, userData) {
+UserService.updateAuthUser = function (authId, userData) {
     var response = await(axios.patch(`/user/${authId}`, {
         firstName: userData.firstName,
         lastName: userData.lastName
@@ -120,7 +151,7 @@ UserService.updateAuthUser = function(authId, userData) {
     return response.data;
 };
 
-UserService.setUserFund = function(id, userFundId) {
+UserService.setUserFund = function (id, userFundId) {
     return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.UserFund.update({
             creatorId: null
@@ -141,7 +172,7 @@ UserService.setUserFund = function(id, userFundId) {
     }));
 };
 
-UserService.findAuthUserByEmail = function(email) {
+UserService.findAuthUserByEmail = function (email) {
     var response = await(axios.get('/users', {
         params: {
             email
@@ -152,7 +183,7 @@ UserService.findAuthUserByEmail = function(email) {
     return users[0];
 };
 
-UserService.createCard = function(sberUserId, bindingId) {
+UserService.createCard = function (sberUserId, bindingId) {
     return await(sequelize.sequelize.transaction((t) => {
         return sequelize.models.Card.create({
             sberUserId,
@@ -169,5 +200,25 @@ UserService.createCard = function(sberUserId, bindingId) {
             });
     }));
 };
+
+UserService.getSberUsers = function () {
+    return await(sequelize.models.SberUser.findAll({
+        where: {
+            authId: {
+                $ne: null
+            }
+        }
+    }))
+}
+
+UserService.getAuthUsersByIds = function (ids) {
+    var response = await(axios.get('/users', {
+        params: {
+            id: ids
+        }
+    }))
+
+    return response.data;
+}
 
 module.exports = UserService;

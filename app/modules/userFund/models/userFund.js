@@ -54,6 +54,39 @@ module.exports = function(sequelize, DataTypes) {
                     foreignKey: 'userFundId',
                     otherKey: 'sberUserId'
                 });
+                UserFund.belongsToMany(models.Entity, {
+                    as: 'fund',
+                    through: 'UserFundEntity',
+                    foreignKey: 'userFundId',
+                    otherKey: 'entityId',
+                    scope: {
+                        type: {
+                            $iLike: 'fund'
+                        }
+                    }
+                });
+                UserFund.belongsToMany(models.Entity, {
+                    as: 'direction',
+                    through: 'UserFundEntity',
+                    foreignKey: 'userFundId',
+                    otherKey: 'entityId',
+                    scope: {
+                        type: {
+                            $iLike: 'direction'
+                        }
+                    }
+                });
+                UserFund.belongsToMany(models.Entity, {
+                    as: 'topic',
+                    through: 'UserFundEntity',
+                    foreignKey: 'userFundId',
+                    otherKey: 'entityId',
+                    scope: {
+                        type: {
+                            $iLike: 'topic'
+                        }
+                    }
+                });
             }
         }
     });
