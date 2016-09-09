@@ -139,7 +139,7 @@ class UserFundController extends Controller {
             await(userFundService.addEntity(id, entityId));
             return null;
         } catch (err) {
-            if (err.message == 'Not found') {
+            if (err.message === 'Not found') {
                 var ids = [id, entityId].join(' OR ');
                 throw new errors.NotFoundError(i18n.__('UserFund OR Entity'), ids);
             }
@@ -252,6 +252,41 @@ class UserFundController extends Controller {
             userFundId = actionContext.request.user.userFund.id;
         return await(userFundService.getCurrentAmount(sberUserId, userFundId));
     };
+
+
+    /**
+     * @api {post} /user-fund/switching-subscriptions switching subscriptions
+     * @apiName switching subscriptions on UserFund
+     * @apiGroup UserFund
+     *
+     * @apiParam {Number}  [userFundId=user.userFund.id] id of userFund
+     * @apiParam {Boolean} enabled switch on or off subscriptions on UserFund
+     *
+     * @apiParamExample {json} exampleReqeust:
+     * {
+     *   "userFundId": "1",
+     *   "enabled": true
+     * }
+     * @apiError (Error 422) ValidationError wrong type
+     */
+    actionSwitchingSubscriptions(actionContext) {
+        var sberUserId    = actionContext.request.user.id,
+            ownUserFundId = actionContext.request.user.userFund.id,
+            // if don't get from the request UserFundId then this is user's UserFund
+            userFundId    = actionContext.data.userFundId || ownUserFundId,
+            enabled       = actionContext.data.enabled;
+        if (enabled === true || enabled === false) {
+            var message = (enabled) ? i18n.__('Subscription included') : i18n.__('Subscription off');
+            await(
+                userFundService.switchSubscription(sberUserId, userFundId, { enabled })
+            );
+            return { message };
+        } else {
+            return new errors.ValidationError({
+                enabled: [i18n.__('enabled must be a boolean value')]
+            });
+        }
+    }
 }
 
 module.exports = UserFundController;

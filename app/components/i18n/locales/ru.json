@@ -1,4 +1,7 @@
 {
+	"Subscription included": "Подписка включена",
+	"Subscription off": "Подписка выключена",
+	"enabled must be a boolean value": "enabled должно быть булевой величиной",
 	"Your User Fund \"{{userFundName}}\" deactivated.": "Ваш Юзер фонд \"{{userFundName}}\" деактивирован.",
 	"Money is not written off(for the second month in a row), check your card, write-downs will be no more. {{error}}": "Деньги не списались(второй месяц подряд), проверьте вашу карточку, списаний больше не будет. {{error}}",
 	"Money is not written off, check your card. {{error}}": "Деньги не списались, проверьте вашу карточку. {{error}}",
