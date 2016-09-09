@@ -65,7 +65,6 @@
     "chakram": "^1.4.0",
     "chance": "^1.0.4",
     "gulp-apidoc": "^0.2.4",
-    "chakram": "^1.4.0",
     "mocha": "^3.0.2",
     "pg-promise": "^5.3.2",
     "query-string": "^4.2.3",

@@ -46,8 +46,6 @@ AuthService.register = function(userData) {
                                 '[a-z0-9\u007F-\uffff!#$%&\'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9]'+
                                 '(?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$'].join(''), 'i')
 
-    console.log(mailRegex.test(email))
-
     if (!email || !password || password.length < 6 || !firstName || !lastName ||
         firstName.length > 20 || lastName.length > 20 || !mailRegex.test(email)) {
         var valErrors = [];

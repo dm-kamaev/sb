@@ -303,6 +303,7 @@ UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId)
  /**
   * return unhandled subscriptions in this month
   * @param {int[]} allDates dates need to handle
+  * @param {Object} [nowDate] current date. Defaults to now
   * @return {Object[]} UserFundSubscriptions array of UserFundSubscriptions
   * @return {Number} UserFundSubscription.userFundSubscriptionId id of subscription
   * @return {Object} UserFundSubscription.payDate date user desired to pay
@@ -314,7 +315,6 @@ UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId)
   * @return {Object} UserFundSubscription.realDate current date
   */
 UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
-    console.log('nowDate: ', nowDate);
     return await(sequelize.sequelize.query(`
     SELECT
     "UserFundSubscription"."id"                                    AS "userFundSubscriptionId",
@@ -381,5 +381,45 @@ UserFundService.setPayDate = function(subscriptionId, payDate) {
         payDate
     }));
 };
+
+UserFundService.getUserFundWithIncludes = function (id) {
+    return await(sequelize.models.UserFund.findOne({
+        where: {
+            id
+        },
+        include: [{
+            model: sequelize.models.Entity,
+            as: 'topic',
+            required: false,
+            include: [{
+                model: sequelize.models.Entity,
+                as: 'direction',
+                required: false,
+                include: {
+                    model: sequelize.models.Entity,
+                    as: 'fund',
+                    required: false
+                }
+            },{
+                model: sequelize.models.Entity,
+                as: 'fund',
+                required: false
+            }]
+        },{
+            model: sequelize.models.Entity,
+            as: 'direction',
+            required: false,
+            include: {
+                model: sequelize.models.Entity,
+                as: 'fund',
+                required: false
+            }
+        },{
+            model: sequelize.models.Entity,
+            as: 'fund',
+            required: false
+        }]
+    }))
+}
 
 module.exports = UserFundService;

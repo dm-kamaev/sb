@@ -15,7 +15,6 @@ module.exports = (req, res, next) => {
     var ua = req.headers['user-agent'];
 
     if (/^(facebookexternalhit)|(Twitterbot)|(Pinterest)/gi.test(ua)) {
-        console.log(ua, ' is a bot');
         return nonSPARouter(req, res, next);
     }
 

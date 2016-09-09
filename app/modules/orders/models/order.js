@@ -90,7 +90,7 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'userFundSubscription',
                     foreignKey: 'userFundSubscriptionId'
                 });
-                Order.hasMany(models.OrderItem, {
+                Order.hasOne(models.OrderItem, {
                     as: 'orderItem',
                     foreignKey: 'sberAcquOrderNumber'
                 });
