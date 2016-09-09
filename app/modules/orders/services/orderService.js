@@ -593,9 +593,6 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         }
     }
 };
-// async(() => {
-//     OrderService.failedReccurentPayment(465, 10, 'Денег нет');
-// })();
 
 
 /**
