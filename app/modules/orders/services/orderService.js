@@ -623,7 +623,7 @@ function disableUserFundSubscription_(sberUserId) {
 function checkExistSubscribers_(listUserFundId) {
     var res = [];
     var activeUserFundSubscription =
-        userFundService.searchActiveUserFundSubscriptionByUserFundId(listUserFundId);
+         userFundService.searchActiveSubscription(listUserFundId);
 
     var listUserFundIdHasSubscribers = {};
     // { '1': true, '73': true, '74': true }
