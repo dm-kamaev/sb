@@ -269,8 +269,12 @@ UserFundService.updatUserFundSubscriptionBySberUserId = function(sberUserId, dat
 };
 
 
-
-UserFundService.searchActiveUserFundSubscriptionByUserFundId = function(listUserFundId) {
+/**
+ * search active user fund subscription by userFundId
+ * @param  {[array]} listUserFundId [73, 74 ,1]
+ * @return {[type]}                [description]
+ */
+UserFundService.searchActiveSubscription = function(listUserFundId) {
     return await(sequelize.models.UserFundSubscription.findAll({
         where: {
             userFundId: {
