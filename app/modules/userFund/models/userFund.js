@@ -42,7 +42,10 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'entity',
                     through: 'UserFundEntity',
                     foreignKey: 'userFundId',
-                    otherKey: 'entityId'
+                    otherKey: 'entityId',
+                    scope: {
+                        published: true
+                    }
                 });
                 UserFund.belongsTo(models.SberUser, {
                     as: 'owner',
@@ -62,7 +65,8 @@ module.exports = function(sequelize, DataTypes) {
                     scope: {
                         type: {
                             $iLike: 'fund'
-                        }
+                        },
+                        published: true
                     }
                 });
                 UserFund.belongsToMany(models.Entity, {
@@ -73,7 +77,8 @@ module.exports = function(sequelize, DataTypes) {
                     scope: {
                         type: {
                             $iLike: 'direction'
-                        }
+                        },
+                        published: true
                     }
                 });
                 UserFund.belongsToMany(models.Entity, {
@@ -84,7 +89,8 @@ module.exports = function(sequelize, DataTypes) {
                     scope: {
                         type: {
                             $iLike: 'topic'
-                        }
+                        },
+                        published: true
                     }
                 });
             }

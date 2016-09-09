@@ -10,7 +10,6 @@ const mailService = require('../modules/auth/services/mailService.js');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const path = require('path');
-const log = console.log;
 const argv = require('yargs').argv;
 
 const NumberDays = 5; // take 5 days before now

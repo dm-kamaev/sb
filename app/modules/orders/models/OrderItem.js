@@ -14,7 +14,15 @@ module.exports = function(sequelize, DataTypes) {
                 model: 'Entity',
                 key: 'id'
             },
-            allowNull: false
+            allowNull: true
+        },
+        userFundId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'UserFund',
+                key: 'id'
+            },
+            allowNull: true
         },
         sberAcquOrderNumber: {
             type: DataTypes.INTEGER,
@@ -33,6 +41,7 @@ module.exports = function(sequelize, DataTypes) {
         },
         uncovered: {
             type: DataTypes.BOOLEAN,
+            defaultValue: true,
             allowNull: false
         },
         title: {
@@ -80,6 +89,18 @@ module.exports = function(sequelize, DataTypes) {
                     as: 'child',
                     foreignKey: 'parentId'
                 });
+                OrderItem.hasMany(OrderItem, {
+                    as: 'fund',
+                    foreignKey: 'parentId'
+                })
+                OrderItem.hasMany(OrderItem, {
+                    as: 'topic',
+                    foreignKey: 'parentId'
+                })
+                OrderItem.hasMany(OrderItem, {
+                    as: 'direction',
+                    foreignKey: 'parentId'
+                })
             }
         }
     });
