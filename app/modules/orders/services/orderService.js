@@ -103,6 +103,7 @@ OrderService.firstPayOrSendMessage = function (params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
         var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
+
         if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
             throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
@@ -110,9 +111,18 @@ OrderService.firstPayOrSendMessage = function (params) {
         //     listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
         //     listFunds = res.listFunds;
 
+        var snapshot = {
+            title: userFund.titile,
+            description: userFund.description,
+            topic: userFund.topic,
+            direction: userFund.direction,
+            fund: userFund.fund
+        }
+
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
+            userFundSnapshot: snapshot,
             // listDirectionsTopicsFunds,
             // listFunds,
             userFund,
@@ -288,7 +298,13 @@ OrderService.createOrder = function (data) {
                 type: data.type,
                 amount: data.amount,
                 status: data.status,
+<<<<<<< HEAD
                 scheduledPayDate: data.scheduledPayDate
+=======
+                userFundSnapshot: data.userFundSnapshot,
+                scheduledPayDate: data.scheduledPayDate,
+
+>>>>>>> SV-289
             })
     })).sberAcquOrderNumber;
 };
