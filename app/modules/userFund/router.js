@@ -22,4 +22,7 @@ userFundRouter.use((req, res, next) => {
 userFundRouter.post('/amount', userFundController.actionSetAmount);
 userFundRouter.get('/amount', userFundController.actionGetCurrentAmount);
 
+userFundRouter.post('/switching-subscriptions', userFundController.actionSwitchingSubscriptions);
+
+
 module.exports = userFundRouter;

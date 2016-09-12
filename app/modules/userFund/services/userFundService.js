@@ -255,17 +255,33 @@ UserFundService.updateUserFundSubscription = function(id, data) {
 
 
 /**
- * get user subscriptions by sberUserId and returning data after update
+ * update user subscriptions by sberUserId and returning data after update
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
-UserFundService.updatUserFundSubscriptionBySberUserId = function(sberUserId, data) {
+UserFundService.updateSubscriptions = function(sberUserId, data) {
     return await(sequelize.models.UserFundSubscription.update(data, {
         where: {
             sberUserId,
         },
         returning: true,
     }))[1];
+};
+
+
+/**
+ * switch subscriptions by sberUserId and userFundId
+ * @param  {[int]}  sberUserId
+ * @param  {[int]}  userFundId
+ * @return {[type]}
+ */
+UserFundService.switchSubscription = function(sberUserId, userFundId, data) {
+    return await(sequelize.models.UserFundSubscription.update(data, {
+        where: {
+            sberUserId,
+            userFundId,
+        },
+    }));
 };
 
 
