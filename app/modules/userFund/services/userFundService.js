@@ -272,6 +272,7 @@ UserFundService.updateSubscriptions = function(sberUserId, data) {
 /**
  * switch subscriptions by sberUserId and userFundId
  * @param  {[int]}  sberUserId
+ * @param  {[int]}  userFundId
  * @return {[type]}
  */
 UserFundService.switchSubscription = function(sberUserId, userFundId, data) {
