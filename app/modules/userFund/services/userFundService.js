@@ -270,6 +270,22 @@ UserFundService.updateSubscriptions = function(sberUserId, data) {
 
 
 /**
+ * switch subscriptions by sberUserId and userFundId
+ * @param  {[int]}  sberUserId
+ * @param  {[int]}  userFundId
+ * @return {[type]}
+ */
+UserFundService.switchSubscription = function(sberUserId, userFundId, data) {
+    return await(sequelize.models.UserFundSubscription.update(data, {
+        where: {
+            sberUserId,
+            userFundId,
+        },
+    }));
+};
+
+
+/**
  * search active user fund subscription by userFundId
  * @param  {[array]} listUserFundId [73, 74 ,1]
  * @return {[type]}                [description]
