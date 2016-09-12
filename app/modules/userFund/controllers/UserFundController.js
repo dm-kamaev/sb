@@ -216,7 +216,7 @@ class UserFundController extends Controller {
             // if don't get from the request UserFundId then this is user's UserFund
             userFundId    = actionContext.data.userFundId || ownUserFundId,
             enabled       = actionContext.data.enabled;
-        if (enabled === true || enabled === false) {
+        if (typeof(enabled) === 'boolean') {
             var message = (enabled) ? i18n.__('Subscription included') : i18n.__('Subscription off');
             await(
                 userFundService.switchSubscription(sberUserId, userFundId, { enabled })
