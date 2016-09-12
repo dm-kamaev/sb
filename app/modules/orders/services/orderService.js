@@ -103,6 +103,7 @@ OrderService.firstPayOrSendMessage = function (params) {
     // if user with unconfirmed payment, then do first pay
     if (!params.currentCardId) {
         var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
+
         if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
             throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
@@ -110,9 +111,18 @@ OrderService.firstPayOrSendMessage = function (params) {
         //     listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
         //     listFunds = res.listFunds;
 
+        var snapshot = {
+            title: userFund.titile,
+            description: userFund.description,
+            topic: userFund.topic,
+            direction: userFund.direction,
+            fund: userFund.fund
+        }
+
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
+            userFundSnapshot: snapshot,
             // listDirectionsTopicsFunds,
             // listFunds,
             userFund,
@@ -288,83 +298,9 @@ OrderService.createOrder = function (data) {
                 type: data.type,
                 amount: data.amount,
                 status: data.status,
+                userFundSnapshot: data.userFundSnapshot,
                 scheduledPayDate: data.scheduledPayDate,
-                orderItem: {
-                    type: 'userFund',
-                    userFundId: data.userFund.id,
-                    title: data.userFund.title,
-                    description: data.userFund.description,
-                    imgUrl: data.userFund.imgUrl,
-                    uncovered: false
-                }
-            },
-            {
-                include: [{
-                    model: sequelize.models.OrderItem,
-                    as: 'orderItem'
-                }]
-            })
-            .then(order => {
-                return sequelize.models.OrderItem.bulkCreate(['fund', 'topic', 'direction'].map(type => {
-                    return data.userFund[type].map(entity => {
-                        return {
-                            title: entity.title,
-                            description: entity.description,
-                            uncovered: false,
-                            type: entity.type,
-                            entityId: entity.id,
-                            sberAcquOrderNumber: order.sberAcquOrderNumber,
-                            parentId: order.orderItem.id
-                        }
-                    })
-                }).reduce((prev, curr) => prev.concat(curr)), {
-                    returning: true
-                })
-            })
-            .then(orderItems => {
-                var res = orderItems.map(orderItem => {
-                    var origin = data.userFund[orderItem.type].find(e => e.id == orderItem.entityId)
-                    return ['direction', 'fund'].map(type => {
-                        return origin[type] && origin[type].map(entity => ({
-                                title: entity.title,
-                                description: entity.description,
-                                uncovered: true,
-                                type: entity.type,
-                                entityId: entity.id,
-                                sberAcquOrderNumber: orderItem.sberAcquOrderNumber,
-                                parentId: orderItem.id,
-                                fund: entity.fund && entity.fund.map(fund => Object.assign({}, fund.dataValues, {
-                                    uncovered: true,
-                                    id: undefined,
-                                    entityId: fund.id,
-                                    sberAcquOrderNumber: orderItem.sberAcquOrderNumber,
-                                    createdAt: undefined,
-                                    updatedAt: undefined
-                                })),
-                                direction: entity.direction && entity.direction.map(direction => Object.assign({}, direction.dataValues, {
-                                    uncovered: true,
-                                    id: undefined,
-                                    entityId: direction.id,
-                                    sberAcquOrderNumber: orderItem.sberAcquOrderNumber,
-                                    createdAt: undefined,
-                                    updatedAt: undefined
-                                }))
-                            }))
-                    })
-                })
-                return Promise.all(_.flattenDeep(res)
-                    .filter(Boolean)
-                    .map(e => {
-                        return sequelize.models.OrderItem.create(e, {
-                            include: [e.fund && {
-                                model: sequelize.models.OrderItem,
-                                as: 'fund'
-                            }, e.direction && {
-                                model: sequelize.models.OrderItem,
-                                as: 'direction'
-                            }].filter(Boolean)
-                        })
-                    }))
+
             })
     }))[0].sberAcquOrderNumber;
 };
