@@ -34,11 +34,11 @@ module.exports = class CallbackController extends Controller {
                 userFund = userFundSubscription.userFund,
                 ownUserFund = sberUser.userFund;
 
-            await(userService.createCard(sberUser.id,
-                        sberAcquiringOrderStatus.bindingInfo.bindingId));
-            // await(userFundService.updateDesiredAmountHistory(paymentId, {
-            //     payDate: moment().add(1, 'month').toDate()
-            // }));
+            console.log(sberAcquiringOrderStatus);
+            await(userService.createCard(sberUser.id, {
+                bindingId: sberAcquiringOrderStatus.bindingInfo.bindingId
+            }));
+
             var subscriptionId = userFundSubscription.id;
             await(userFundService.updateUserFundSubscription(subscriptionId, {
                 enabled: true

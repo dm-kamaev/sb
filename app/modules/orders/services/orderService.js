@@ -287,85 +287,9 @@ OrderService.createOrder = function (data) {
                 type: data.type,
                 amount: data.amount,
                 status: data.status,
-                scheduledPayDate: data.scheduledPayDate,
-                orderItem: {
-                    type: 'userFund',
-                    userFundId: data.userFund.id,
-                    title: data.userFund.title,
-                    description: data.userFund.description,
-                    imgUrl: data.userFund.imgUrl,
-                    uncovered: false
-                }
-            },
-            {
-                include: [{
-                    model: sequelize.models.OrderItem,
-                    as: 'orderItem'
-                }]
+                scheduledPayDate: data.scheduledPayDate
             })
-            .then(order => {
-                return sequelize.models.OrderItem.bulkCreate(['fund', 'topic', 'direction'].map(type => {
-                    return data.userFund[type].map(entity => {
-                        return {
-                            title: entity.title,
-                            description: entity.description,
-                            uncovered: false,
-                            type: entity.type,
-                            entityId: entity.id,
-                            sberAcquOrderNumber: order.sberAcquOrderNumber,
-                            parentId: order.orderItem.id
-                        }
-                    })
-                }).reduce((prev, curr) => prev.concat(curr)), {
-                    returning: true
-                })
-            })
-            .then(orderItems => {
-                var res = orderItems.map(orderItem => {
-                    var origin = data.userFund[orderItem.type].find(e => e.id == orderItem.entityId)
-                    return ['direction', 'fund'].map(type => {
-                        return origin[type] && origin[type].map(entity => ({
-                                title: entity.title,
-                                description: entity.description,
-                                uncovered: true,
-                                type: entity.type,
-                                entityId: entity.id,
-                                sberAcquOrderNumber: orderItem.sberAcquOrderNumber,
-                                parentId: orderItem.id,
-                                fund: entity.fund && entity.fund.map(fund => Object.assign({}, fund.dataValues, {
-                                    uncovered: true,
-                                    id: undefined,
-                                    entityId: fund.id,
-                                    sberAcquOrderNumber: orderItem.sberAcquOrderNumber,
-                                    createdAt: undefined,
-                                    updatedAt: undefined
-                                })),
-                                direction: entity.direction && entity.direction.map(direction => Object.assign({}, direction.dataValues, {
-                                    uncovered: true,
-                                    id: undefined,
-                                    entityId: direction.id,
-                                    sberAcquOrderNumber: orderItem.sberAcquOrderNumber,
-                                    createdAt: undefined,
-                                    updatedAt: undefined
-                                }))
-                            }))
-                    })
-                })
-                return Promise.all(_.flattenDeep(res)
-                    .filter(Boolean)
-                    .map(e => {
-                        return sequelize.models.OrderItem.create(e, {
-                            include: [e.fund && {
-                                model: sequelize.models.OrderItem,
-                                as: 'fund'
-                            }, e.direction && {
-                                model: sequelize.models.OrderItem,
-                                as: 'direction'
-                            }].filter(Boolean)
-                        })
-                    }))
-            })
-    }))[0].sberAcquOrderNumber;
+    })).sberAcquOrderNumber;
 };
 
 function createPayDate_(subscriptionId, payDate) {
@@ -419,10 +343,11 @@ OrderService.getMissingDays = function (allDates, date) {
 
 
 OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
-    var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
+    var userFund = userFundService.getUserFundWithIncludes(userFundSubscription.userFundId)
 
     if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
         // this should never happened
+        return;
     }
 
     const getScheduledDate = (realDate, payDate) => {
@@ -468,6 +393,7 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
         throw new errors.AcquiringError(sberAcquPayment.errorMessage);
     }
     // console.log(sberAcquPayment);
+    OrderService.updateInfo(sberAcquOrderNumber, sberAcquPayment);
 
     var paymentResultResponse = sberAcquiring.payByBind({
         orderId: sberAcquPayment.orderId,
@@ -593,6 +519,50 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         }
     }
 };
+
+OrderService.getOrderWithNestedEntities = function(id) {
+    return await(sequelize.models.Order.findOne({
+        where: {
+            id
+        },
+        include: {
+            model: sequelize.models.OrderItem,
+            as: 'orderItem',
+            include: [{
+                model: sequelize.models.OrderItem,
+                as: 'fund',
+                required: false
+            },{
+                model: sequelize.models.OrderItem,
+                as: 'direction',
+                required: false,
+                include: {
+                    model: sequelize.models.OrderItem,
+                    as: 'fund',
+                    required: false
+                }
+            },{
+                model: sequelize.models.OrderItem,
+                as: 'topic',
+                required: false,
+                include: [{
+                    model: sequelize.models.OrderItem,
+                    as: 'fund',
+                    required: false
+                },{
+                    model: sequelize.models.OrderItem,
+                    as: 'direction',
+                    required: false,
+                    include: {
+                        model: sequelize.models.OrderItem,
+                        as: 'fund',
+                        required: false
+                    }
+                }]
+            }]
+        }
+    }))
+}
 
 
 /**

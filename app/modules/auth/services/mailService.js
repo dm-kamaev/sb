@@ -41,7 +41,11 @@ MailService.sendMailCron = function(email, emailData) {
       '<div>' + (emailData.error || emailData.data) + '</div>',
       'html'
     );
-    await(mailSender.sendMail(email, letter));
+    try {
+        await(mailSender.sendMail(email, letter));
+    } catch (err) {
+        logger.critical('ERROR AT SENDING MAIL ', err.message)
+    }
     // need for debug
     return emailData;
 };
@@ -59,7 +63,11 @@ MailService.sendUserRecurrentPayments = function(email, emailData) {
       '<div>' + emailData.data + '</div>',
       'html'
     );
-    await(mailSender.sendMail(email, letter));
+    try {
+        await(mailSender.sendMail(email, letter));
+    } catch (err) {
+        logger.critical('ERROR AT SENDING MAIL ', err.message)
+    }
     // need for debug
     return emailData;
 };

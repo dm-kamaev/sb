@@ -101,7 +101,7 @@ class UserController extends Controller {
      *     "loggedIn": true
      * }
      */
-    actionGetUser(actionContext) {
+    actionFindUser(actionContext) {
         var sberUser = actionContext.request.user,
             email = actionContext.request.query.email;
         if (email) {
@@ -143,8 +143,29 @@ class UserController extends Controller {
      * @apiHeader (AdminToken) {String} Token-Header Authorization value
      */
     actionGetOrders(ctx, id) {
-        var orders = userService.getOrders(id);
-        return orders;
+        return userService.getOrders(id);
+    }
+
+    /**
+     * @api {put} /user/:id update user
+     * @apiName update user
+     * @apiGroup User
+     * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     */
+    actionUpdateUserById(ctx, id) {
+        var sberUser = userService.findSberUserById(id);
+        var authUser = userService.updateAuthUser(sberUser.authId, ctx.data)
+        return userView.renderUser(authUser, sberUser)
+    }
+
+    /**
+     * @api {get} /user/:id/subscription get subscriptions
+     * @apiName get subscriptions
+     * @apiGroup User
+     * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     */
+    actionGetSubscriptions(ctx, id) {
+        return userService.getUserFundSubscriptions(id)
     }
 };
 

@@ -9,6 +9,7 @@ exports.renderUser = function(authUser, sberUser) {
         lastName: authUser.lastName,
         userFund: sberUser.userFund ?
             userFundView.renderUserFund(sberUser.userFund) : null,
+        card: sberUser.currentCard,
         loggedIn: !!sberUser.authId
     };
 };

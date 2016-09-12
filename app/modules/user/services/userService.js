@@ -15,11 +15,10 @@ UserService.findSberUserById = function (id, include) {
         where: {
             id
         },
-        include: [{
+        include: include ? [{
             model: sequelize.models.UserFund,
             as: 'userFund',
-            required: false,
-            include: include ? [{
+            include: [{
                 model: sequelize.models.Entity,
                 as: 'fund',
                 required: false
@@ -31,41 +30,57 @@ UserService.findSberUserById = function (id, include) {
                 model: sequelize.models.Entity,
                 as: 'direction',
                 required: false
-            }] : []
+            }]
+        },{
+            model: sequelize.models.Card,
+            as: 'currentCard',
+            required: true
+        }] : [{
+            model: sequelize.models.UserFund,
+            as: 'userFund'
         }]
+    }, {
+        order: [{
+            model: sequelize.models.PayDayHistory,
+            as: 'payDayHistory'
+        }, 'createdAt', 'DESC'],
+        limit: 1
     }));
 };
 
 UserService.getOrders = function (id) {
-    var sberUser = await(sequelize.models.SberUser.findOne({
-        where: {
+    return await(sequelize.sequelize.query(`SELECT
+  "scheduledPayDate",
+  "Order"."createdAt" as "createdAt",
+  "Order".status as status,
+  "sberAcquOrderNumber",
+  "sberAcquOrderId",
+  "amount",
+  "userFundId",
+  "Order".type as type,
+  "title",
+  "description"
+FROM "Order"
+JOIN "UserFundSubscription"
+    ON "UserFundSubscription"."id" = "Order"."userFundSubscriptionId"
+JOIN "SberUser"
+  ON "SberUser"."id" = "UserFundSubscription"."sberUserId"
+  AND "SberUser".id = :id
+JOIN "UserFund"
+  ON "UserFundSubscription"."userFundId" = "UserFund".id`, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
             id
-        },
-        include: {
-            model: sequelize.models.UserFundSubscription,
-            as: 'userFundSubscription',
-            required: false,
-            include: [{
-                model: sequelize.models.Order,
-                as: 'order',
-                required: false,
-                include: {
-                    model: sequelize.models.OrderItem,
-                    as: 'orderItem'
-                }
-            }, {
-                model: sequelize.models.UserFund,
-                as: 'userFund'
-            }]
         }
-    }))
+    }));
 
-    return sberUser.userFundSubscription.map(sub => Object.assign({}, sub.dataValues, {
-        order: sub.order.map(order => Object.assign({}, order.dataValues, {
-            userFund: sub.userFund.dataValues
-        }))
-    }))
-        .reduce((prev, curr) => prev.order.concat(curr.order));
+    var orders = [];
+    sberUser.userFundSubscription.forEach(sub => {
+        orders = orders.concat(sub.order.map(order => Object.assign(order, {
+            userFund: sub.userFund
+        })))
+    });
+    return orders
 }
 
 /**
@@ -183,11 +198,11 @@ UserService.findAuthUserByEmail = function (email) {
     return users[0];
 };
 
-UserService.createCard = function (sberUserId, bindingId) {
+UserService.createCard = function (sberUserId, data) {
     return await(sequelize.sequelize.transaction((t) => {
         return sequelize.models.Card.create({
             sberUserId,
-            bindingId
+            bindingId: data.bindingId
         })
             .then(card => {
                 return sequelize.models.SberUser.update({
@@ -219,6 +234,34 @@ UserService.getAuthUsersByIds = function (ids) {
     }))
 
     return response.data;
+}
+
+UserService.getUserFundSubscriptions = function (id) {
+    return await(sequelize.sequelize.query(`SELECT
+  "UserFundSubscription".id as id,
+  "userFundId",
+  "sberUserId",
+  "enabled",
+  "payDate",
+  "Order"."scheduledPayDate" as "scheduledPayDate",
+  "Order"."createdAt" as "realPayDate"
+FROM "UserFundSubscription"
+LEFT JOIN "PayDayHistory" ON "PayDayHistory".id = (SELECT "PayDayHistory".id
+                                                    FROM "PayDayHistory"
+                                                    WHERE "PayDayHistory"."subscriptionId" = "UserFundSubscription".id
+                                                    ORDER BY "PayDayHistory"."createdAt" DESC
+                                                    LIMIT 1)
+LEFT JOIN "Order" ON "Order"."sberAcquOrderNumber" = (SELECT "Order"."sberAcquOrderNumber"
+                                                          FROM "Order"
+                                                          WHERE "Order"."userFundSubscriptionId" = "UserFundSubscription".id
+                                                          ORDER BY "Order"."createdAt" DESC
+                                                          LIMIT 1)
+WHERE "sberUserId" = :id`, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            id
+        }
+    }))
 }
 
 module.exports = UserService;
