@@ -220,7 +220,7 @@ class UserFundController extends Controller {
         if (typeof(enabled) === 'boolean') {
             var message = (enabled) ? i18n.__('Subscription included') : i18n.__('Subscription off');
             await(
-                userFundService.switchSubscription(sberUserId, userFundId, { enabled })
+                userFundService.switchSubscriptions(sberUserId, userFundId, { enabled })
             );
             return { message };
         } else {
@@ -240,7 +240,7 @@ class UserFundController extends Controller {
         var sberUserId = actionContext.request.user.id,
             userFundId = actionContext.request.user.userFund.id;
         await(
-            userFundService.switchSubscription(sberUserId, userFundId, { enabled: false })
+            userFundService.switchSubscriptions(sberUserId, userFundId, { enabled: false })
         );
         await(
             userFundService.removeUserFund(userFundId)
