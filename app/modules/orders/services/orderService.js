@@ -298,13 +298,8 @@ OrderService.createOrder = function (data) {
                 type: data.type,
                 amount: data.amount,
                 status: data.status,
-<<<<<<< HEAD
-                scheduledPayDate: data.scheduledPayDate
-=======
                 userFundSnapshot: data.userFundSnapshot,
                 scheduledPayDate: data.scheduledPayDate,
-
->>>>>>> SV-289
             })
     })).sberAcquOrderNumber;
 };

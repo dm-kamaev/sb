@@ -23,6 +23,7 @@ userFundRouter.post('/amount', userFundController.actionSetAmount);
 userFundRouter.get('/amount', userFundController.actionGetCurrentAmount);
 
 userFundRouter.post('/switching-subscriptions', userFundController.actionSwitchingSubscriptions);
+userFundRouter.post('/remove-userFund',         userFundController.actionRemoveUserFund);
 
 
 module.exports = userFundRouter;
