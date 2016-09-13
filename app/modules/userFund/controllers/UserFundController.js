@@ -5,6 +5,7 @@ const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
+const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityView = require('../../entity/views/entityView');
@@ -227,6 +228,25 @@ class UserFundController extends Controller {
                 enabled: [i18n.__('enabled must be a boolean value')]
             });
         }
+    }
+
+
+    /**
+     * @api {post} /user-fund/remove-userFund remove userFund
+     * @apiName remove userFund
+     * @apiGroup UserFund
+     */
+    actionRemoveUserFund(actionContext) {
+        var sberUserId = actionContext.request.user.id,
+            userFundId = actionContext.request.user.userFund.id;
+        await(
+            userFundService.switchSubscription(sberUserId, userFundId, { enabled: false })
+        );
+        await(
+            userFundService.removeUserFund(userFundId)
+        );
+        logger.info(sberUserId, userFundId);
+        return { message: i18n.__('User Fund was removed') };
     }
 }
 
