@@ -34,7 +34,7 @@ UserService.findSberUserById = function (id, include) {
         },{
             model: sequelize.models.Card,
             as: 'currentCard',
-            required: true
+            required: false
         }] : [{
             model: sequelize.models.UserFund,
             as: 'userFund'
@@ -185,6 +185,11 @@ UserService.setUserFund = function (id, userFundId) {
                 });
             });
     }));
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.UserFundEntity.update({
+
+        })
+    }))
 };
 
 UserService.findAuthUserByEmail = function (email) {
@@ -202,7 +207,10 @@ UserService.createCard = function (sberUserId, data) {
     return await(sequelize.sequelize.transaction((t) => {
         return sequelize.models.Card.create({
             sberUserId,
-            bindingId: data.bindingId
+            bindingId: data.bindingId,
+            PAN: data.PAN,
+            expiration: data.expiration,
+            cardHolderName: data.cardHolderName
         })
             .then(card => {
                 return sequelize.models.SberUser.update({
