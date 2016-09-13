@@ -245,7 +245,6 @@ class UserFundController extends Controller {
         await(
             userFundService.removeUserFund(userFundId)
         );
-        logger.info(sberUserId, userFundId);
         return { message: i18n.__('User Fund was removed') };
     }
 }
