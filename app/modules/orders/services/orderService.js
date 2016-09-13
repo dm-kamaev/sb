@@ -101,28 +101,20 @@ OrderService.updateInfo = function (sberAcquOrderNumber, data) {
  */
 OrderService.firstPayOrSendMessage = function (params) {
     // if user with unconfirmed payment, then do first pay
-    if (!params.currentCardId) {
-        var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
+    var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
+    if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
+        throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
+    }
 
-        if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
-            throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
-        }
+    if (!params.currentCardId) {
+
         // var res = getListDirectionTopicFunds_(entities),
         //     listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
         //     listFunds = res.listFunds;
 
-        var snapshot = {
-            title: userFund.titile,
-            description: userFund.description,
-            topic: userFund.topic,
-            direction: userFund.direction,
-            fund: userFund.fund
-        }
-
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
-            userFundSnapshot: snapshot,
             // listDirectionsTopicsFunds,
             // listFunds,
             userFund,
@@ -159,6 +151,13 @@ OrderService.firstPayOrSendMessage = function (params) {
             sberAcquOrderNumber, responceSberAcqu
         );
     } else {
+        await(sequelize.models.UserFundSubscription.update({
+            enabled: true
+        }, {
+            where: {
+                id: params.userFundSubscriptionId
+            }
+        }))
         return {
             message: i18n.__('You changed the monthly payment amount.')
         };
@@ -298,8 +297,7 @@ OrderService.createOrder = function (data) {
                 type: data.type,
                 amount: data.amount,
                 status: data.status,
-                userFundSnapshot: data.userFundSnapshot,
-                scheduledPayDate: data.scheduledPayDate,
+                scheduledPayDate: data.scheduledPayDate
             })
     })).sberAcquOrderNumber;
 };
@@ -404,8 +402,7 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
     if (sberAcquPayment.errorCode) {
         throw new errors.AcquiringError(sberAcquPayment.errorMessage);
     }
-    // console.log(sberAcquPayment);
-    OrderService.updateInfo(sberAcquOrderNumber, sberAcquPayment);
+    console.log(sberAcquPayment);
 
     var paymentResultResponse = sberAcquiring.payByBind({
         orderId: sberAcquPayment.orderId,
@@ -414,15 +411,26 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
 
     var paymentResult = JSON.parse(paymentResultResponse);
     // return
-    //
-    if (paymentResult.errorCode != 0) {
+    console.log(paymentResult)
+    var orderStatusExtended = sberAcquiring.getStatusAndGetBind({
+        orderNumber: sberAcquOrderNumber,
+        orderId: sberAcquPayment.orderId,
+        clientId: userFundSubscription.sberUserId
+    })
+    if (orderStatusExtended.actionCode!= 0) {
         OrderService.failedReccurentPayment(sberAcquOrderNumber,
             userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate);
-    } else {
-        OrderService.updateInfo(sberAcquOrderNumber, {
-            status: orderStatus.PAID
-        });
     }
+    OrderService.updateInfo(sberAcquOrderNumber, {
+        sberAcquErrorCode: orderStatusExtended.errorCode,
+        sberAcquErrorMessage: orderStatusExtended.errorMessage,
+        sberAcquActionCode: orderStatusExtended.actionCode,
+        sberAcquOrderId: sberAcquPayment.orderId,
+        sberAcquActionCodeDescription: orderStatusExtended.actionCodeDescription,
+        amount: orderStatusExtended.amount,
+        status: orderStatusExtended.actionCode === 0 ? orderStatus.PAID : orderStatus.FAILED
+    })
+
 
 
 };

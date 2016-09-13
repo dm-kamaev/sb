@@ -109,7 +109,7 @@ class EntityController extends Controller {
      * ]
      */
     actionGetEntitiesByType(actionContext, type) {
-        var userFundId = actionContext.request.user.userFund.id;
+        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id;
         var published = actionContext.request.published;
         var entities = await(entityService.getEntitiesByType(type, userFundId, published));
         return entityView.renderEntities(entities);
@@ -136,7 +136,7 @@ class EntityController extends Controller {
      * @apiError (Error 404) NotFoundError entity with this id not found
      */
     actionGetEntity(actionContext, id) {
-        var userFundId = actionContext.request.user.userFund.id,
+        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
             published = actionContext.request.published,
             include = actionContext.request.query.include;
         var entity = await(entityService.getEntity(id, userFundId, published, include));
@@ -213,7 +213,7 @@ class EntityController extends Controller {
      */
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
-            var userFundId = actionContext.request.user.userFund.id,
+            var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
                 published = actionContext.request.published;
             var entities =
                 await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
@@ -256,7 +256,7 @@ class EntityController extends Controller {
      *
      */
     actionGetAllEntities(actionContext) {
-        var userFundId = actionContext.request.user.userFund.id,
+        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
             published = actionContext.request.published;
         var entities = await(entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);

@@ -27,11 +27,43 @@ UserFundService.updateUserFund = function(id, data) {
     }));
 };
 
-UserFundService.getUserFund = function(id) {
+UserFundService.getUserFund = function(id, includes, nested) {
     return await(sequelize.models.UserFund.findOne({
         where: {
             id
-        }
+        },
+        include: includes ? [{
+            model: sequelize.models.Entity,
+            as: 'topic',
+            required: false,
+            include: nested ? [{
+                model: sequelize.models.Entity,
+                as: 'direction',
+                required: false,
+                include: {
+                    model: sequelize.models.Entity,
+                    as: 'fund',
+                    required: false
+                }
+            },{
+                model: sequelize.models.Entity,
+                as: 'fund',
+                required: false
+            }] : undefined
+        },{
+            model: sequelize.models.Entity,
+            as: 'direction',
+            required: false,
+            include: nested ? {
+                model: sequelize.models.Entity,
+                as: 'fund',
+                required: false
+            } : undefined
+        },{
+            model: sequelize.models.Entity,
+            as: 'fund',
+            required: false
+        }] : undefined
     }));
 };
 
@@ -275,28 +307,11 @@ UserFundService.updateSubscriptions = function(sberUserId, data) {
  * @param  {[int]}  userFundId
  * @return {[type]}
  */
-UserFundService.switchSubscriptions = function(sberUserId, userFundId, data) {
+UserFundService.switchSubscription = function(sberUserId, userFundId, data) {
     return await(sequelize.models.UserFundSubscription.update(data, {
         where: {
             sberUserId,
             userFundId,
-        },
-    }));
-};
-
-
-/**
- * remove user fund by userFundId
- * @param  {[int]}  userFundId
- * @return {[type]}
- */
-UserFundService.removeUserFund = function(userFundId) {
-    return await(sequelize.models.UserFund.update({
-        deletedAt: new Date(),
-        enabled:false
-    }, {
-        where: {
-            id:userFundId,
         },
     }));
 };
