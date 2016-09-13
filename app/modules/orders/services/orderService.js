@@ -299,7 +299,11 @@ OrderService.createOrder = function (data) {
                 amount: data.amount,
                 status: data.status,
                 userFundSnapshot: data.userFundSnapshot,
+<<<<<<< HEAD
                 scheduledPayDate: data.scheduledPayDate,
+=======
+                scheduledPayDate: data.scheduledPayDate
+>>>>>>> SV-298 Commit fix
             })
     })).sberAcquOrderNumber;
 };
