@@ -35,8 +35,18 @@ module.exports = class CallbackController extends Controller {
                 ownUserFund = sberUser.userFund;
 
             console.log(sberAcquiringOrderStatus);
+            var cardAuthInfo = sberAcquiringOrderStatus.cardAuthInfo,
+                expiration = cardAuthInfo && cardAuthInfo.expiration,
+                PAN = cardAuthInfo && cardAuthInfo.pan,
+                cardHolderName = cardAuthInfo && cardAuthInfo.cardholderName,
+                year = expiration && parseInt(expiration.substring(0, 4)),
+                month = expiration && parseInt(expiration.substring(4, 6));
+
             await(userService.createCard(sberUser.id, {
-                bindingId: sberAcquiringOrderStatus.bindingInfo.bindingId
+                bindingId: sberAcquiringOrderStatus.bindingInfo.bindingId,
+                PAN,
+                expiration: expiration ? new Date(year, month) : undefined,
+                cardHolderName
             }));
 
             var subscriptionId = userFundSubscription.id;

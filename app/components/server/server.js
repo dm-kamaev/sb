@@ -45,11 +45,9 @@ app.use('/', express.static(path.join(__dirname, '../../../public/uploads')));
 
 app.use('/callback', callbackRouter);
 
-// app.use(cordovaSession);
 app.use(session);
 app.use(passport.init);
 app.use(passport.session);
-app.use(anonymous);
 
 app.use(headers);
 

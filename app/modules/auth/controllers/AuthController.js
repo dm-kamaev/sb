@@ -156,7 +156,7 @@ class AuthController extends Controller {
         }));
     };
     /**
-     * @api /auth/register register
+     * @api {post} /auth/register register
      * @apiName Register
      * @apiGroup Auth
      *
@@ -175,7 +175,7 @@ class AuthController extends Controller {
             var authUser = await(authService.register(userData));
             var token = await(authService.generateToken(userData.email));
             await(mailService.sendMail(userData.email, VERIFY_LINK + token));
-            var sberUser = ctx.request.user;
+            var sberUser = ctx.request.user || userService.createSberUser(authUser.id);
             await(userService.setAuthId(sberUser.id, authUser.id));
 
             return await(new Promise((resolve, reject) => {
@@ -192,7 +192,7 @@ class AuthController extends Controller {
         }
     };
     /**
-     * @api /auth/login login
+     * @api {post} /auth/login login
      * @apiName Login
      * @apiGroup Auth
      *
@@ -214,11 +214,11 @@ class AuthController extends Controller {
             var sberUser = await(userService.findSberUserByAuthId(authUser.id));
 
             if (!sberUser) {
-                sberUser = sessionUser;
+                sberUser = sessionUser || userService.createSberUser(authUser.id);
                 await(userService.setAuthId(sberUser.id, authUser.id));
-            } else if (!sberUser.userFund.enabled &&
+            } else if (!sberUser.userFund.enabled && sessionUser &&
                 await(userFundService.getEntities(sessionUser.id)).length) {
-                await(userService.setUserFund(sberUser.id, sessionUser.userFund.id));
+                await(userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id));
             }
 
             return await(new Promise((resolve, reject) => {
@@ -265,7 +265,7 @@ class AuthController extends Controller {
      */
     actionSendVerification(ctx) {
         var sberUser = ctx.request.user;
-        if (!sberUser.authId) throw new errors.HttpError('Unathorized', 403);
+        if (!sberUser || !sberUser.authId) throw new errors.HttpError('Unathorized', 403);
 
         var authUser = await(userService.findAuthUserByAuthId(sberUser.authId)),
             email = authUser.email;

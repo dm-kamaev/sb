@@ -69,10 +69,6 @@ module.exports = function(sequelize, DataTypes) {
         fundInfo: {
             type: DataTypes.JSONB,
         },
-        userFundSnapshot: {
-            type: DataTypes.JSONB,
-            allowNull: true
-        },
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE,

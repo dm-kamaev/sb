@@ -1,29 +1,32 @@
 'use strict';
 
 var userFundRouter = require('express').Router();
+const errors = require('../../components/errors')
+const anonymous = require('../../components/server/middleware/anonymous')
 
 var UserFundController = require('./controllers/UserFundController');
 var userFundController = new UserFundController();
 
 userFundRouter.get('/', userFundController.actionGetUserFunds);
 userFundRouter.get('/:id(\\d+)', userFundController.actionGetUserFund);
+userFundRouter.get('/count', userFundController.actionCountUserFunds);
 // userFundRouter.post('/', userFundController.actionCreateUserFund);
 // userFundRouter.delete('/:id(\\d+)', userFundController.actionDeleteUserFund);
-userFundRouter.put('/:id(\\d+)', userFundController.actionUpdateUserFund);
+// userFundRouter.put('/:id(\\d+)', userFundController.actionUpdateUserFund);
+userFundRouter.use(anonymous)
+
 userFundRouter.post('/:entityId(\\d+)', userFundController.actionAddEntity);
 userFundRouter.delete('/:entityId(\\d+)',
                 userFundController.actionRemoveEntity);
 userFundRouter.get('/entity', userFundController.actionGetEntities);
-userFundRouter.get('/count', userFundController.actionCountUserFunds);
 userFundRouter.use((req, res, next) => {
-    // check permissions here somehow
-    next();
+    if (req.user && req.user.authId) return next();
+    throw new errors.HttpError('Unathorized', 403)
 });
 userFundRouter.post('/amount', userFundController.actionSetAmount);
 userFundRouter.get('/amount', userFundController.actionGetCurrentAmount);
 
 userFundRouter.post('/switching-subscriptions', userFundController.actionSwitchingSubscriptions);
-userFundRouter.post('/remove-userFund',         userFundController.actionRemoveUserFund);
 
 
 module.exports = userFundRouter;

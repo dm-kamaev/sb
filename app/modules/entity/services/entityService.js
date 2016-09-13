@@ -11,14 +11,14 @@ EntityService.getAllEntities = function(userFundId, published) {
         where: {
             published
         },
-        include: {
+        include: userFundId ? {
             model: sequelize.models.UserFund,
             as: 'userFund',
             where: {
                 id: userFundId
             },
             required: false
-        }
+        } : undefined
     }));
 };
 
@@ -30,14 +30,16 @@ EntityService.getEntity = function(id, userFundId, published, includes) {
             required: false
         };
     });
-    include.push({
-        model: sequelize.models.UserFund,
-        as: 'userFund',
-        where: {
-            id: userFundId
-        },
-        required: false
-    });
+    if (userFundId) {
+        include.push({
+            model: sequelize.models.UserFund,
+            as: 'userFund',
+            where: {
+                id: userFundId
+            },
+            required: false
+        });
+    }
     return await(sequelize.models.Entity.findOne({
         where: {
             id: id,
@@ -55,14 +57,14 @@ EntityService.getEntitiesByType = function(type, userFundId, published) {
             },
             published
         },
-        include: {
+        include: userFundId ? {
             model: sequelize.models.UserFund,
             as: 'userFund',
             where: {
                 id: userFundId
             },
             required: false
-        }
+        } : undefined
     }));
 };
 
@@ -79,14 +81,14 @@ EntityService.getEntitiesByOwnerId = function(id, type, userFundId, published) {
                 type: type
             },
             required: false,
-            include: {
+            include: userFundId ? {
                 model: sequelize.models.UserFund,
                 as: 'userFund',
                 where: {
                     id: userFundId
                 },
                 required: false
-            }
+            } : undefined
         }
     }));
     if (!res) throw new Error('Not found');
@@ -257,7 +259,10 @@ EntityService.getUserFunds = function(id, published) {
         include: {
             model: sequelize.models.UserFund,
             as: 'userFund',
-            required: false
+            required: false,
+            where: {
+                enabled: true
+            }
         }
     }));
 };

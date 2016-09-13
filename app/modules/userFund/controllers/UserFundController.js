@@ -5,7 +5,6 @@ const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
-const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityView = require('../../entity/views/entityView');
@@ -42,14 +41,17 @@ class UserFundController extends Controller {
      * @api {get} /user-fund/:id get user fund
      * @apiName get user fund
      * @apiGroup UserFund
+     * @apiParam {Boolean} [include] include root entities
+     * @apiParam {Boolean} [nested] include nested entities
      *
      * @apiSuccess {Object} UserFund
      *
      * @apiError (Error 404) NotFoundError
      */
-    actionGetUserFund(actionContext, id) {
-        return userFundService.getUserFundWithIncludes(id)
-        var userFund = await(userFundService.getUserFund(id));
+    actionGetUserFund(ctx, id) {
+        var includes = ctx.request.query.include || false,
+            nested = ctx.request.query.nested || false;
+        var userFund = await(userFundService.getUserFund(id, includes, nested));
         if (!userFund) throw new errors.NotFoundError(i18n.__('UserFund'), id);
         return userFundView.renderUserFund(userFund);
     };
@@ -220,7 +222,7 @@ class UserFundController extends Controller {
         if (typeof(enabled) === 'boolean') {
             var message = (enabled) ? i18n.__('Subscription included') : i18n.__('Subscription off');
             await(
-                userFundService.switchSubscriptions(sberUserId, userFundId, { enabled })
+                userFundService.switchSubscription(sberUserId, userFundId, { enabled })
             );
             return { message };
         } else {
@@ -228,24 +230,6 @@ class UserFundController extends Controller {
                 enabled: [i18n.__('enabled must be a boolean value')]
             });
         }
-    }
-
-
-    /**
-     * @api {post} /user-fund/remove-userFund remove userFund
-     * @apiName remove userFund
-     * @apiGroup UserFund
-     */
-    actionRemoveUserFund(actionContext) {
-        var sberUserId = actionContext.request.user.id,
-            userFundId = actionContext.request.user.userFund.id;
-        await(
-            userFundService.switchSubscriptions(sberUserId, userFundId, { enabled: false })
-        );
-        await(
-            userFundService.removeUserFund(userFundId)
-        );
-        return { message: i18n.__('User Fund was removed') };
     }
 }
 

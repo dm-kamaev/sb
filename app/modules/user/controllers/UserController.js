@@ -110,6 +110,7 @@ class UserController extends Controller {
                 throw new errors.NotFoundError('User', email);
             }
         } else {
+            if (!sberUser) return null;
             var authId = sberUser.authId;
             var authUser = await(userService.findAuthUserByAuthId(authId));
             return userView.renderUser(authUser, sberUser);

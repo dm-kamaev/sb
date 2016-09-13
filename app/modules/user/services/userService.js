@@ -166,29 +166,22 @@ UserService.updateAuthUser = function (authId, userData) {
     return response.data;
 };
 
-UserService.setUserFund = function (id, userFundId) {
-    return await(sequelize.sequelize_.transaction(t => {
-        return sequelize.models.UserFund.update({
-            creatorId: null
-        }, {
+UserService.setUserFund = function (userFundId, oldUserFundId) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.UserFundEntity.destroy({
             where: {
-                creatorId: id
+                userFundId: oldUserFundId
             }
         })
             .then(() => {
-                return sequelize.models.UserFund.update({
-                    creatorId: id
+                return sequelize.models.UserFundEntity.update({
+                    userFundId: oldUserFundId
                 }, {
                     where: {
-                        id: userFundId
+                        userFundId
                     }
-                });
-            });
-    }));
-    return await(sequelize.sequelize.transaction(t => {
-        return sequelize.models.UserFundEntity.update({
-
-        })
+                })
+            })
     }))
 };
 
@@ -247,12 +240,14 @@ UserService.getAuthUsersByIds = function (ids) {
 UserService.getUserFundSubscriptions = function (id) {
     return await(sequelize.sequelize.query(`SELECT
   "UserFundSubscription".id as id,
-  "userFundId",
-  "sberUserId",
-  "enabled",
-  "payDate",
+  "UserFundSubscription"."userFundId" as "userFundId",
+  "UserFundSubscription"."sberUserId" as "sberUserId",
+  "UserFundSubscription".enabled as enabled,
+  date_part('day', "payDate") as "payDate",
   "Order"."scheduledPayDate" as "scheduledPayDate",
-  "Order"."createdAt" as "realPayDate"
+  "Order"."createdAt" as "realPayDate",
+  "UserFund".title as title,
+  "UserFund".description as description
 FROM "UserFundSubscription"
 LEFT JOIN "PayDayHistory" ON "PayDayHistory".id = (SELECT "PayDayHistory".id
                                                     FROM "PayDayHistory"
@@ -264,6 +259,8 @@ LEFT JOIN "Order" ON "Order"."sberAcquOrderNumber" = (SELECT "Order"."sberAcquOr
                                                           WHERE "Order"."userFundSubscriptionId" = "UserFundSubscription".id
                                                           ORDER BY "Order"."createdAt" DESC
                                                           LIMIT 1)
+                                                          
+JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId"
 WHERE "sberUserId" = :id`, {
         type: sequelize.sequelize.QueryTypes.SELECT,
         replacements: {

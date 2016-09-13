@@ -16,6 +16,15 @@ module.exports = function(sequelize, DataTypes) {
             },
             allowNull: false
         },
+        expiration: {
+            type: DataTypes.DATE
+        },
+        PAN: {
+            type: DataTypes.STRING
+        },
+        cardHolderName: {
+            type: DataTypes.STRING
+        },
         bindingId: {
             type: DataTypes.STRING,
             allowNull: false

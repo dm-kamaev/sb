@@ -11,7 +11,7 @@ exports.renderEntity = function(entity) {
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
         imgUrl: `http://${os.hostname()}:3000/${entity.imgUrl}`,
-        checked: entity.userFund && !!entity.userFund.length,
+        checked: entity.userFund && !!entity.userFund.length || false,
         published: entity.published,
         funds: entity.fund && exports.renderEntities(entity.fund),
         directions: entity.direction && exports.renderEntities(entity.direction),
