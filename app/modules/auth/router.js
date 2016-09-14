@@ -6,12 +6,18 @@ const AuthController = require('./controllers/AuthController');
 const authController = new AuthController();
 const loggedIn = require('../../components/server/middleware/checkLoggedIn');
 
-authRouter.get('/test', authController.actionTest);
-authRouter.post('/logout', authController.actionLogout);
-authRouter.get('/verify', authController.actionVerifyEmail);
-authRouter.post('/send', authController.actionSendVerification);
+var controllersArray = {};
+controllersArray['v1'] = authController;
+
+var VersionedController = require('nodules/controller').VersionedController;
+var versionedController = new VersionedController(controllersArray);
+
+authRouter.get('/test', versionedController.actionTest);
+authRouter.post('/logout', versionedController.actionLogout);
+authRouter.get('/verify', versionedController.actionVerifyEmail);
+authRouter.post('/send', versionedController.actionSendVerification);
 authRouter.use(loggedIn);
-authRouter.post('/register', authController.actionRegister);
-authRouter.post('/login', authController.actionLogin);
+authRouter.post('/register', versionedController.actionRegister);
+authRouter.post('/login', versionedController.actionLogin);
 
 module.exports = authRouter;

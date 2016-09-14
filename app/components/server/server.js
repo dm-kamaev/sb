@@ -51,11 +51,11 @@ app.use(passport.session);
 
 app.use(headers);
 
-app.use('/entity', entityRoutes);
-app.use('/user-fund', userFundRoutes);
-app.use('/user', userRouter);
-app.use('/auth', authRouter);
-app.use('/order', orderRouter);
+app.use(/\/v?\d*\.?\d*\/?entity/, entityRoutes);
+app.use(/\/v?\d*\.?\d*\/?user-fund/, userFundRoutes);
+app.use(/\/v?\d*\.?\d*\/?user/, userRouter);
+app.use(/\/v?\d*\.?\d*\/?auth/, authRouter);
+app.use(/\/v?\d*\.?\d*\/?order/, orderRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{

@@ -41,7 +41,14 @@ var orderController = new class extends Controller {
     }
 }();
 
-orderRouter.get('/:sberAcquOrderNumber(\\d+)', orderController.actionGetOrderStatus);
-orderRouter.get('/:sberAcquOrderNumber(\\d+)/entity', orderController.actionGetOrderComposition);
+var controllersArray = {};
+controllersArray['v1'] = orderController;
+
+var VersionedController = require('nodules/controller').VersionedController;
+var versionedController = new VersionedController(controllersArray);
+
+orderRouter.get('/:sberAcquOrderNumber(\\d+)', versionedController.actionGetOrderStatus);
+orderRouter.get('/:sberAcquOrderNumber(\\d+)/entity', versionedController.actionGetOrderComposition);
+
 
 module.exports = orderRouter;
