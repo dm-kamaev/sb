@@ -32,14 +32,10 @@ module.exports = function(sequelize, DataTypes) {
                 }
             }
         },
-        payDate: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
         changer: {
             type: DataTypes.STRING,
             validate: {
-                isIn: ['user', 'admin']
+                isIn: [['user', 'admin']]
             }
         },
         createdAt: {

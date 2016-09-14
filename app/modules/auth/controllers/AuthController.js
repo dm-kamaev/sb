@@ -274,6 +274,7 @@ class AuthController extends Controller {
         var letterText = await(mailService.sendMail(email,
             VERIFY_LINK + token));
         // need for debug
+        //TODO: remove
         return letterText;
         return null;
     };

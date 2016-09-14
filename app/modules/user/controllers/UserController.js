@@ -122,6 +122,10 @@ class UserController extends Controller {
      * @apiName Get all users
      * @apiGroup User
      * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     * @apiHeaderExample {json} Header-Example:
+     *    {
+     *      "Token-Header": "superSecretTokenString"
+     *    }
      */
     actionGetUsers(ctx) {
         var sberUsers = userService.getSberUsers(),
@@ -142,6 +146,10 @@ class UserController extends Controller {
      * @apiName Get orders
      * @apiGroup User
      * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     * @apiHeaderExample {json} Header-Example:
+     *    {
+     *      "Token-Header": "superSecretTokenString"
+     *    }
      */
     actionGetOrders(ctx, id) {
         return userService.getOrders(id);
@@ -152,6 +160,10 @@ class UserController extends Controller {
      * @apiName update user
      * @apiGroup User
      * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     * @apiHeaderExample {json} Header-Example:
+     *    {
+     *      "Token-Header": "superSecretTokenString"
+     *    }
      */
     actionUpdateUserById(ctx, id) {
         var sberUser = userService.findSberUserById(id);
@@ -164,9 +176,30 @@ class UserController extends Controller {
      * @apiName get subscriptions
      * @apiGroup User
      * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     * @apiHeaderExample {json} Header-Example:
+     *    {
+     *      "Token-Header": "superSecretTokenString"
+     *    }
      */
     actionGetSubscriptions(ctx, id) {
         return userService.getUserFundSubscriptions(id)
+    }
+
+    /**
+     * @api {post} /user/:id/subscription/:subscriptionId change amount
+     * @apiName change amount
+     * @apiGroup User
+     * @apiHeader (AdminToken) {String} Token-Header Authorization value
+     * @apiParam {Number} amount amount in kopeck
+     * @apiSampleRequest http://www58.lan:3000/user/1/subscription/2/amount
+     * @apiHeaderExample {json} Header-Example:
+     *    {
+     *      "Token-Header": "superSecretTokenString"
+     *    }
+     */
+    actionChangeAmount(ctx, id, subscriptionId) {
+        var amount = ctx.data.amount;
+        return userFundService.changeAmount(id, subscriptionId, 'admin', amount)
     }
 };
 

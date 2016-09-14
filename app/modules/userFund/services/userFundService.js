@@ -45,12 +45,12 @@ UserFundService.getUserFund = function(id, includes, nested) {
                     as: 'fund',
                     required: false
                 }
-            },{
+            }, {
                 model: sequelize.models.Entity,
                 as: 'fund',
                 required: false
             }] : undefined
-        },{
+        }, {
             model: sequelize.models.Entity,
             as: 'direction',
             required: false,
@@ -59,7 +59,7 @@ UserFundService.getUserFund = function(id, includes, nested) {
                 as: 'fund',
                 required: false
             } : undefined
-        },{
+        }, {
             model: sequelize.models.Entity,
             as: 'fund',
             required: false
@@ -196,7 +196,7 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
     }));
 };
 
-UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, payDate) {
+UserFundService.setAmount = function(sberUserId, userFundId, changer, amount) {
     return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.UserFundSubscription.findOrCreate({
             where: {
@@ -208,14 +208,13 @@ UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, pa
             .then(subscription => {
                 return sequelize.models.DesiredAmountHistory.create({
                     subscriptionId: subscription.id,
-                    payDate: payDate || Date.now(),
                     changer,
                     amount
                 });
             })
-            .then(amount => {
+            .then(desiredAmount => {
                 return sequelize.models.UserFundSubscription.update({
-                    currentAmountId: amount.id
+                    currentAmountId: desiredAmount.id
                 }, {
                     where: {
                         userFundId,
@@ -228,6 +227,28 @@ UserFundService.setAmount = function(sberUserId, userFundId, changer, amount, pa
             });
     }));
 };
+
+UserFundService.changeAmount = function(sberUserId, subscriptionId, changer, amount) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.DesiredAmountHistory.create({
+            subscriptionId,
+            changer,
+            amount
+        })
+            .then(desiredAmount => {
+                return sequelize.models.UserFundSubscription.update({
+                    currentAmountId: desiredAmount.id
+                }, {
+                    where: {
+                        id: subscriptionId
+                    }
+                })
+            })
+            .catch(err => {
+                throw err;
+            })
+    }))
+}
 
 UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
     var suuf = await(sequelize.models.UserFundSubscription.findOne({
@@ -352,20 +373,20 @@ UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId)
         }
     }
 };
- /**
-  * return unhandled subscriptions in this month
-  * @param {int[]} allDates dates need to handle
-  * @param {Object} [nowDate] current date. Defaults to now
-  * @return {Object[]} UserFundSubscriptions array of UserFundSubscriptions
-  * @return {Number} UserFundSubscription.userFundSubscriptionId id of subscription
-  * @return {Object} UserFundSubscription.payDate date user desired to pay
-  * @return {Number} UserFundSubscription.amount amount desired to pay
-  * @return {Number} UserFundSubscription.sberUserId id of user
-  * @return {Number} UserFundSubscription.userFundId if of userFund
-  * @return {Number} UserFundSubscription.bindingId bindingId od of linked card
-  * @return {Object} UserFundSubscription.processedMonth date with month we curently pay
-  * @return {Object} UserFundSubscription.realDate current date
-  */
+/**
+ * return unhandled subscriptions in this month
+ * @param {int[]} allDates dates need to handle
+ * @param {Object} [nowDate] current date. Defaults to now
+ * @return {Object[]} UserFundSubscriptions array of UserFundSubscriptions
+ * @return {Number} UserFundSubscription.userFundSubscriptionId id of subscription
+ * @return {Object} UserFundSubscription.payDate date user desired to pay
+ * @return {Number} UserFundSubscription.amount amount desired to pay
+ * @return {Number} UserFundSubscription.sberUserId id of user
+ * @return {Number} UserFundSubscription.userFundId if of userFund
+ * @return {Number} UserFundSubscription.bindingId bindingId od of linked card
+ * @return {Object} UserFundSubscription.processedMonth date with month we curently pay
+ * @return {Object} UserFundSubscription.realDate current date
+ */
 UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
     return await(sequelize.sequelize.query(`
     SELECT
@@ -414,19 +435,19 @@ UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
                                                                                            date_trunc('month',:currentDate::date - INTERVAL '5 days')
                                                                                            AND date_trunc('month', :currentDate::date))
   AND "UserFundSubscription"."createdAt" < "payDayHistory"."processedMonth"`, {
-                                                    type: sequelize.sequelize.QueryTypes.SELECT,
-                                                    replacements: {
-                                                        allDates,
-                                                        currentDate: nowDate || new Date().toISOString()
-                                                    }
-                                                }));
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            allDates,
+            currentDate: nowDate || new Date().toISOString()
+        }
+    }));
 };
 
 /**
-  * @param {int} subscriptionId id of subscription
-  * @param {Object} payDate Date object, desired payDate
-  * @return {Object} PayDate sequelize object
-  */
+ * @param {int} subscriptionId id of subscription
+ * @param {Object} payDate Date object, desired payDate
+ * @return {Object} PayDate sequelize object
+ */
 UserFundService.setPayDate = function(subscriptionId, payDate) {
     return await(sequelize.models.PayDayHistory.create({
         subscriptionId,
@@ -434,7 +455,7 @@ UserFundService.setPayDate = function(subscriptionId, payDate) {
     }));
 };
 
-UserFundService.getUserFundWithIncludes = function (id) {
+UserFundService.getUserFundWithIncludes = function(id) {
     return await(sequelize.models.UserFund.findOne({
         where: {
             id
@@ -452,12 +473,12 @@ UserFundService.getUserFundWithIncludes = function (id) {
                     as: 'fund',
                     required: false
                 }
-            },{
+            }, {
                 model: sequelize.models.Entity,
                 as: 'fund',
                 required: false
             }]
-        },{
+        }, {
             model: sequelize.models.Entity,
             as: 'direction',
             required: false,
@@ -466,12 +487,35 @@ UserFundService.getUserFundWithIncludes = function (id) {
                 as: 'fund',
                 required: false
             }
-        },{
+        }, {
             model: sequelize.models.Entity,
             as: 'fund',
             required: false
         }]
     }))
+}
+
+UserFundService.getUserFundSubscriptionById = function(subscriptionId) {
+    return await(sequelize.models.UserFundSubscription.findOne({
+        where: {
+            id: subscriptionId
+        }
+    }))
+}
+
+UserFundService.getUserFundSubscriptionByOrder = function(sberAcquOrderNumber) {
+    var order = await(sequelize.models.Order.findOne({
+        where: {
+            sberAcquOrderNumber
+        },
+        include: {
+            model: sequelize.models.UserFundSubscription,
+            as: 'userFundSubscription'
+        }
+    }))
+    if (!order) throw new Error('Not found')
+
+    return order.userFundSubscription
 }
 
 module.exports = UserFundService;

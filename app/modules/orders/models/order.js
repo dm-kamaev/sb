@@ -60,14 +60,8 @@ module.exports = function(sequelize, DataTypes) {
             defaultValue: orderTypes.FIRST,
             allowNull: false
         },
-        funds: {
-            type: DataTypes.ARRAY(DataTypes.STRING),
-        },
-        directionsTopicsFunds: {
-            type: DataTypes.ARRAY(DataTypes.STRING),
-        },
-        fundInfo: {
-            type: DataTypes.JSONB,
+        userFundSnapshot: {
+            type: DataTypes.JSONB
         },
         createdAt: {
             allowNull: false,
