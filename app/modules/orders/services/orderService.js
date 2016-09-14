@@ -115,9 +115,7 @@ OrderService.firstPayOrSendMessage = function (params) {
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
-            // listDirectionsTopicsFunds,
-            // listFunds,
-            userFund,
+            userFundSnapshot: userFund,
             status: orderStatus.NEW,
             type: orderTypes.FIRST
         };
@@ -387,7 +385,7 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
 
     var sberAcquOrderNumber = OrderService.createOrder({
         userFundSubscriptionId: userFundSubscription.userFundSubscriptionId,
-        userFund,
+        userFundSnapshot: userFund,
         amount: userFundSubscription.amount,
         type: orderTypes.RECURRENT,
         status: orderStatus.CONFIRMING_PAYMENT,
@@ -537,50 +535,22 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
     }
 };
 
-OrderService.getOrderWithNestedEntities = function(id) {
-    return await(sequelize.models.Order.findOne({
-        where: {
-            id
-        },
-        include: {
-            model: sequelize.models.OrderItem,
-            as: 'orderItem',
-            include: [{
-                model: sequelize.models.OrderItem,
-                as: 'fund',
-                required: false
-            },{
-                model: sequelize.models.OrderItem,
-                as: 'direction',
-                required: false,
-                include: {
-                    model: sequelize.models.OrderItem,
-                    as: 'fund',
-                    required: false
-                }
-            },{
-                model: sequelize.models.OrderItem,
-                as: 'topic',
-                required: false,
-                include: [{
-                    model: sequelize.models.OrderItem,
-                    as: 'fund',
-                    required: false
-                },{
-                    model: sequelize.models.OrderItem,
-                    as: 'direction',
-                    required: false,
-                    include: {
-                        model: sequelize.models.OrderItem,
-                        as: 'fund',
-                        required: false
-                    }
-                }]
-            }]
+OrderService.getOrderComposition = function(sberAcquOrderNumber) {
+    return await(sequelize.sequelize.query(`SELECT 
+    entities -> 'id' AS "id", 
+    entities -> 'type' as "type", 
+    entities -> 'title' AS "title", 
+    entities -> 'description' AS "description"
+    FROM (SELECT jsonb_array_elements(("Order"."userFundSnapshot" -> 'topic') ||
+                             ("Order"."userFundSnapshot" -> 'fund') ||
+                             ("Order"."userFundSnapshot" -> 'direction')) AS entities
+  FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            sberAcquOrderNumber
         }
     }))
 }
-
 
 /**
  * disable user's subsription and return list user fund id

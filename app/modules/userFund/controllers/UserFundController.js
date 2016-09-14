@@ -152,7 +152,6 @@ class UserFundController extends Controller {
      *   "app": true
      * }
      */
-     // { "amount": 210 }
     actionSetAmount(actionContext) {
         var sberUserId = actionContext.request.user.id,
             changer = 'user',

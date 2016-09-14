@@ -28,6 +28,7 @@ userRouter.use(checkToken);
 userRouter.get('/:id(\\d+)', userController.actionGetUserById);
 userRouter.get('/all', userController.actionGetUsers);
 userRouter.put('/:id(\\d+)', userController.actionUpdateUserById);
+userRouter.post('/:id(\\d+)/subscription/:subscrptionId(\\d+)/amount', userController.actionChangeAmount);
 
 
 module.exports = userRouter;
