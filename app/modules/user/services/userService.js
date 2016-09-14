@@ -244,6 +244,7 @@ UserService.getUserFundSubscriptions = function (id) {
   "UserFundSubscription"."sberUserId" as "sberUserId",
   "UserFundSubscription".enabled as enabled,
   date_part('day', "payDate") as "payDate",
+  "DesiredAmountHistory".amount as amount,
   "Order"."scheduledPayDate" as "scheduledPayDate",
   "Order"."createdAt" as "realPayDate",
   "UserFund".title as title,
@@ -259,7 +260,7 @@ LEFT JOIN "Order" ON "Order"."sberAcquOrderNumber" = (SELECT "Order"."sberAcquOr
                                                           WHERE "Order"."userFundSubscriptionId" = "UserFundSubscription".id
                                                           ORDER BY "Order"."createdAt" DESC
                                                           LIMIT 1)
-                                                          
+JOIN "DesiredAmountHistory" ON "UserFundSubscription"."currentAmountId" = "DesiredAmountHistory".id                                                           
 JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId"
 WHERE "sberUserId" = :id`, {
         type: sequelize.sequelize.QueryTypes.SELECT,
