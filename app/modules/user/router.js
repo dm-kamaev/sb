@@ -31,16 +31,11 @@ userRouter.get('/:id(\\d+)/order', checkRules, versionedController.actionGetOrde
 userRouter.get('/:id(\\d+)/subscription', checkRules, versionedController.actionGetSubscriptions);
 
 userRouter.use(checkToken);
-<<<<<<< HEAD
-userRouter.get('/:id(\\d+)', userController.actionGetUserById);
-userRouter.get('/all', userController.actionGetUsers);
-userRouter.put('/:id(\\d+)', userController.actionUpdateUserById);
-userRouter.post('/:id(\\d+)/subscription/:subscrptionId(\\d+)/amount', userController.actionChangeAmount);
-=======
+
 userRouter.get('/:id(\\d+)', versionedController.actionGetUserById);
 userRouter.get('/all', versionedController.actionGetUsers);
 userRouter.put('/:id(\\d+)', versionedController.actionUpdateUserById);
->>>>>>> SV-290 Added versioned controllers
+userRouter.post('/:id(\\d+)/subscription/:subscrptionId(\\d+)/amount', versionedController.actionChangeAmount);
 
 
 module.exports = userRouter;
