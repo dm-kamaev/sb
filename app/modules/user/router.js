@@ -8,6 +8,12 @@ const errors = require('../../components/errors')
 var UserController = require('./controllers/UserController');
 var userController = new UserController();
 
+var controllersArray = {};
+controllersArray['v1'] = userController;
+
+var VersionedController = require('nodules/controller').VersionedController;
+var versionedController = new VersionedController(controllersArray);
+
 const checkRules = (req, res, next) => {
     if (req.header('Token-Header') == SECRET || req.user && req.user.id == req.params.id) {
         return next()
@@ -15,20 +21,26 @@ const checkRules = (req, res, next) => {
     throw new errors.HttpError('Unathorized', 403)
 }
 
-userRouter.post('/user-fund', userController.actionCreateUserFund);
+userRouter.post('/user-fund', versionedController.actionCreateUserFund);
 // userRouter.delete('/user-fund', userController.actionDeleteUserFund);
 // userRouter.get('/:id(\\d+)', userController.actionGetUserById);
 // userRouter.get('/all', userController.actionGetUsers);
-userRouter.get('/', userController.actionFindUser);
-userRouter.put('/', userController.actionUpdateUser);
-userRouter.get('/:id(\\d+)/order', checkRules, userController.actionGetOrders);
-userRouter.get('/:id(\\d+)/subscription', checkRules, userController.actionGetSubscriptions);
+userRouter.get('/', versionedController.actionFindUser);
+userRouter.put('/', versionedController.actionUpdateUser);
+userRouter.get('/:id(\\d+)/order', checkRules, versionedController.actionGetOrders);
+userRouter.get('/:id(\\d+)/subscription', checkRules, versionedController.actionGetSubscriptions);
 
 userRouter.use(checkToken);
+<<<<<<< HEAD
 userRouter.get('/:id(\\d+)', userController.actionGetUserById);
 userRouter.get('/all', userController.actionGetUsers);
 userRouter.put('/:id(\\d+)', userController.actionUpdateUserById);
 userRouter.post('/:id(\\d+)/subscription/:subscrptionId(\\d+)/amount', userController.actionChangeAmount);
+=======
+userRouter.get('/:id(\\d+)', versionedController.actionGetUserById);
+userRouter.get('/all', versionedController.actionGetUsers);
+userRouter.put('/:id(\\d+)', versionedController.actionUpdateUserById);
+>>>>>>> SV-290 Added versioned controllers
 
 
 module.exports = userRouter;

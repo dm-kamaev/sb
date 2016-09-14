@@ -7,26 +7,33 @@ const anonymous = require('../../components/server/middleware/anonymous')
 var UserFundController = require('./controllers/UserFundController');
 var userFundController = new UserFundController();
 
-userFundRouter.get('/', userFundController.actionGetUserFunds);
-userFundRouter.get('/:id(\\d+)', userFundController.actionGetUserFund);
-userFundRouter.get('/count', userFundController.actionCountUserFunds);
+var controllersArray = {};
+controllersArray['v1'] = userFundController;
+
+var VersionedController = require('nodules/controller').VersionedController;
+var versionedController = new VersionedController(controllersArray);
+
+
+userFundRouter.get('/', versionedController.actionGetUserFunds);
+userFundRouter.get('/:id(\\d+)', versionedController.actionGetUserFund);
+userFundRouter.get('/count', versionedController.actionCountUserFunds);
 // userFundRouter.post('/', userFundController.actionCreateUserFund);
 // userFundRouter.delete('/:id(\\d+)', userFundController.actionDeleteUserFund);
 // userFundRouter.put('/:id(\\d+)', userFundController.actionUpdateUserFund);
 userFundRouter.use(anonymous)
 
-userFundRouter.post('/:entityId(\\d+)', userFundController.actionAddEntity);
+userFundRouter.post('/:entityId(\\d+)', versionedController.actionAddEntity);
 userFundRouter.delete('/:entityId(\\d+)',
-                userFundController.actionRemoveEntity);
-userFundRouter.get('/entity', userFundController.actionGetEntities);
+                versionedController.actionRemoveEntity);
+userFundRouter.get('/entity', versionedController.actionGetEntities);
 userFundRouter.use((req, res, next) => {
     if (req.user && req.user.authId) return next();
     throw new errors.HttpError('Unathorized', 403)
 });
-userFundRouter.post('/amount', userFundController.actionSetAmount);
-userFundRouter.get('/amount', userFundController.actionGetCurrentAmount);
+userFundRouter.post('/amount', versionedController.actionSetAmount);
+userFundRouter.get('/amount', versionedController.actionGetCurrentAmount);
 
-userFundRouter.post('/switching-subscriptions', userFundController.actionSwitchingSubscriptions);
+userFundRouter.post('/switching-subscriptions', versionedController.actionSwitchingSubscriptions);
 
 
 module.exports = userFundRouter;

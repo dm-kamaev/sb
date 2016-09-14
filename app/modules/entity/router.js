@@ -24,6 +24,12 @@ const upload = multer({
 var EntityController = require('./controllers/EntityController');
 var entityController = new EntityController();
 
+var controllersArray = {};
+controllersArray['v1'] = entityController;
+
+var VersionedController = require('nodules/controller').VersionedController;
+var versionedController = new VersionedController(controllersArray);
+
 entityRouter.use((req, res, next) => {
     req.published = req.header('Token-Header') != SECRET ? true : { $or: [true, false] };
     // req.published = true;
@@ -31,17 +37,17 @@ entityRouter.use((req, res, next) => {
 });
 entityRouter.use(checkQuery);
 entityRouter.get('/',
-    entityController.actionGetAllEntities);
+    versionedController.actionGetAllEntities);
 entityRouter.get('/:type(topic|direction|fund)',
-    entityController.actionGetEntitiesByType);
+    versionedController.actionGetEntitiesByType);
 entityRouter.get('/:id(\\d+)',
-    entityController.actionGetEntity);
+    versionedController.actionGetEntity);
 entityRouter.get('/:id(\\d+)/:type(topic|direction|fund)',
-    entityController.actionGetEntitiesByAssociatedId);
+    versionedController.actionGetEntitiesByAssociatedId);
 entityRouter.get('/fund/today',
-    entityController.actionGetTodayFundsCount);
+    versionedController.actionGetTodayFundsCount);
 entityRouter.get('/:id(\\d+)/user-fund',
-    entityController.actionGetUserFunds);
+    versionedController.actionGetUserFunds);
 entityRouter.post('/publishall',
     entityController.actionPublishAll);
 
@@ -49,17 +55,17 @@ entityRouter.post('/publishall',
 entityRouter.use(checkToken);
 
 entityRouter.get('/all',
-    entityController.actionGetEntitiesWithNested);
+    versionedController.actionGetEntitiesWithNested);
 entityRouter.post('/', upload.single('picture'),
-    entityController.actionCreateEntity);
+    versionedController.actionCreateEntity);
 entityRouter.put('/:id(\\d+)', upload.single('picture'),
-    entityController.actionUpdateEntity);
+    versionedController.actionUpdateEntity);
 entityRouter.delete('/:id(\\d+)',
-    entityController.actionDeleteEntity);
+    versionedController.actionDeleteEntity);
 entityRouter.post('/:id(\\d+)/:otherId(\\d+)',
-    entityController.actionAssociate);
+    versionedController.actionAssociate);
 entityRouter.delete('/:id(\\d+)/:otherId(\\d+)',
-    entityController.actionRemoveAssociation);
+    versionedController.actionRemoveAssociation);
 
 
 module.exports = entityRouter;
