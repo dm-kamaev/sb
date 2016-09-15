@@ -67,14 +67,14 @@ describe('Today recurrent payment test', function() {
         var entities = services.entity.generateEntities(1);
         var url = services.url.concatUrl('entity');
         return chakram.get(services.url('entity'))
-            .then(res => {
-                if (res.body[0]) {
-                    return chakram.post(url, entities[0]);
-                }
-            })
-            .then(() => {
-                return chakram.wait();
-            })
+        .then(res => {
+            if (!res.body[0]) {
+                return chakram.post(url, entities[0]);
+            }
+        })
+        .then(() => {
+            return chakram.wait();
+        })
     });
 
 

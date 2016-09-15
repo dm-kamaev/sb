@@ -178,6 +178,8 @@ class AuthController extends Controller {
             var sberUser = ctx.request.user || userService.createSberUser(authUser.id);
             await(userService.setAuthId(sberUser.id, authUser.id));
 
+            // ctx.status = 201;
+
             return await(new Promise((resolve, reject) => {
                 ctx.request.login(sberUser, (err) => {
                     if (err) reject(new errors.HttpError(err.message, 400));
