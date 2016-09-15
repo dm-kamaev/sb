@@ -339,6 +339,22 @@ UserFundService.switchSubscription = function(sberUserId, userFundId, data) {
 
 
 /**
+* remove user fund by userFundId
+* @param  {[int]}  userFundId
+* @return {[type]}
+*/
+UserFundService.removeUserFund = function(userFundId) {
+    return await(sequelize.models.UserFund.update({
+        deletedAt: new Date(),
+        enabled:false
+    }, {
+        where: {
+            id:userFundId,
+        },
+    }));
+};
+
+/**
  * search active user fund subscription by userFundId
  * @param  {[array]} listUserFundId [73, 74 ,1]
  * @return {[type]}                [description]
