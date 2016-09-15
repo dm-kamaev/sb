@@ -1,0 +1,7 @@
+{
+    "user": "gorod",
+    "password": "123qwe",
+    "host": "localhost",
+    "port": "5432",
+    "database": "sber-together-api"
+}
