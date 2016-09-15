@@ -173,15 +173,15 @@ UserService.setUserFund = function (userFundId, oldUserFundId) {
                 userFundId: oldUserFundId
             }
         })
-            .then(() => {
-                return sequelize.models.UserFundEntity.update({
-                    userFundId: oldUserFundId
-                }, {
-                    where: {
-                        userFundId
-                    }
-                })
+        .then(() => {
+            return sequelize.models.UserFundEntity.update({
+                userFundId: oldUserFundId
+            }, {
+                where: {
+                    userFundId
+                }
             })
+        })
     }))
 };
 
