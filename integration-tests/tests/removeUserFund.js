@@ -52,7 +52,7 @@ describe('Remove userFund =>', function() {
     });
 
 
-    before('Should create entities if not exists', function () {
+    before('Create entities if not exists', function () {
         return db.any('SELECT * FROM "Entity" LIMIT 1').then((entities) => {
           if (!entities.length) {
             entities = services.entity.generateEntities(1);
