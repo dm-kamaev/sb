@@ -4,7 +4,7 @@ const services = require('../../services');
 const log = console.log;
 
 module.exports = function(context) {
-    var chakram = context.chakram, expect  = context.expect;
+    var chakram = context.chakram, expect = context.expect;
 
     chakram.addMethod('checkLogout', function(respObj) {
         var statusCode = respObj.response.statusCode,
