@@ -1,0 +1,9 @@
+{
+    "jar": true,
+    "har": {
+        "headers": [{
+            "name": "Token-Header",
+            "value": "superSecretTokenString"
+        }]
+    }
+}
