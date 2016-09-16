@@ -1,0 +1,8 @@
+{
+  "host": "localhost",
+  "port": "5432",
+  "username": "gorod",
+  "password": "ar5raikethaeXooqu2Aehai9ahng0ierekeZooShoebae7shie9EeDuseic5Mael",
+  "database": "sber-together-api",
+  "dialect": "postgres"
+}

@@ -78,7 +78,8 @@ EntityService.getEntitiesByOwnerId = function(id, type, userFundId, published) {
             model: sequelize.models.Entity,
             as: 'childEntity',
             where: {
-                type: type
+                type: type,
+                published
             },
             required: false,
             include: userFundId ? {
