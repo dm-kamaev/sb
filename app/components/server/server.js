@@ -40,8 +40,8 @@ app.use(metaTags);
 
 app.set('views', path.join(__dirname, '../../../../public/meta_templates'));
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
-app.use('/static', express.static(path.join(__dirname, '../../../public/frontend')));
-app.use(express.static(path.join(__dirname, '../../../public/frontend')));
+app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
+app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use('/entities', express.static(path.join(__dirname, '../../../public/uploads/entities')));
 
 app.use('/callback', callbackRouter);
