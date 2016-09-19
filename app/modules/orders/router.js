@@ -39,6 +39,10 @@ var orderController = new class extends Controller {
         }
         throw new errors.HttpError('Unathorized', 403)
     }
+
+    actionGenerateReport(actionContext) {
+        return await(orderService.generateReport());
+    }
 }();
 
 var controllersArray = {};
@@ -49,6 +53,7 @@ var versionedController = new VersionedController(controllersArray);
 
 orderRouter.get('/:sberAcquOrderNumber(\\d+)', versionedController.actionGetOrderStatus);
 orderRouter.get('/:sberAcquOrderNumber(\\d+)/entity', versionedController.actionGetOrderComposition);
+orderRouter.get('/generate-report', versionedController.actionGenerateReport);
 
 
 module.exports = orderRouter;

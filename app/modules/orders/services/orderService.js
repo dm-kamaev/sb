@@ -102,7 +102,7 @@ OrderService.updateInfo = function (sberAcquOrderNumber, data) {
 OrderService.firstPayOrSendMessage = function (params) {
     // if user with unconfirmed payment, then do first pay
     var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
-    if (isEmptyUserFund_(userFund)) {
+    if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
         throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
     }
 
@@ -360,10 +360,10 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
     }
 
     const getScheduledDate = (realDate, payDate) => {
-        return realDate.getDate() === payDate.getDate() ? realDate :
+        return realDate.getDate() == payDate.getDate() ? realDate :
             realDate.getDate() > payDate.getDate() ?
             moment(realDate).set('date', payDate.getDate()).toDate() :
-            moment(realDate).endOf('month').daysInMonth() === moment(realDate).toDate().getDate() ?
+            moment(realDate).endOf('month').daysInMonth() == moment(realDate).toDate().getDate() ?
             moment(realDate).toDate() :
             moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
             moment(realDate).subtract(1, 'month').endOf('month').toDate() :
@@ -416,7 +416,7 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
         orderId: sberAcquPayment.orderId,
         clientId: userFundSubscription.sberUserId
     })
-    if (orderStatusExtended.actionCode !== 0) {
+    if (orderStatusExtended.actionCode!= 0) {
         OrderService.failedReccurentPayment(sberAcquOrderNumber,
             userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate);
     }
@@ -552,6 +552,77 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
     }))
 }
 
+// TODO: add sberbank report to arguments
+OrderService.generateReport = async(function () {
+    // TODO: sber report parsing
+    // TODO: order conflict error handling
+
+    var orders = await(sequelize.models.Order.findAll({
+        attributes: ['amount', 'userFundSnapshot'],
+        where: {
+            status: orderStatus.PAID,
+            /*updatedAt: {
+                $and: { // TODO: change it to date from sber report
+                    $lte: new Date(),
+                    $gte: new Date(new Date - 24 * 60 * 60 * 1000)
+                }
+            },*/
+            userFundSnapshot: {
+                $ne: null
+            }
+        }
+    }));
+    // TODO: move to private method
+    var fundsArray = [];
+    var sumModulo = 0;
+    orders.forEach(order => {
+        var funds = order.userFundSnapshot.fund;
+        var directionFunds = _.map(order.userFundSnapshot.direction,
+            direction => {
+                return direction.fund;
+            }
+        );
+        var topicFunds = _.map(order.userFundSnapshot.topic, topic => {
+            return topic.fund;
+        });
+        var topicDirectionFunds = _.map(order.userFundSnapshot.topic,
+            topic => {
+                return _.map(topic.direction, direction => {
+                    return direction.fund;
+                });
+            }
+        );
+        var orderFunds = _.concat(funds, directionFunds, topicFunds,
+            topicDirectionFunds);
+        orderFunds = _.flattenDeep(orderFunds);
+        var fundsCount = orderFunds.length;
+        var fundPayment = Math.floor(order.amount / fundsCount);
+        var modulo = order.amount - fundPayment * fundsCount;
+        orderFunds = _.map(orderFunds, ord => {
+            ord.payment = fundPayment;
+            return ord;
+        });
+        fundsArray.push(orderFunds);
+        sumModulo += modulo;
+    });
+
+    var result = {
+        payments: [],
+        sumModulo: sumModulo
+    }
+
+    fundsArray = _.flattenDeep(fundsArray);
+    fundsArray = _.groupBy(fundsArray, 'id');
+    _.forIn(fundsArray, function (val, key) {
+        var res = {
+            id: key,
+            payment: _.sumBy(val, 'payment')
+        };
+        result.payments.push(res);
+    });
+    return result;
+});
+
 /**
  * disable user's subsription and return list user fund id
  * @param  {[int]} sberUserId
@@ -648,13 +719,6 @@ function sendEmailOwnerUserFund_(userFundIds) {
 function restGetUserData_(authId) {
     var resp = await(axios.get(`/user/${authId}`));
     return resp.data || {};
-}
-
-
-function isEmptyUserFund_ (userFund){
-    if (!userFund) { return true; }
-    if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) { return true; }
-    return false;
 }
 
 module.exports = OrderService;
