@@ -161,7 +161,8 @@ UserService.setAuthId = function (id, authId) {
 UserService.updateAuthUser = function (authId, userData) {
     var response = await(axios.patch(`/user/${authId}`, {
         firstName: userData.firstName,
-        lastName: userData.lastName
+        lastName: userData.lastName,
+        email: userData.email
     }));
     return response.data;
 };

@@ -16,6 +16,7 @@ const userRouter = require('../../modules/user/router');
 const authRouter = require('../../modules/auth/router');
 const callbackRouter = require('../../modules/sberAcquiring/router');
 const orderRouter = require('../../modules/orders/router');
+const statementRouter = require('../../modules/statement/router');
 
 const headers = require('./middleware/headers');
 const session = require('./middleware/session/session');
@@ -57,6 +58,7 @@ app.use(/\/v?\d*\.?\d*\/?user-fund/, userFundRoutes);
 app.use(/\/v?\d*\.?\d*\/?user/, userRouter);
 app.use(/\/v?\d*\.?\d*\/?auth/, authRouter);
 app.use(/\/v?\d*\.?\d*\/?order/, orderRouter);
+app.use(/\/v?\d*\.?\d*\/?statement/, statementRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{

@@ -6,9 +6,9 @@ const errors = require('../../../components/errors');
 const orderService = require('../services/orderService');
 
 module.exports = class OrderController extends Controller {
-    // actionLoadStatement(ctx) {
-    //     ctx
-    // }
+    actionLoadStatement(ctx) {
+        console.log(ctx.request.file)
+    }
 
     /**
      * @api /order/:sberAcquOrderNumber get order by id with includes(test)

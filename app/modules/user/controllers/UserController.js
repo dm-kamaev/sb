@@ -167,7 +167,14 @@ class UserController extends Controller {
      */
     actionUpdateUserById(ctx, id) {
         var sberUser = userService.findSberUserById(id);
-        var authUser = userService.updateAuthUser(sberUser.authId, ctx.data)
+        try {
+            var authUser = userService.updateAuthUser(sberUser.authId, ctx.data)
+        } catch (err) {
+            if (err.data && err.data[0].code == 'ValidationError') {
+                throw new errors.ValidationError(err.data[0].validationErrors)
+            }
+            throw err;
+        }
         return userView.renderUser(authUser, sberUser)
     }
 

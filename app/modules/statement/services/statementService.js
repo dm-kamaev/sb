@@ -4,11 +4,11 @@ const sequelize = require('../../../components/sequelize');
 var StateMentService = {};
 
 StateMentService.parseStatement = function(file) {
-    var arr = file.toString().split('\n'),
+    var arr = file.toString().split('\r\n'),
         orders = []
 
     for (var i = 0; i < arr.length; i++) {
-        if (~arr[i].indexOf('СекцияДокумент')) {
+        if (~arr[i].indexOf('СекцияДокумент=Банковский ордер')) {
             var order = {
                 // sberAcquOrderNumber:
                 bankNumber: arr[++i].split('=')[1],
@@ -30,6 +30,7 @@ StateMentService.parseStatement = function(file) {
             orders.push(order)
         }
     }
+    return orders;
 
     // sequelize.models.Statement.create({
     //     fileName:
