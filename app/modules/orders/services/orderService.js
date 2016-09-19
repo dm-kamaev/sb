@@ -553,10 +553,9 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
 }
 
 // TODO: add sberbank report to arguments
-OrderService.generateReport = async(function () {
+OrderService.generateReport = async(function (startDate) {
     // TODO: sber report parsing
     // TODO: order conflict error handling
-
     var orders = await(sequelize.models.Order.findAll({
         attributes: ['amount', 'userFundSnapshot'],
         where: {
@@ -564,7 +563,7 @@ OrderService.generateReport = async(function () {
             /*updatedAt: {
                 $and: { // TODO: change it to date from sber report
                     $lte: new Date(),
-                    $gte: new Date(new Date - 24 * 60 * 60 * 1000)
+                    $gte: new Date(startDate)
                 }
             },*/
             userFundSnapshot: {
@@ -573,45 +572,39 @@ OrderService.generateReport = async(function () {
         }
     }));
     // TODO: move to private method
+    return countPayments_(orders);
+});
+
+
+/**
+ * count payments to all funds
+ * @param {[array]} paidOrders
+ * @return {[object]} {
+ *      payments: [{"id": 1, "payment": 123456}, {"id": 2, "payment": 45678}],
+ *      sumModulo: 2345
+ *  }
+ */
+function countPayments_(paidOrders) {
     var fundsArray = [];
     var sumModulo = 0;
-    orders.forEach(order => {
-        var funds = order.userFundSnapshot.fund;
-        var directionFunds = _.map(order.userFundSnapshot.direction,
-            direction => {
-                return direction.fund;
-            }
-        );
-        var topicFunds = _.map(order.userFundSnapshot.topic, topic => {
-            return topic.fund;
-        });
-        var topicDirectionFunds = _.map(order.userFundSnapshot.topic,
-            topic => {
-                return _.map(topic.direction, direction => {
-                    return direction.fund;
-                });
-            }
-        );
-        var orderFunds = _.concat(funds, directionFunds, topicFunds,
-            topicDirectionFunds);
-        orderFunds = _.flattenDeep(orderFunds);
-        var fundsCount = orderFunds.length;
-        var fundPayment = Math.floor(order.amount / fundsCount);
-        var modulo = order.amount - fundPayment * fundsCount;
-        orderFunds = _.map(orderFunds, ord => {
+    paidOrders.forEach(order => {
+        var orderFunds = getFundsFromOrder_(order);
+        var fundPayment = Math.trunc(order.amount / orderFunds.count);
+        var modulo = order.amount - (fundPayment * orderFunds.count);
+        // TODO: FIX
+        orderFunds.funds = _.map(orderFunds.funds, ord => {
             ord.payment = fundPayment;
             return ord;
         });
-        fundsArray.push(orderFunds);
+        fundsArray.push(orderFunds.funds);
+        fundsArray = fundsArray.concat(orderFunds.funds);
         sumModulo += modulo;
     });
-
     var result = {
         payments: [],
         sumModulo: sumModulo
     }
-
-    fundsArray = _.flattenDeep(fundsArray);
+    //fundsArray = _.flattenDeep(fundsArray);
     fundsArray = _.groupBy(fundsArray, 'id');
     _.forIn(fundsArray, function (val, key) {
         var res = {
@@ -621,7 +614,45 @@ OrderService.generateReport = async(function () {
         result.payments.push(res);
     });
     return result;
-});
+}
+
+/**
+ * get funds array and funds count from order
+ * @param {[object]} order
+ * @return {object} {
+ *      funds: [{"id": 1}, {"id": 2}],
+ *      count: 2
+ *  }
+ */
+function getFundsFromOrder_(order) {
+    var funds = order.userFundSnapshot.fund;
+    var directionFunds = _.map(order.userFundSnapshot.direction,
+        direction => {
+            return direction.fund;
+        }
+    );
+    var topicFunds = _.map(order.userFundSnapshot.topic, topic => {
+        return topic.fund;
+    });
+    _.map(order.userFundSnapshot.topic,
+        topic => {
+            return _.map(topic.direction, direction => {
+                funds = funds.concat(direction.funds)
+            });
+        }
+    );
+    /*var orderFunds = _.concat(funds, directionFunds, topicFunds,
+        topicDirectionFunds);*/
+    var orderFunds = funds.concat(directionFunds, topicFunds, topicDirectionFunds);
+    console.log(orderFunds);
+    //orderFunds = _.flattenDeep(orderFunds);
+    var fundsCount = orderFunds.length;
+
+    return {
+        funds: orderFunds,
+        count: fundsCount
+    };
+}
 
 /**
  * disable user's subsription and return list user fund id
