@@ -24,7 +24,7 @@ gulp.task('frontend', ['moveFrontend']);
 
 gulp.task('moveFrontend', ['buildFrontend'], () => {
     gulp.src([`node_modules/${frontDirName}/public/**/*`])
-    .pipe(gulp.dest('public/frontend/'));
+    .pipe(gulp.dest('public/frontend/static'));
 });
 
 gulp.task('apidoc', done => {

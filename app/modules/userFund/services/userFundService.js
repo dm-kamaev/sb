@@ -124,19 +124,27 @@ UserFundService.getTodayCreatedUserFunds = function() {
 };
 
 UserFundService.addEntity = function(id, entityId) {
-    var count = await(sequelize.models.UserFundEntity.count({
-        where: {
-            entityId,
-            userFundId: id
+    return await(sequelize.sequelize.query(`INSERT INTO "UserFundEntity" 
+            (id, 
+            "userFundId", 
+            "entityId", 
+            "createdAt", 
+            "updatedAt") VALUES 
+                                (DEFAULT, 
+                                :userFundId, 
+                                (SELECT id 
+                                        FROM "Entity" 
+                                        WHERE id = :entityId 
+                                        AND "Entity"."deletedAt" IS NULL 
+                                        AND "Entity"."published" = true), 
+                                CURRENT_TIMESTAMP, 
+                                CURRENT_TIMESTAMP)`, {
+        type: sequelize.sequelize.QueryTypes.INSERT,
+        replacements: {
+            userFundId: id,
+            entityId
         }
-    }));
-
-    if (count) throw new Error(i18n.__('Relation exists'));
-
-    return await(sequelize.models.UserFundEntity.create({
-        entityId,
-        userFundId: id
-    }));
+    }))
 };
 
 UserFundService.removeEntity = function(id, entityId) {
@@ -337,22 +345,6 @@ UserFundService.switchSubscription = function(sberUserId, userFundId, data) {
     }));
 };
 
-
-/**
-* remove user fund by userFundId
-* @param  {[int]}  userFundId
-* @return {[type]}
-*/
-UserFundService.removeUserFund = function(userFundId) {
-    return await(sequelize.models.UserFund.update({
-        deletedAt: new Date(),
-        enabled:false
-    }, {
-        where: {
-            id:userFundId,
-        },
-    }));
-};
 
 /**
  * search active user fund subscription by userFundId
