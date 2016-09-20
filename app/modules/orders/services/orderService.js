@@ -9,6 +9,7 @@ const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const errors = require('../../../components/errors');
+const excel = require('../../../components/excel');
 const orderStatus = require('../enums/orderStatus');
 const orderTypes = require('../enums/orderTypes');
 const os = require('os');
@@ -551,6 +552,55 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
         }
     }))
 }
+
+
+/**
+ * count payments to all funds
+ * @param {[array]} paidOrders
+ * @return {[object]} {
+ *      payments: [{"id": 1, "payment": 123456, "title": "qwerty"}],
+ *      sumModulo: 2345
+ *  }
+*/
+
+
+/**
+ * recommendation write in excel.
+ * get calculated data for accountant, transform and write in .xlsx
+ * @param  {[type]} countPayments { payments: [{"id": 1, "payment": 123456, "title": "qwerty"}], sumModulo: 2345 }
+ * @return {[type]}
+ */
+OrderService.writeInExcel = function (countPayments) {
+    var fundPayments      = countPayments.payments,
+        remainderDivision = countPayments.sumModulo;
+    var dataForSheet = [
+        [ 'id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)' ]
+    ];
+    fundPayments.forEach((fundPayment) => {
+        dataForSheet.push(
+            [ fundPayment.id, fundPayment.title, fundPayment.payment ]
+        );
+    });
+    dataForSheet.push([ 'Остатки', ' ', remainderDivision ]);
+
+    var sheet = excel.createSheets(
+      [
+        {
+          name: 'Рекомендация',
+          value: dataForSheet,
+        }
+      ]
+    );
+    excel.write(
+        '../../../../public/uploads/recommendation/Рекомендация_'+
+        moment().format('YYYY_DD_MM')+'.xlsx',
+        sheet
+    );
+};
+
+
+
+
 
 /**
  * disable user's subsription and return list user fund id

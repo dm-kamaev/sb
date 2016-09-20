@@ -39,13 +39,8 @@ exports.createSheets = function(data) {
                 'zoomScale': 200,
             },
         };
-        var ws = wb.addWorksheet(sheet.name, options);
-        var style = wb.createStyle(sheet.style);
-        // var style = wb.createStyle({
-        //     font: {  size: 12
-        //     },
-        //     // numberFormat: '$#,##0.00; ($#,##0.00); -'
-        // });
+        var ws    = wb.addWorksheet(sheet.name, options);
+        var style = wb.createStyle(sheet.style || {});
         setCell_(ws, sheet.value, style);
     });
 
@@ -62,6 +57,10 @@ exports.createSheets = function(data) {
 function setCell_(ws, rows, style) {
     for (var r = 0, l = rows.length; r < l; r++) {
         var row = rows[r];
+        iterateColumn();
+    }
+
+    function iterateColumn () {
         for (var c = 0, l1 = row.length; c < l1; c++) {
             var el = row[c];
             var num_row = r + 1,
