@@ -1,6 +1,7 @@
 'use strict';
 
 const os = require('os');
+const config = require('../../../../config/config.json')
 
 exports.renderEntity = function(entity) {
     return {
@@ -10,7 +11,7 @@ exports.renderEntity = function(entity) {
         description: entity.description,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-        imgUrl: `http://${os.hostname()}:3000/${entity.imgUrl}`,
+        imgUrl: `http://${config.hostname}:${config.port}/${entity.imgUrl}`,
         checked: entity.userFund && !!entity.userFund.length || false,
         published: entity.published,
         funds: entity.fund && exports.renderEntities(entity.fund),
