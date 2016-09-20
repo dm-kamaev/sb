@@ -9,6 +9,7 @@ const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const errors = require('../../../components/errors');
+const excel = require('../../../components/excel');
 const orderStatus = require('../enums/orderStatus');
 const orderTypes = require('../enums/orderTypes');
 const os = require('os');
@@ -360,10 +361,10 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
     }
 
     const getScheduledDate = (realDate, payDate) => {
-        return realDate.getDate() == payDate.getDate() ? realDate :
+        return realDate.getDate() === payDate.getDate() ? realDate :
             realDate.getDate() > payDate.getDate() ?
             moment(realDate).set('date', payDate.getDate()).toDate() :
-            moment(realDate).endOf('month').daysInMonth() == moment(realDate).toDate().getDate() ?
+            moment(realDate).endOf('month').daysInMonth() === moment(realDate).toDate().getDate() ?
             moment(realDate).toDate() :
             moment(realDate).set('month', realDate.getMonth() - 1).daysInMonth() < payDate.getDate() ?
             moment(realDate).subtract(1, 'month').endOf('month').toDate() :
@@ -416,7 +417,7 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
         orderId: sberAcquPayment.orderId,
         clientId: userFundSubscription.sberUserId
     })
-    if (orderStatusExtended.actionCode!= 0) {
+    if (orderStatusExtended.actionCode !== 0) {
         OrderService.failedReccurentPayment(sberAcquOrderNumber,
             userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate);
     }
@@ -552,6 +553,7 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
     }))
 }
 
+
 // TODO: add sberbank report to arguments
 OrderService.generateReport = async(function (startDate) {
     // TODO: sber report parsing
@@ -616,6 +618,7 @@ function countPayments_(paidOrders) {
     return result;
 }
 
+
 /**
  * get funds array and funds count from order
  * @param {[object]} order
@@ -651,6 +654,42 @@ function getFundsFromOrder_(order) {
         count: fundsCount
     };
 }
+
+
+/**
+ * recommendation write in excel.
+ * get calculated data for accountant, transform and write in .xlsx
+ * @param  {[type]} countPayments { payments: [{"id": 1, "payment": 123456, "title": "qwerty"}], sumModulo: 2345 }
+ * @return {[type]}
+ */
+OrderService.writeInExcel = function (countPayments) {
+    var fundPayments      = countPayments.payments,
+        remainderDivision = countPayments.sumModulo;
+    var dataForSheet = [
+        [ 'id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)' ]
+    ];
+    fundPayments.forEach((fundPayment) => {
+        dataForSheet.push(
+            [ fundPayment.id, fundPayment.title, fundPayment.payment ]
+        );
+    });
+    dataForSheet.push([ 'Остатки', ' ', remainderDivision ]);
+
+    var sheet = excel.createSheets(
+      [
+        {
+          name: 'Рекомендация',
+          value: dataForSheet,
+        }
+      ]
+    );
+    excel.write(
+        '../../../../public/uploads/recommendation/Рекомендация_'+
+        moment().format('YYYY_DD_MM')+'.xlsx',
+        sheet
+    );
+};
+
 
 /**
  * disable user's subsription and return list user fund id
