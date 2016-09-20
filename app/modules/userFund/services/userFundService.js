@@ -123,21 +123,39 @@ UserFundService.getTodayCreatedUserFunds = function() {
     }));
 };
 
+
+/**
+* remove user fund by userFundId
+* @param  {[int]}  userFundId
+* @return {[type]}
+*/
+UserFundService.removeUserFund = function(userFundId) {
+    return await(sequelize.models.UserFund.update({
+        deletedAt: new Date(),
+        enabled:false
+    }, {
+        where: {
+           id:userFundId,
+       },
+   }));
+};
+
+
 UserFundService.addEntity = function(id, entityId) {
-    return await(sequelize.sequelize.query(`INSERT INTO "UserFundEntity" 
-            (id, 
-            "userFundId", 
-            "entityId", 
-            "createdAt", 
-            "updatedAt") VALUES 
-                                (DEFAULT, 
-                                :userFundId, 
-                                (SELECT id 
-                                        FROM "Entity" 
-                                        WHERE id = :entityId 
-                                        AND "Entity"."deletedAt" IS NULL 
-                                        AND "Entity"."published" = true), 
-                                CURRENT_TIMESTAMP, 
+    return await(sequelize.sequelize.query(`INSERT INTO "UserFundEntity"
+            (id,
+            "userFundId",
+            "entityId",
+            "createdAt",
+            "updatedAt") VALUES
+                                (DEFAULT,
+                                :userFundId,
+                                (SELECT id
+                                        FROM "Entity"
+                                        WHERE id = :entityId
+                                        AND "Entity"."deletedAt" IS NULL
+                                        AND "Entity"."published" = true),
+                                CURRENT_TIMESTAMP,
                                 CURRENT_TIMESTAMP)`, {
         type: sequelize.sequelize.QueryTypes.INSERT,
         replacements: {
