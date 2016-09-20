@@ -226,8 +226,8 @@ class UserFundController extends Controller {
             );
             return { message };
         } else {
-            return new errors.ValidationError({
-                enabled: [i18n.__('enabled must be a boolean value')]
+            throw new errors.ValidationError({
+                enabled: i18n.__('enabled must be a boolean value')
             });
         }
     }
@@ -246,10 +246,7 @@ class UserFundController extends Controller {
             })
         );
         await(userFundService.removeUserFund(userFundId));
-        logger.info(sberUserId, userFundId);
-        return {
-            message: i18n.__('User Fund was removed')
-        };
+        return { message: i18n.__('User Fund was removed') };
     }
 }
 
