@@ -55,7 +55,7 @@ describe('Report generation', function() {
         this.directionIds = [];
 
         funds.forEach(fund => {
-            chakram.post(services.urls)
+            chakram.post(services.urls.concatUrl('entity'))
         })
     });
 })

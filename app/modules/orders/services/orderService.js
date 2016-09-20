@@ -580,7 +580,7 @@ OrderService.generateReport = async(function (startDate) {
  * count payments to all funds
  * @param {[array]} paidOrders
  * @return {[object]} {
- *      payments: [{"id": 1, "payment": 123456}, {"id": 2, "payment": 45678}],
+ *      payments: [{"id": 1, "payment": 123456, "title": "qwerty"}],
  *      sumModulo: 2345
  *  }
  */
@@ -591,26 +591,26 @@ function countPayments_(paidOrders) {
         var orderFunds = getFundsFromOrder_(order);
         var fundPayment = Math.trunc(order.amount / orderFunds.count);
         var modulo = order.amount - (fundPayment * orderFunds.count);
-        // TODO: FIX
         orderFunds.funds = _.map(orderFunds.funds, ord => {
             ord.payment = fundPayment;
             return ord;
         });
         fundsArray.push(orderFunds.funds);
-        fundsArray = fundsArray.concat(orderFunds.funds);
         sumModulo += modulo;
     });
     var result = {
         payments: [],
         sumModulo: sumModulo
     }
-    //fundsArray = _.flattenDeep(fundsArray);
+    fundsArray = _.flattenDeep(fundsArray);
     fundsArray = _.groupBy(fundsArray, 'id');
     _.forIn(fundsArray, function (val, key) {
         var res = {
             id: key,
+            title: val[0].title,
             payment: _.sumBy(val, 'payment')
         };
+
         result.payments.push(res);
     });
     return result;
@@ -634,18 +634,16 @@ function getFundsFromOrder_(order) {
     var topicFunds = _.map(order.userFundSnapshot.topic, topic => {
         return topic.fund;
     });
-    _.map(order.userFundSnapshot.topic,
+    var topicDirectionFunds = _.map(order.userFundSnapshot.topic,
         topic => {
             return _.map(topic.direction, direction => {
-                funds = funds.concat(direction.funds)
+                return direction.fund;
             });
         }
     );
-    /*var orderFunds = _.concat(funds, directionFunds, topicFunds,
-        topicDirectionFunds);*/
-    var orderFunds = funds.concat(directionFunds, topicFunds, topicDirectionFunds);
-    console.log(orderFunds);
-    //orderFunds = _.flattenDeep(orderFunds);
+    var orderFunds = _.concat(funds, directionFunds, topicFunds,
+        topicDirectionFunds);
+    orderFunds = _.flattenDeep(orderFunds);
     var fundsCount = orderFunds.length;
 
     return {
