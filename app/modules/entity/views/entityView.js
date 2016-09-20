@@ -11,7 +11,7 @@ exports.renderEntity = function(entity) {
         description: entity.description,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-        imgUrl: `http://${config.hostname}/${entity.imgUrl}`,
+        imgUrl: `${config.hostname}/${entity.imgUrl}`,
         checked: entity.userFund && !!entity.userFund.length || false,
         published: entity.published,
         funds: entity.fund && exports.renderEntities(entity.fund),
