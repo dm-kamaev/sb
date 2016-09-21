@@ -260,13 +260,15 @@ class UserFundController extends Controller {
             ownUserFundId = actionContext.request.user.userFund.id,
             // if don't get from the request UserFundId, then this is user's UserFund
             userFundId    = id || ownUserFundId;
-        logger.info('sberUserId=', sberUserId, 'userFundId=', userFundId);
 
         var res = await(userFundService.getUserFundSubscriptionId(sberUserId, userFundId));
-        logger.info(res);
         if (!res) {
-            //i18n.__('UserFund')
-            throw new errors.NotFoundError('подписка', sberUserId+' '+userFundId);
+            var error = i18n.__(
+                'Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}', {
+                sberUserId,
+                userFundId
+            });
+            throw new errors.NotFoundError(error);
         }
         return { enabled: res.enabled };
     }

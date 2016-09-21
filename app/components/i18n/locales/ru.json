@@ -1,4 +1,5 @@
 {
+	"Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}": "Не найдена подписка для пользователя с id: {{sberUserId}} и userFundId: {{userFundId}}",
 	"User Fund was removed": "Юзер фонд был удален",
 	"Subscription included": "Подписка включена",
 	"Subscription off": "Подписка выключена",
