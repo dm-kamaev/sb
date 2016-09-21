@@ -35,5 +35,9 @@ userFundRouter.get('/amount', versionedController.actionGetCurrentAmount);
 
 userFundRouter.post('/switching-subscriptions', versionedController.actionSwitchingSubscriptions);
 userFundRouter.post('/remove-userFund',         versionedController.actionRemoveUserFund);
+userFundRouter.get(
+  '/get-status-subscription-userFund/:id(\\d+)?',
+  versionedController.actionGetStatusSubscriptionUserFund
+);
 
 module.exports = userFundRouter;

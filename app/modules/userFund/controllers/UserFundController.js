@@ -248,6 +248,28 @@ class UserFundController extends Controller {
         await(userFundService.removeUserFund(userFundId));
         return { message: i18n.__('User Fund was removed') };
     }
+
+
+    /**
+     * @api {get} /user-fund/get-status-subscription-userFund/:id get status of subscription to userFund
+     * @apiName get status of subscription to userFund
+     * @apiGroup UserFund
+     */
+    actionGetStatusSubscriptionUserFund(actionContext, id) {
+        var sberUserId    = actionContext.request.user.id,
+            ownUserFundId = actionContext.request.user.userFund.id,
+            // if don't get from the request UserFundId, then this is user's UserFund
+            userFundId    = id || ownUserFundId;
+        logger.info('sberUserId=', sberUserId, 'userFundId=', userFundId);
+
+        var res = await(userFundService.getUserFundSubscriptionId(sberUserId, userFundId));
+        logger.info(res);
+        if (!res) {
+            //i18n.__('UserFund')
+            throw new errors.NotFoundError('подписка', sberUserId+' '+userFundId);
+        }
+        return { enabled: res.enabled };
+    }
 }
 
 module.exports = UserFundController;
