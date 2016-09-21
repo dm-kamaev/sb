@@ -7,6 +7,13 @@ const path = require('path');
 const queryString = require('query-string');
 const services = require('../services');
 
+const logout = require('../modules/user/logout.js');
+const register = require('../modules/user/register.js');
+const getUserInfo = require('../modules/user/getUserInfo.js');
+const createEntities = require('../modules/entity/createEntitiesForCounting.js');
+const addEntity   = require('../modules/entity/addEntity.js');
+const associate = require('../modules/entity/associateEntities.js');
+
 const pgp = require('pg-promise')();
 const connection = {
     host: 'localhost',
@@ -28,25 +35,23 @@ chakram.setRequestDefaults({
         ]
     }
 });
-describe('Report generation', function() {
-    before('Register user', function() {
-        var user = services.user.genRandomUser(),
-            resp = chakram.post(services.url('auth/register'), user)
-        this.email = user.email;
-        this.firstName = user.firstName
-        this.lastName = user.lastName
-        expect(resp).to.have.status(201)
-        return resp.then(() => {
-            return chakram.get(services.url('user'))
-        })
-        .then(res => {
-            this.sberUserId = res.body.id
-            this.userFundId = res.body.userFund.id
-            return chakram.wait()
-        })
+describe('Count payments to funds', function() {
+    var context = {
+        chakram,
+        expect,
+        entities: []
+    };
+
+    before('Register', register(context));
+    before('Create entities', createEntities(context));
+    before('Associate entities', associate(context));
+
+    it('Should log created entities', function () {
+        console.log(context.entities);
+        return chakram.wait();
     });
 
-    before('create entities', function () {
+    /*before('create entities', function () {
         var funds = services.entity.generateEntities(3, 'fund');
         var topics = services.entity.generateEntities(1, 'topic');
         var directions = services.entity.generateEntities(2, 'direction');
@@ -57,5 +62,5 @@ describe('Report generation', function() {
         funds.forEach(fund => {
             chakram.post(services.urls.concatUrl('entity'))
         })
-    });
+    });*/
 })
