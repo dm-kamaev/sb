@@ -129,8 +129,8 @@ OrderService.firstPayOrSendMessage = function (params) {
             responceSberAcqu = sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: `http://${os.hostname()}:${config.port}/#success?app=${params.isCordova}`,
-                failUrl: `http://${os.hostname()}:${config.port}/#failure?app=${params.isCordova}`,
+                returnUrl: `http://${config.host}/#success?app=${params.isCordova}`,
+                failUrl: `http://${config.host}/#failure?app=${params.isCordova}`,
                 language: 'ru',
                 clientId: params.sberUserId,
             });
