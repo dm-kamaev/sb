@@ -7,6 +7,7 @@ const entityService = require('../services/entityService');
 const entityView = require('../views/entityView');
 const userFundView = require('../../userFund/views/userFundView');
 const errors = require('../../../components/errors');
+const logger = require('../../../components/logger').getLogger('main');
 const _ = require('lodash');
 
 class EntityController extends Controller {
@@ -256,8 +257,10 @@ class EntityController extends Controller {
      *
      */
     actionGetAllEntities(actionContext) {
-        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
-            published = actionContext.request.published;
+        var request = actionContext.request,
+            user    = request.user;
+        var userFundId = (user.userFund) ? user.userFund.id : null,
+            published  = request.published;
         var entities = await(entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
     };
