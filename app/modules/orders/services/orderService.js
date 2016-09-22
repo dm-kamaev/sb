@@ -555,19 +555,14 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
 
 
 // TODO: add sberbank report to arguments
-OrderService.generateReport = async(function (startDate) {
+OrderService.generateReportTest = async(function (sberOrderId) {
     // TODO: sber report parsing
     // TODO: order conflict error handling
     var orders = await(sequelize.models.Order.findAll({
         attributes: ['amount', 'userFundSnapshot'],
         where: {
             status: orderStatus.PAID,
-            /*updatedAt: {
-                $and: { // TODO: change it to date from sber report
-                    $lte: new Date(),
-                    $gte: new Date(startDate)
-                }
-            },*/
+            sberAcquOrderId: sberOrderId,
             userFundSnapshot: {
                 $ne: null
             }

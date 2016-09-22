@@ -7,6 +7,17 @@ const path = require('path');
 const queryString = require('query-string');
 const services = require('../services');
 
+const logout = require('../modules/user/logout.js');
+const register = require('../modules/user/register.js');
+const getUserInfo = require('../modules/user/getUserInfo.js');
+const createEntities = require('../modules/entity/createEntitiesForCounting.js');
+const associate = require('../modules/entity/associateEntities.js');
+const addEntities = require('../modules/entity/addEntities.js');
+const firstPay = require('../modules/userFund/firstPay.js');
+const setOrderPaid = require('../modules/order/setOrderPaid.js');
+const checkRecommendation =
+    require('../modules/recommendation/checkRecommendationResult.js');
+
 const pgp = require('pg-promise')();
 const connection = {
     host: 'localhost',
@@ -28,34 +39,22 @@ chakram.setRequestDefaults({
         ]
     }
 });
-describe('Report generation', function() {
-    before('Register user', function() {
-        var user = services.user.genRandomUser(),
-            resp = chakram.post(services.url('auth/register'), user)
-        this.email = user.email;
-        this.firstName = user.firstName
-        this.lastName = user.lastName
-        expect(resp).to.have.status(201)
-        return resp.then(() => {
-            return chakram.get(services.url('user'))
-        })
-        .then(res => {
-            this.sberUserId = res.body.id
-            this.userFundId = res.body.userFund.id
-            return chakram.wait()
-        })
-    });
+describe('Count payments to funds', function() {
+    var context = {
+        pgpromise: db,
+        chakram,
+        expect,
+        entities: [],
+        sberOrderId: '',
+        amount: 6969696
+    };
 
-    before('create entities', function () {
-        var funds = services.entity.generateEntities(3, 'fund');
-        var topics = services.entity.generateEntities(1, 'topic');
-        var directions = services.entity.generateEntities(2, 'direction');
-        this.fundIds = [];
-        this.topicIds = [];
-        this.directionIds = [];
+    before('Register', register(context));
+    before('Create entities', createEntities(context));
+    before('Associate entities', associate(context));
 
-        funds.forEach(fund => {
-            chakram.post(services.urls.concatUrl('entity'))
-        })
-    });
+    it('Should add entities', addEntities(context));
+    it('Should make first payment', firstPay.withOutCheck(context));
+    it('Should set order paid', setOrderPaid(context));
+    it('Should check recommendation', checkRecommendation(context));
 })
