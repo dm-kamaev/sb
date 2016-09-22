@@ -12,7 +12,7 @@ exports.renderEntity = function(entity) {
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
         imgUrl: `${config.hostname}/${entity.imgUrl}`,
-        checked: entity.userFund && !!entity.userFund.length || false,
+        checked: entity.userFund && !!entity.userFund.length || false, // if user checked this entity
         published: entity.published,
         funds: entity.fund && exports.renderEntities(entity.fund),
         directions: entity.direction && exports.renderEntities(entity.direction),

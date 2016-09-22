@@ -4,6 +4,7 @@
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
+const logger = require('../../../components/logger').getLogger('main');
 const userService = require('../services/userService');
 const userFundService = require('../../userFund/services/userFundService');
 const userView = require('../views/userView');
