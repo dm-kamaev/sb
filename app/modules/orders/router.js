@@ -40,8 +40,8 @@ var orderController = new class extends Controller {
         throw new errors.HttpError('Unathorized', 403)
     }
 
-    actionGenerateReport(actionContext) {
-        return await(orderService.generateReport());
+    actionGenerateReportTest(actionContext, sberOrderId) {
+        return await(orderService.generateReportTest(sberOrderId));
     }
 }();
 
@@ -53,7 +53,7 @@ var versionedController = new VersionedController(controllersArray);
 
 orderRouter.get('/:sberAcquOrderNumber(\\d+)', versionedController.actionGetOrderStatus);
 orderRouter.get('/:sberAcquOrderNumber(\\d+)/entity', versionedController.actionGetOrderComposition);
-orderRouter.get('/generate-report', versionedController.actionGenerateReport);
+orderRouter.get('/generate-report/:sberOrderId', versionedController.actionGenerateReportTest);
 
 
 module.exports = orderRouter;

@@ -11,8 +11,12 @@ const logout = require('../modules/user/logout.js');
 const register = require('../modules/user/register.js');
 const getUserInfo = require('../modules/user/getUserInfo.js');
 const createEntities = require('../modules/entity/createEntitiesForCounting.js');
-const addEntity   = require('../modules/entity/addEntity.js');
 const associate = require('../modules/entity/associateEntities.js');
+const addEntities = require('../modules/entity/addEntities.js');
+const firstPay = require('../modules/userFund/firstPay.js');
+const setOrderPaid = require('../modules/order/setOrderPaid.js');
+const checkRecommendation =
+    require('../modules/recommendation/checkRecommendationResult.js');
 
 const pgp = require('pg-promise')();
 const connection = {
@@ -37,30 +41,20 @@ chakram.setRequestDefaults({
 });
 describe('Count payments to funds', function() {
     var context = {
+        pgpromise: db,
         chakram,
         expect,
-        entities: []
+        entities: [],
+        sberOrderId: '',
+        amount: 6969696
     };
 
     before('Register', register(context));
     before('Create entities', createEntities(context));
     before('Associate entities', associate(context));
 
-    it('Should log created entities', function () {
-        console.log(context.entities);
-        return chakram.wait();
-    });
-
-    /*before('create entities', function () {
-        var funds = services.entity.generateEntities(3, 'fund');
-        var topics = services.entity.generateEntities(1, 'topic');
-        var directions = services.entity.generateEntities(2, 'direction');
-        this.fundIds = [];
-        this.topicIds = [];
-        this.directionIds = [];
-
-        funds.forEach(fund => {
-            chakram.post(services.urls.concatUrl('entity'))
-        })
-    });*/
+    it('Should add entities', addEntities(context));
+    it('Should make first payment', firstPay.withOutCheck(context));
+    it('Should set order paid', setOrderPaid(context));
+    it('Should check recommendation', checkRecommendation(context));
 })
