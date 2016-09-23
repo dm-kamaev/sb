@@ -227,35 +227,47 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
     }));
 };
 
-UserFundService.setAmount = function(sberUserId, userFundId, changer, amount) {
+UserFundService.setAmount = function(params) {
+    var sberUserId = params.sberUserId,
+        userFundId = params.userFundId,
+        changer    = params.changer,
+        amount     = params.amount,
+        // null –– current amount, integer –– a percentage of your salary
+        percent    = params.percent;
+
+    function createRecordAmount(subscription) {
+        var recordAmount = {
+            subscriptionId: subscription.id,
+            changer,
+            amount,
+        };
+        if (percent) { recordAmount.percent = percent; }
+        return sequelize.models.DesiredAmountHistory.create(recordAmount);
+    }
+
+    function setCurrentAmountId (desiredAmount) {
+        return sequelize.models.UserFundSubscription.update({
+            currentAmountId: desiredAmount.id
+        }, {
+            where: {
+                userFundId,
+                sberUserId
+            }
+        });
+    }
+
     return await(sequelize.sequelize_.transaction(t => {
         return sequelize.models.UserFundSubscription.findOrCreate({
             where: {
                 userFundId,
                 sberUserId
             }
-        })
-            .spread(subscription => subscription)
-            .then(subscription => {
-                return sequelize.models.DesiredAmountHistory.create({
-                    subscriptionId: subscription.id,
-                    changer,
-                    amount
-                });
-            })
-            .then(desiredAmount => {
-                return sequelize.models.UserFundSubscription.update({
-                    currentAmountId: desiredAmount.id
-                }, {
-                    where: {
-                        userFundId,
-                        sberUserId
-                    }
-                });
-            })
-            .catch(err => {
-                throw err;
-            });
+        }).spread(subscription => subscription)
+          .then(createRecordAmount)
+          .then(setCurrentAmountId)
+          .catch(err => {
+              throw err;
+          });
     }));
 };
 

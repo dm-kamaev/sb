@@ -74,7 +74,8 @@ app.use((err, req, res, next) => {
         validationErrors: err.validationErrors
     }]);
     if (status >= 500) {
-        logger.critical(prettyJSON(err));
+        // logger.critical(prettyJSON(err));
+        logger.critical(err);
     }
 });
 
