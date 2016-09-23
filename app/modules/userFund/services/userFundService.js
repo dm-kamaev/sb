@@ -12,9 +12,10 @@ var UserFundService = {};
 
 UserFundService.createUserFund = function(data) {
     return await(sequelize.models.UserFund.create({
-        title: data.title,
+        title:       data.title,
         description: data.description,
-        creatorId: data.creatorId
+        creatorId:   data.creatorId,
+        enabled:     data.enabled,
     }));
 };
 
@@ -129,10 +130,14 @@ UserFundService.getTodayCreatedUserFunds = function() {
 * @param  {[int]}  userFundId
 * @return {[type]}
 */
-UserFundService.removeUserFund = function(userFundId) {
+UserFundService.removeUserFund = function (userFundId) {
     return await(sequelize.models.UserFund.update({
         deletedAt: new Date(),
-        enabled:false
+        enabled:false, // hide for anither user
+        // creatorId is null,
+        // because if we removed userFund, we immediately create new empty userFund
+        // for user, but creatorId uniq
+        creatorId: null,
     }, {
         where: {
            id:userFundId,

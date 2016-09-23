@@ -3,6 +3,7 @@
 const express = require('express');
 const http = require('http');
 const logger = require('../logger').getLogger('main');
+const prettyJSON = require('../prettyJSON');
 const bodyparser = require('body-parser');
 const path = require('path');
 
@@ -72,7 +73,9 @@ app.use((err, req, res, next) => {
         message: err.message || 'Internal server error',
         validationErrors: err.validationErrors
     }]);
-    if (status >= 500) logger.critical(err);
+    if (status >= 500) {
+        logger.critical(prettyJSON(err));
+    }
 });
 
 module.exports = http.createServer(app);
