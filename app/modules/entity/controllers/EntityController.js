@@ -139,9 +139,15 @@ class EntityController extends Controller {
     actionGetEntity(actionContext, id) {
         var request = actionContext.request,
             user    = request.user;
-        var userFundId = (user.userFund) ? user.userFund.id : null,
+        var userFundId,
             published = request.published,
             include   = request.query.include;
+
+	if (user) {
+            userFundId = (user.userFund) ? user.userFund.id : null;
+       	} else {
+            userFundId = null;
+       	}	       
 
         var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
