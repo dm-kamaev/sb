@@ -151,24 +151,32 @@ class UserFundController extends Controller {
      * {
      *   "userFundId": "1",
      *   "amount": "20000",
-     *   "app": true
+     *   "app": true,
+     *   "percent": null
      * }
      */
     actionSetAmount(actionContext) {
-        var sberUserId = actionContext.request.user.id,
-            changer = 'user',
-            ownUserFundId = actionContext.request.user.userFund.id,
+        var request = actionContext.request,
+            user    = request.user;
+        var sberUserId    = user.id,
+            changer       = 'user',
+            ownUserFundId = (user.userFund) ? user.userFund.id : null,
+            data          = actionContext.data,
             // now user can only pay to own userFund
-            userFundId = actionContext.data.userFundId || ownUserFundId,
-            amount = actionContext.data.amount,
-            isCordova = actionContext.data.app;
+            userFundId = data.userFundId || ownUserFundId,
+            amount     = data.amount,
+            isCordova  = data.app,
+            // null –– current amount, integer –– a percentage of your salary
+            percent    = data.percent;
 
         // check whether userFund enabled if he is not the owner
         // if now first pay then user's userfund is always disabled, but for another userfund
         // must enable
         userFundService.checkEnableAnotherUserFund(ownUserFundId, userFundId);
         await(
-            userFundService.setAmount(sberUserId, userFundId, changer, amount)
+            userFundService.setAmount({
+                sberUserId, userFundId, changer, amount, percent
+            })
         );
 
         var subscription = await(
@@ -186,6 +194,8 @@ class UserFundController extends Controller {
         };
         return orderService.firstPayOrSendMessage(params);
     }
+
+
     /**
      * @api {get} /user-fund/amount get amount
      * @apiName get current amount

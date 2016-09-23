@@ -103,7 +103,7 @@ OrderService.updateInfo = function (sberAcquOrderNumber, data) {
 OrderService.firstPayOrSendMessage = function (params) {
     // if user with unconfirmed payment, then do first pay
     var userFund = userFundService.getUserFundWithIncludes(params.userFundId)
-    if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
+    if (isEmptyUserFund_(userFund)) {
         throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
     }
 
@@ -122,7 +122,6 @@ OrderService.firstPayOrSendMessage = function (params) {
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
-        // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
@@ -782,6 +781,18 @@ function sendEmailOwnerUserFund_(userFundIds) {
 function restGetUserData_(authId) {
     var resp = await(axios.get(`/user/${authId}`));
     return resp.data || {};
+}
+
+
+function isEmptyUserFund_ (userFund) {
+    if (!userFund) { return true; }
+    if (
+        !userFund.fund.length &&
+        !userFund.topic.length &&
+        !userFund.direction.length
+       ) {
+        return true;
+    }
 }
 
 module.exports = OrderService;

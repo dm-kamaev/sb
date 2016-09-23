@@ -38,6 +38,10 @@ module.exports = function(sequelize, DataTypes) {
                 isIn: [['user', 'admin']]
             }
         },
+        percent: {
+            type:         DataTypes.INTEGER,
+            defaultValue: null,
+        },
         createdAt: {
             type: DataTypes.DATE
         },
