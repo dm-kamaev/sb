@@ -1,0 +1,6 @@
+{
+    "hosts": [
+        "http://sber-vmeste.qa.lan:3000",
+        "http://localhost:3000"
+    ]
+}
