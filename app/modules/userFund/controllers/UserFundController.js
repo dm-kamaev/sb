@@ -55,7 +55,7 @@ class UserFundController extends Controller {
         var userFund = await(userFundService.getUserFund(id, includes, nested));
         if (!userFund) throw new errors.NotFoundError(i18n.__('UserFund'), id);
         return userFundView.renderUserFund(userFund);
-    };
+    }
 
     /**
      * @api {get} /user-fund/ get userFunds
@@ -67,7 +67,7 @@ class UserFundController extends Controller {
     actionGetUserFunds(actionContext) {
         var userFunds = await(userFundService.getUserFunds());
         return userFundView.renderUserFunds(userFunds);
-    };
+    }
 
     /**
      * @api {post} /user-fund/:entityId add entity
@@ -79,18 +79,19 @@ class UserFundController extends Controller {
      * @apiError (Error 400) HttpError relation exists
      */
     actionAddEntity(actionContext, entityId) {
-        var id = actionContext.request.user.userFund.id;
+        var request = actionContext.request;
+        var userFundId = (request.user.userFund) ? request.user.userFund.id : null;
         try {
-            await(userFundService.addEntity(id, entityId));
+            await(userFundService.addEntity(userFundId, entityId));
             return null;
         } catch (err) {
             if (err.message === 'Not found') {
-                var ids = [id, entityId].join(' OR ');
+                var ids = [ userFundId, entityId ].join(' OR ');
                 throw new errors.NotFoundError(i18n.__('UserFund OR Entity'), ids);
             }
             throw new errors.HttpError(i18n.__('Relation exists'), 400);
         }
-    };
+    }
 
     /**
      * @api {delete} /user-fund/:entityId
@@ -238,14 +239,23 @@ class UserFundController extends Controller {
      * @apiGroup UserFund
      */
     actionRemoveUserFund(actionContext) {
-        var sberUserId = actionContext.request.user.id,
-            userFundId = actionContext.request.user.userFund.id;
+        var user       = actionContext.request.user,
+            sberUserId = user.id,
+            userFundId = (user.userFund) ? user.userFund.id : null;
         await(
             userFundService.switchSubscription(sberUserId, userFundId, {
                 enabled: false
             })
         );
         await(userFundService.removeUserFund(userFundId));
+        // create new empty userFund for user, because frontend could add/edit
+        // funds in userFund
+        await(userFundService.createUserFund({
+            title:      '',
+            description:'',
+            creatorId:  sberUserId,
+            enabled:    false
+        }));
         return { message: i18n.__('User Fund was removed') };
     }
 
@@ -256,19 +266,20 @@ class UserFundController extends Controller {
      * @apiGroup UserFund
      */
     actionGetStatusSubscriptionUserFund(actionContext, id) {
-        var sberUserId    = actionContext.request.user.id,
-            ownUserFundId = actionContext.request.user.userFund.id,
+        var request       = actionContext.request,
+            sberUserId    = request.user.id,
+            ownUserFundId = (request.user.userFund) ? request.user.userFund.id : null,
             // if don't get from the request UserFundId, then this is user's UserFund
             userFundId    = id || ownUserFundId;
 
         var res = await(userFundService.getUserFundSubscriptionId(sberUserId, userFundId));
         if (!res) {
-            var error = i18n.__(
+            var message = i18n.__(
                 'Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}', {
                 sberUserId,
-                userFundId
+                userFundId: userFundId || 'null'
             });
-            throw new errors.NotFoundError(error);
+            return { message };
         }
         return { enabled: res.enabled };
     }

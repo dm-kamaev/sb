@@ -137,9 +137,12 @@ class EntityController extends Controller {
      * @apiError (Error 404) NotFoundError entity with this id not found
      */
     actionGetEntity(actionContext, id) {
-        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
-            published = actionContext.request.published,
-            include = actionContext.request.query.include;
+        var request = actionContext.request,
+            user    = request.user;
+        var userFundId = (user.userFund) ? user.userFund.id : null,
+            published = request.published,
+            include   = request.query.include;
+
         var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return entityView.renderEntity(entity);
@@ -214,8 +217,10 @@ class EntityController extends Controller {
      */
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
-            var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
-                published = actionContext.request.published;
+            var request    = actionContext.request,
+                sberUserId = request.user.id;
+            var userFundId = (request.user.userFund) ? request.user.userFund.id : null,
+                published  = request.published;
             var entities =
                 await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
             return entityView.renderEntities(entities);
