@@ -17,7 +17,7 @@
     <property name="packaging.target.current-path" value="${packaging.target.basedir}/current"/>
     <property name="packaging.target.shared.path" value="/opt/${packaging.project}/shared"/>
 
-    <property name="nginx.sites-enabled.path" value="/etc/nginx/sites-enabled"/>;
+    <property name="nginx.sites-enabled.path" value="/etc/nginx/sites-enabled"/>
     <property name="sber.nginx-config-name" value="sber-vmeste-${params.env}.conf"/>
 
     <property name="packaging.source.supervisor"
