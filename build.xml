@@ -180,7 +180,9 @@
     </target>
 
     <target name="nginx.restart">
-        <exec executable="sudo service nginx restart" failonerror="on"/>
+        <exec executable="service" failonerror="on">
+            <arg line="nginx restart"/>
+        </exec>
     </target>
 
 </project>
