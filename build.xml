@@ -166,21 +166,21 @@
     </target>
 
     <target name="sber.link-nginx-config"
-            failonerror="on"
             depends="sber.check-nginx-config"
             unless="nginx-config-linked">
         <symlink link="${nginx.sites-enabled.path}"
-                resource="${packaging.target.current-path}/environment/nginx/${sber.nginx-config-name}"/>
+                resource="${packaging.target.current-path}/environment/nginx/${sber.nginx-config-name}"
+                failonerror="on"/>
     </target>
 
-    <target name="nginx.config-test" failonerror="on">
-        <exec executable="nginx">
+    <target name="nginx.config-test">
+        <exec executable="nginx" failonerror="on">
             <arg line="-t"/>
         </exec>
     </target>
 
-    <target name="nginx.restart" failonerror="on">
-        <exec executable="sudo service nginx restart"/>
+    <target name="nginx.restart">
+        <exec executable="sudo service nginx restart" failonerror="on"/>
     </target>
 
 </project>
