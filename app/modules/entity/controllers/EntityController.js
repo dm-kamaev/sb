@@ -147,7 +147,7 @@ class EntityController extends Controller {
             userFundId = (user.userFund) ? user.userFund.id : null;
        	} else {
             userFundId = null;
-       	}	       
+       	}
 
         var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
@@ -269,7 +269,7 @@ class EntityController extends Controller {
      */
     actionGetAllEntities(actionContext) {
         var request = actionContext.request,
-            user    = request.user;
+            user    = request.user || {};
         var userFundId = (user.userFund) ? user.userFund.id : null,
             published  = request.published;
         var entities = await(entityService.getAllEntities(userFundId, published));
