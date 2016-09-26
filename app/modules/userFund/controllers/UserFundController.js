@@ -184,11 +184,12 @@ class UserFundController extends Controller {
         );
 
         var card = await(userService.findCardBySberUserId(sberUserId));
+        var isActiveCard = (card.currentCard) ? true : false;
         var params = {
             userFundId,
             amount,
-            userFundSubscriptionId: subscription.dataValues.id,
-            currentCardId: card.dataValues.currentCardId,
+            userFundSubscriptionId: subscription.id,
+            isActiveCard,
             sberUserId,
             isCordova
         };
@@ -249,8 +250,8 @@ class UserFundController extends Controller {
      * @apiGroup UserFund
      */
     actionRemoveUserFund(actionContext) {
-        var user       = actionContext.request.user,
-            sberUserId = user.id,
+        var user       = actionContext.request.user || {},
+            sberUserId = user.id || null,
             userFundId = (user.userFund) ? user.userFund.id : null;
         await(
             userFundService.switchSubscription(sberUserId, userFundId, {
@@ -258,6 +259,7 @@ class UserFundController extends Controller {
             })
         );
         await(userFundService.removeUserFund(userFundId));
+        await(userService.removeCard(sberUserId));
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund
         await(userFundService.createUserFund({
