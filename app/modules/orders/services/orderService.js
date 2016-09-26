@@ -107,11 +107,7 @@ OrderService.firstPayOrSendMessage = function (params) {
         throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
     }
 
-    if (!params.currentCardId) {
-
-        // var res = getListDirectionTopicFunds_(entities),
-        //     listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
-        //     listFunds = res.listFunds;
+    if (!params.isActiveCard) {
 
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,

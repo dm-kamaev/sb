@@ -92,6 +92,11 @@ UserService.findCardBySberUserId = function (sberUserId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id: sberUserId
+        },
+        include: {
+            model: sequelize.models.Card,
+            as:    'currentCard',
+            required: false
         }
     }));
 };
@@ -217,6 +222,23 @@ UserService.createCard = function (sberUserId, data) {
     }));
 };
 
+
+/**
+ * remove card
+ * @param  {[int]} sberUserId
+ * @return {[type]}            [description]
+ */
+UserService.removeCard = function (sberUserId) {
+    return await(sequelize.models.Card.update({
+        deletedAt: new Date()
+    } ,{
+        where: {
+            sberUserId
+        }
+    }));
+};
+
+
 UserService.getSberUsers = function () {
     return await(sequelize.models.SberUser.findAll({
         where: {
@@ -260,7 +282,7 @@ LEFT JOIN "Order" ON "Order"."sberAcquOrderNumber" = (SELECT "Order"."sberAcquOr
                                                           WHERE "Order"."userFundSubscriptionId" = "UserFundSubscription".id
                                                           ORDER BY "Order"."createdAt" DESC
                                                           LIMIT 1)
-JOIN "DesiredAmountHistory" ON "UserFundSubscription"."currentAmountId" = "DesiredAmountHistory".id                                                           
+JOIN "DesiredAmountHistory" ON "UserFundSubscription"."currentAmountId" = "DesiredAmountHistory".id
 JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId"
 WHERE "sberUserId" = :id`, {
         type: sequelize.sequelize.QueryTypes.SELECT,
