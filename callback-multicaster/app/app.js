@@ -18,7 +18,6 @@ app.use(bodyparser.urlencoded({
 app.use('/callback', router);
 
 router.get('/', (req, res, next) => {
-    console.log(req.query);
     var resp = Promise.all(config.hosts.map(host => {
         return axios.get(host + '/callback', {
             params: req.query,
@@ -32,7 +31,8 @@ router.get('/', (req, res, next) => {
             res.sendStatus(200);
             next();
         } else {
-            console.log(resultArray);
+            console.log('callback sending failed: '
+                + JSON.stringify(resultArray));
             res.sendStatus(500);
             next();
         }

@@ -17,6 +17,9 @@
     <property name="packaging.target.current-path" value="${packaging.target.basedir}/current"/>
     <property name="packaging.target.shared.path" value="/opt/${packaging.project}/shared"/>
 
+    <property name="nginx.sites-enabled.path" value="/etc/nginx/sites-enabled"/>;
+    <property name="sber.nginx-config-name" value="sber-vmeste-${params.env}.conf"/>
+
     <property name="packaging.source.supervisor"
             value="${packaging.target.current-path}/environment/supervisord/${packaging.project}.conf"/>
 
@@ -51,6 +54,10 @@
              user.create-runtime-dir,
              sber.build-test-environment,
              packaging.release.folder.link,
+             sber.check-nginx-config,
+             sber.link-nginx-config,
+             nginx.config-test,
+             nginx.restart,
              packaging.rollback-script,
              packaging.supervisor.restart,
 	         packaging.crontab.install,
@@ -152,4 +159,28 @@
             <arg line="run tests"/>
         </exec>
     </target>
+
+    <target name="sber.check-nginx-config">
+        <available file="${nginx.sites-enabled.path}/${sber.nginx-config-name}"
+            property="nginx-config-linked"/>
+    </target>
+
+    <target name="sber.link-nginx-config"
+            failonerror="on"
+            depends="sber.check-nginx-config"
+            unless="nginx-config-linked">
+        <symlink link="${nginx.sites-enabled.path}"
+                resource="${packaging.target.current-path}/environment/nginx/${sber.nginx-config-name}"/>
+    </target>
+
+    <target name="nginx.config-test" failonerror="on">
+        <exec executable="nginx">
+            <arg line="-t"/>
+        </exec>
+    </target>
+
+    <target name="nginx.restart" failonerror="on">
+        <exec executable="sudo service nginx restart"/>
+    </target>
+
 </project>
