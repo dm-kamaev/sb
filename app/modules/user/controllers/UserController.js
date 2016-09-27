@@ -57,7 +57,9 @@ class UserController extends Controller {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.toggleEnabled(id, false));
         if (!res[0]) throw new errors.NotFoundError('Userfund', id);
-    };
+    }
+
+
     /**
      * @api {put} /user/ update user
      * @apiName update user
@@ -67,18 +69,23 @@ class UserController extends Controller {
      *
      * @apiParamExample {json} example:
      * {
-     * 		"firstName": "Max",
-     * 		"lastName": "Rylkin"
+     *     "firstName": "Vasya",
+     *     "lastName": "Ivanov",
+     *     "email":    "vasya-ivanov@mail.ru"
      * }
      */
     actionUpdateUser(actionContext) {
-        var authId = actionContext.request.user.authId,
-            userData = actionContext.request.body;
+        var request = actionContext.request,
+            user    = request.user  || {};
+        var authId   = user.authId  || null,
+            userData = request.body || {};
 
         if (!authId) throw new errors.HttpError('Unathorized', 403);
         await(userService.updateAuthUser(authId, userData));
         return null;
-    };
+    }
+
+
     /**
      * @api {get} /user get user
      * @apiName get current user

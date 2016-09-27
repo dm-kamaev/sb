@@ -163,13 +163,26 @@ UserService.setAuthId = function (id, authId) {
     }));
 };
 
+
+/**
+ * update Auth User
+ * @param  {[int]} authId   [description]
+ * @param  {[obj]} userData {
+*      "firstName": "Vasya",
+*      "lastName": "Ivanov"
+*      "email":    "vasya-ivanov@mail.ru"
+* }
+* @return {[type]}          [description]
+*/
 UserService.updateAuthUser = function (authId, userData) {
     var response = await(axios.patch(`/user/${authId}`, {
-        firstName: userData.firstName,
-        lastName: userData.lastName
+        firstName: userData.firstName  || '',
+        lastName:  userData.lastName   || '',
+        email:     userData.email      || ''
     }));
     return response.data;
 };
+
 
 UserService.setUserFund = function (userFundId, oldUserFundId) {
     return await(sequelize.sequelize.transaction(t => {
