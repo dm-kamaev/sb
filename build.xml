@@ -129,7 +129,7 @@
                 multicaster.supervisor.unlink"
         if="demo-environment">
       <echo message="Link ${multicaster.source.supervisor} ${multicaster.target.supervisor}"/>
-      <symlink link="${emulator.target.supervisor}" resource="${emulator.source.supervisor}"/>
+      <symlink link="${multicaster.target.supervisor}" resource="${multicaster.source.supervisor}"/>
   </target>
 
   <target name="multicaster.supervisor.unlink" depends="sber.check-demo-env" if="demo-environment">
