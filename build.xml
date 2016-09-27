@@ -132,7 +132,7 @@
       <symlink link="${emulator.target.supervisor}" resource="${emulator.source.supervisor}"/>
   </target>
 
-  <target name="multicaster.supervisor.unlink" if="demo-environment">
+  <target name="multicaster.supervisor.unlink" depends="sber.check-demo-env" if="demo-environment">
       <symlink action="delete" link="${multicaster.target.supervisor}"/>
   </target>
 
