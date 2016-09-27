@@ -21,5 +21,6 @@
 	"Failed create order in Sberbank acquiring. errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'": "Не удалось создать платеж в Сбербанк эквайринг. errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",
 	"You changed the monthly payment amount.": "Вы изменили сумму ежемесячного платежа.",
 	"Failed connection with sberbank acquiring (first pay). {{error}}": "Ошибка соединения со сбербанк эквайринг (первый платеж). {{error}}",
-	"Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}"
+	"Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}",
+	"SberUser": "SberUser"
 }

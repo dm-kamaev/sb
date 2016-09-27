@@ -13,7 +13,7 @@ class NotFoundError extends Error {
           var modelName = arguments[0], id = arguments[1];
           super(i18n.__('Can\'t find {{modelName}} with id {{id}}', {
               modelName,
-              id
+              id: id || 'null'
           }));
         } else {
           super(arguments[0]);
