@@ -3,12 +3,11 @@
 const services = require('../../services');
 const config_db = require('../../config/db.json');
 const db = require('pg-promise')()(config_db);
-const log = console.log;
+const chakram = require('chakram');
+const expect = chakram.expect;
 
 module.exports = function(context) {
-    var chakram = context.chakram,
-        expect  = context.expect,
-        listEntities = context.listEntities;
+    var listEntities = context.listEntities;
 
     function createEntity () {
         var entities = services.entity.generateEntities(1); // one entity
