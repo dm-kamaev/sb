@@ -138,7 +138,9 @@ class UserFundController extends Controller {
             all,
             today
         };
-    };
+    }
+
+
     /**
      * @api {post} /user-fund/amount set amount
      * @apiName set amount
@@ -172,6 +174,8 @@ class UserFundController extends Controller {
             // null –– current amount, integer –– salary per month in cents
             salary     = data.salary || null;
 
+        if (!sberUserId)    { throw new errors.NotFoundError(i18n.__('SberUser'), sberUserId); }
+        if (!ownUserFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), ownUserFundId); }
         // check whether userFund enabled if he is not the owner
         // if now first pay then user's userfund is always disabled, but for another userfund
         // must enable
