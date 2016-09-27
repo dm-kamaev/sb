@@ -152,22 +152,25 @@ class UserFundController extends Controller {
      *   "userFundId": "1",
      *   "amount": "20000",
      *   "app": true,
-     *   "percent": null
+     *   "percent": null,
+     *   "salary":  null
      * }
      */
     actionSetAmount(actionContext) {
         var request = actionContext.request,
-            user    = request.user;
-        var sberUserId    = user.id,
+            user    = request.user  || {};
+        var sberUserId    = user.id || null,
             changer       = 'user',
             ownUserFundId = (user.userFund) ? user.userFund.id : null,
-            data          = actionContext.data,
+            data          = actionContext.data || {},
             // now user can only pay to own userFund
             userFundId = data.userFundId || ownUserFundId,
-            amount     = data.amount,
+            amount     = data.amount || null,
             isCordova  = data.app,
             // null –– current amount, integer –– a percentage of your salary
-            percent    = data.percent;
+            percent    = data.percent || null,
+            // null –– current amount, integer –– salary per month in cents
+            salary     = data.salary || null;
 
         // check whether userFund enabled if he is not the owner
         // if now first pay then user's userfund is always disabled, but for another userfund
@@ -175,7 +178,7 @@ class UserFundController extends Controller {
         userFundService.checkEnableAnotherUserFund(ownUserFundId, userFundId);
         await(
             userFundService.setAmount({
-                sberUserId, userFundId, changer, amount, percent
+                sberUserId, userFundId, changer, amount, percent, salary
             })
         );
 

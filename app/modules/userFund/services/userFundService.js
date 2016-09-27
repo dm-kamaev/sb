@@ -223,13 +223,38 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
     }));
 };
 
+
+/**
+ * create record in UserFundSubscription and DesiredAmountHistory,
+ * then update UserFundSubscription (insert currentAmountId  from DesiredAmountHistory)
+ * @param {[obj]} params {
+ *    sberUserId [int],
+ *    userFundId [int],
+ *    changer    [str] –– 'user' || 'admin',
+ *    amount     [int] –– in cents,
+ *    percent    [int] null –– current amount, integer –– a percentage of your salary,
+ *    salary     [int] null –– current amount, integer –– salary per month in cents,
+ * }
+ */
 UserFundService.setAmount = function(params) {
     var sberUserId = params.sberUserId,
         userFundId = params.userFundId,
         changer    = params.changer,
         amount     = params.amount,
-        // null –– current amount, integer –– a percentage of your salary
-        percent    = params.percent;
+        percent    = params.percent,
+        salary     = params.salary;
+
+    function createTransaction(transact) {
+        return sequelize.models.UserFundSubscription.findOrCreate({
+                where: {
+                    userFundId,
+                    sberUserId
+                }
+            }).spread(subscription => subscription)
+              .then(createRecordAmount)
+              .then(setCurrentAmountId)
+              .catch(err => { throw err });
+    }
 
     function createRecordAmount(subscription) {
         var recordAmount = {
@@ -237,7 +262,11 @@ UserFundService.setAmount = function(params) {
             changer,
             amount,
         };
-        if (percent) { recordAmount.percent = percent; }
+        if (percent && salary) {
+            console.log('HERE');
+            recordAmount.percent = percent;
+            recordAmount.salary  = salary;
+        }
         return sequelize.models.DesiredAmountHistory.create(recordAmount);
     }
 
@@ -252,19 +281,7 @@ UserFundService.setAmount = function(params) {
         });
     }
 
-    return await(sequelize.sequelize_.transaction(t => {
-        return sequelize.models.UserFundSubscription.findOrCreate({
-            where: {
-                userFundId,
-                sberUserId
-            }
-        }).spread(subscription => subscription)
-          .then(createRecordAmount)
-          .then(setCurrentAmountId)
-          .catch(err => {
-              throw err;
-          });
-    }));
+    return await(sequelize.sequelize_.transaction(createTransaction));
 };
 
 UserFundService.changeAmount = function(sberUserId, subscriptionId, changer, amount) {
