@@ -22,6 +22,10 @@
 
     <property name="packaging.source.supervisor"
             value="${packaging.target.current-path}/environment/supervisord/${packaging.project}.conf"/>
+    <property name="multicaster.source.supervisor"
+            value="${packaging.target.current-path}/environment/supervisord/callback-multicaster.conf"/>
+    <property name="multicaster.target.supervisor"
+            value="/etc/supervisor/conf.d/callback-multicaster.conf"/>
 
     <property name="packaging.source.media.path" value="${basedir}/public/uploads/entities"/>
     <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entities"/>
@@ -47,6 +51,7 @@
              packaging.supervisor.link,
              user.supervisor.link,
              auth.supervisor.link,
+             multicaster.supervisor.link,
              sber.make-tmp-dir,
              user.migrate,
              sber.migrate-database,
@@ -111,6 +116,24 @@
       <exec executable="mkdir" dir="${basedir}">
           <arg line="app/components/sequelize/tmp"/>
       </exec>
+  </target>
+
+  <target name="sber.check-demo-env">
+      <condition property="demo-environment">
+          <contains string="${params.env}" substring="demo"/>
+      </condition>
+  </target>
+
+  <target name="multicaster.supervisor.link"
+        depends="sber.check-demo-environment,
+                emulator.supervisor.unlink"
+        if="demo-environment">
+      <echo message="Link ${multicaster.source.supervisor} ${multicaster.target.supervisor}"/>
+      <symlink link="${emulator.target.supervisor}" resource="${emulator.source.supervisor}"/>
+  </target>
+
+  <target name="multicaster.supervisor.unlink" if="demo-environment">
+      <symlink action="delete" link="${multicaster.target.supervisor}"/>
   </target>
 
   <target name="packaging.shared-folders.link.media" depends="packaging.shared-folders.unlink.media">
