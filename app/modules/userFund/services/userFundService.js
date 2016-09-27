@@ -133,11 +133,7 @@ UserFundService.getTodayCreatedUserFunds = function() {
 UserFundService.removeUserFund = function (userFundId) {
     return await(sequelize.models.UserFund.update({
         deletedAt: new Date(),
-        enabled:false, // hide for anither user
-        // creatorId is null,
-        // because if we removed userFund, we immediately create new empty userFund
-        // for user, but creatorId uniq
-        creatorId: null,
+        enabled:false, // hide for another user
     }, {
         where: {
            id:userFundId,
