@@ -59,7 +59,8 @@ UserService.getOrders = function (id) {
   "userFundId",
   "Order".type as type,
   "title",
-  "description"
+  "description",
+  "Order"."userFundSnapshot" as "userFundSnapshot"
 FROM "Order"
 JOIN "UserFundSubscription"
     ON "UserFundSubscription"."id" = "Order"."userFundSubscriptionId"
