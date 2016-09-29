@@ -48,6 +48,7 @@ UserService.findSberUserById = function (id, include) {
     }));
 };
 
+
 UserService.getOrders = function (id) {
     return await(sequelize.sequelize.query(`SELECT
   "scheduledPayDate",
@@ -252,15 +253,21 @@ UserService.removeCard = function (sberUserId) {
 };
 
 
-UserService.getSberUsers = function () {
-    return await(sequelize.models.SberUser.findAll({
-        where: {
-            authId: {
-                $ne: null
-            }
+
+UserService.getSberUsers = function (condinitions) {
+    var where = {
+        authId: {
+            $ne: null
         }
-    }))
+    };
+    if (condinitions) {
+        Object.keys(condinitions).forEach(key => {
+            where[key] = condinitions[key];
+        });
+    }
+    return await(sequelize.models.SberUser.findAll({ where }));
 }
+
 
 UserService.getAuthUsersByIds = function (ids) {
     var response = await(axios.get('/users', {

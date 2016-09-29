@@ -1,4 +1,6 @@
 {
+	"Your payments to User fund \"{{userFundName}}\" stopped, he was removed": "Ваши платежи в Юзер фонд \"{{userFundName}}\" остановлены, он был удален",
+	"Your User Fund \"{{userFundName}}\" removed.": "Ваш Юзер фонд \"{{userFundName}}\" был удален",
 	"Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}": "Не найдена подписка для пользователя с id: {{sberUserId}} и userFundId: {{userFundId}}",
 	"User Fund was removed": "Юзер фонд был удален",
 	"Subscription included": "Подписка включена",

@@ -6,7 +6,13 @@ const sequelize = require('../../../components/sequelize');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const userFundService = require('../services/userFundService');
+const logger = require('../../../components/logger').getLogger('main');
+const mailService = require('../../auth/services/mailService.js');
 
+const userConfig = require('../../../../config/user-config/config');
+const axios = require('axios').create({
+    baseURL: `http://${userConfig.host}:${userConfig.port}`
+});
 
 var UserFundService = {};
 
@@ -103,9 +109,19 @@ UserFundService.getUserFundsWithSberUser = function(listId) {
     }));
 };
 
-
-UserFundService.getUserFunds = function() {
+/**
+ * get userFunds
+ * @param  {[obj]} where optional param
+ * @return {[type]}
+ */
+UserFundService.getUserFunds = function (where) {
+    if (where) { return await(sequelize.models.UserFund.findAll(where)); }
     return await(sequelize.models.UserFund.findAll());
+};
+
+
+UserFundService.getUserFund = function (where) {
+    return await(sequelize.models.UserFund.findOne({ where }));
 };
 
 
@@ -263,7 +279,6 @@ UserFundService.setAmount = function(params) {
             amount,
         };
         if (percent && salary) {
-            console.log('HERE');
             recordAmount.percent = percent;
             recordAmount.salary  = salary;
         }
@@ -364,11 +379,24 @@ UserFundService.updateUserFundSubscription = function(id, data) {
 
 
 /**
+ * update user subscriptions
+ * @param  {[obj]} where
+ * @param  {[obj]} data
+ * @return {[type]}
+ */
+UserFundService.updateSubscriptions = function (where, data) {
+    return await(sequelize.models.UserFundSubscription.update(
+        data, { where })
+    );
+};
+
+
+/**
  * update user subscriptions by sberUserId and returning data after update
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
-UserFundService.updateSubscriptions = function(sberUserId, data) {
+UserFundService.updateSubscriptionsReturn = function(sberUserId, data) {
     return await(sequelize.models.UserFundSubscription.update(data, {
         where: {
             sberUserId,
@@ -557,6 +585,16 @@ UserFundService.getUserFundSubscriptionById = function(subscriptionId) {
             id: subscriptionId
         }
     }))
+}
+
+
+/**
+ * get userFund Subscriptions by fields
+ * @param  {[obj]} where
+ * @return {[type]}
+ */
+UserFundService.getSubscriptions = function(where) {
+    return await(sequelize.models.UserFundSubscription.findAll({ where }));
 }
 
 UserFundService.getUserFundSubscriptionByOrder = function(sberAcquOrderNumber) {
