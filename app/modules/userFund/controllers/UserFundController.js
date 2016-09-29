@@ -2,6 +2,7 @@
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
+const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
@@ -10,6 +11,7 @@ const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
+const sendMail = require('../services/sendMail.js');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
 
@@ -34,9 +36,9 @@ class UserFundController extends Controller {
         delete data.id;
         delete data.enabled;
         var updatedCount = await(userFundService.updateUserFund(id, data));
-        if (!updatedCount[0]) throw new errors.NotFoundError(i18n.__('UserFund'), id);
+        if (!updatedCount[0]) { throw new errors.NotFoundError(i18n.__('UserFund'), id); }
         return null;
-    };
+    }
 
     /**
      * @api {get} /user-fund/:id get user fund
@@ -53,7 +55,7 @@ class UserFundController extends Controller {
         var includes = ctx.request.query.include || false,
             nested = ctx.request.query.nested || false;
         var userFund = await(userFundService.getUserFund(id, includes, nested));
-        if (!userFund) throw new errors.NotFoundError(i18n.__('UserFund'), id);
+        if (!userFund) { throw new errors.NotFoundError(i18n.__('UserFund'), id); }
         return userFundView.renderUserFund(userFund);
     }
 
@@ -95,7 +97,7 @@ class UserFundController extends Controller {
 
     /**
      * @api {delete} /user-fund/:entityId
-     * @apiName removeEntity
+     * @apiName remove Entity
      * @apiGroup UserFund
      *
      *
@@ -105,9 +107,9 @@ class UserFundController extends Controller {
     actionRemoveEntity(actionContext, entityId) {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.removeEntity(id, entityId));
-        if (!res) throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400);
+        if (!res) { throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400); }
         return null;
-    };
+    }
 
     /**
      * @api {get} /user-fund/entity get entities
@@ -122,7 +124,9 @@ class UserFundController extends Controller {
         var userFundId = actionContext.request.user.userFund.id;
         var entities = await(userFundService.getEntities(userFundId));
         return entityView.renderEntities(entities);
-    };
+    }
+
+
     /**
      * @api {get} /user-fund/count get today and all count
      * @apiName count
@@ -214,7 +218,7 @@ class UserFundController extends Controller {
         var sberUserId = actionContext.request.user.id,
             userFundId = actionContext.request.user.userFund.id;
         return await(userFundService.getCurrentAmount(sberUserId, userFundId));
-    };
+    }
 
 
     /**
@@ -251,6 +255,7 @@ class UserFundController extends Controller {
         }
     }
 
+
     /**
      * @api {post} /user-fund/remove-userFund remove userFund
      * @apiName remove userFund
@@ -260,13 +265,35 @@ class UserFundController extends Controller {
         var user       = actionContext.request.user || {},
             sberUserId = user.id || null,
             userFundId = (user.userFund) ? user.userFund.id : null;
-        await(
-            userFundService.switchSubscription(sberUserId, userFundId, {
-                enabled: false
-            })
-        );
+
+        var userFund = await(userFundService.getUserFund({ id: userFundId })) || {};
+        var sberUser = userService.findSberUserById(sberUserId) || {};
+
+        // removed UF, card and send email owner
         await(userFundService.removeUserFund(userFundId));
         await(userService.removeCard(sberUserId));
+        new sendMail.userFund().removeUserFunds([
+            { authId: sberUser.authId, userFundName: userFund.title },
+        ]);
+
+        // disable subcriptions on UF, send email to subscribers
+        var subscriptions = userFundService.getSubscriptions({ userFundId }) || [];
+        var sberUserIds = subscriptions.map(subscription => subscription.SberUserId);
+        var sberUsers = await(userService.getSberUsers({
+            id: {
+                $in: sberUserIds,
+            }
+        })) || [];
+        var dataForMail = sberUsers.map(sberUser => {
+            return { authId: sberUser.authId, userFundName: userFund.title }
+        });
+
+        await(userFundService.updateSubscriptions(
+            { userFundId },
+            { enabled: false }
+        ));
+        new sendMail.userFundSubscription().disableSubscriptions(dataForMail);
+
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund
         await(userFundService.createUserFund({
@@ -275,6 +302,7 @@ class UserFundController extends Controller {
             creatorId:  sberUserId,
             enabled:    false
         }));
+
         return { message: i18n.__('User Fund was removed') };
     }
 
