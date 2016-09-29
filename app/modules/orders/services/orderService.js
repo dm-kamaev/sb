@@ -688,7 +688,7 @@ OrderService.writeInExcel = function (countPayments) {
  */
 function disableUserFundSubscription_(sberUserId) {
     var userFundSubscriptions =
-        userFundService.updateSubscriptions(sberUserId, {
+        userFundService.updateSubscriptionsReturn(sberUserId, {
             enabled: false
         });
     return userFundSubscriptions.map(subsription => subsription.userFundId);
@@ -752,9 +752,7 @@ function sendEmailOwnerUserFund_(userFundIds) {
     }).forEach((user) => {
         var email = user.email,
             userFundName = user.userFundName;
-        if (!email) {
-            return;
-        }
+        if (!email) { return; }
         var data = i18n.__(
             'Your User Fund "{{userFundName}}" deactivated.', {
                 userFundName

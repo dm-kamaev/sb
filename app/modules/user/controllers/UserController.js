@@ -3,6 +3,7 @@
 
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
+const util = require('util');
 const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
 const userService = require('../services/userService');
@@ -79,10 +80,15 @@ class UserController extends Controller {
             user    = request.user  || {};
         var authId   = user.authId  || null,
             userData = request.body || {};
-
         if (!authId) throw new errors.HttpError('Unathorized', 403);
-        await(userService.updateAuthUser(authId, userData));
-        return null;
+
+        try {
+            await(userService.updateAuthUser(authId, userData));
+            return null;
+        } catch (error) {
+            if (error.data) { throw new errors.ValidationError(error.data); }
+            throw new errors.HttpError(util.inspect(error, { depth:4 }), 503);
+        }
     }
 
 
