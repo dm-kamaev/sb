@@ -4,6 +4,7 @@ const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const config = require('../../../../config/user-config/config');
+const orderStatus = require('../../orders/enums/orderStatus.js');
 const axios = require('axios').create({
     baseURL: `http://${config.host}:${config.port}`
 });
@@ -49,41 +50,46 @@ UserService.findSberUserById = function (id, include) {
 };
 
 
-UserService.getOrders = function (id) {
-    return await(sequelize.sequelize.query(`SELECT
-  "scheduledPayDate",
-  "Order"."createdAt" as "createdAt",
-  "Order".status as status,
-  "sberAcquOrderNumber",
-  "sberAcquOrderId",
-  "amount",
-  "userFundId",
-  "Order".type as type,
-  "title",
-  "description",
-  "Order"."userFundSnapshot" as "userFundSnapshot"
-FROM "Order"
-JOIN "UserFundSubscription"
-    ON "UserFundSubscription"."id" = "Order"."userFundSubscriptionId"
-JOIN "SberUser"
-  ON "SberUser"."id" = "UserFundSubscription"."sberUserId"
-  AND "SberUser".id = :id
-JOIN "UserFund"
-  ON "UserFundSubscription"."userFundId" = "UserFund".id`, {
+/**
+ * get user orders
+ * @param  {[int]}  sberUserId
+ * @return {[type]}
+ */
+UserService.getOrders = function (sberUserId) {
+    var query =
+    `SELECT
+        "scheduledPayDate",
+        status,
+        "Order"."createdAt" as "createdAt",
+        "Order".status as status,
+        "sberAcquOrderNumber",
+        "sberAcquOrderId",
+        amount,
+        "userFundId",
+        "Order".type as type,
+        title,
+        description,
+        "Order"."userFundSnapshot" as "userFundSnapshot"
+    FROM "Order"
+    JOIN "UserFundSubscription" AS ufs
+        ON ufs.id = "Order"."userFundSubscriptionId"
+    JOIN "SberUser" AS su
+        ON  su.id = ufs."sberUserId"
+        AND su.id = :id
+    JOIN "UserFund" AS uf
+        ON ufs."userFundId" = uf.id
+    WHERE status= :status
+    ORDER BY "createdAt" DESC`;
+
+    return await(sequelize.sequelize.query(query, {
         type: sequelize.sequelize.QueryTypes.SELECT,
         replacements: {
-            id
+            id:     sberUserId,
+            status: orderStatus.PAID
         }
     }));
-
-    var orders = [];
-    sberUser.userFundSubscription.forEach(sub => {
-        orders = orders.concat(sub.order.map(order => Object.assign(order, {
-            userFund: sub.userFund
-        })))
-    });
-    return orders
 }
+
 
 /**
  * if verify card user then exist data else null
