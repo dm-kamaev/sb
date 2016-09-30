@@ -114,7 +114,7 @@ OrderService.firstPayOrSendMessage = function (params) {
             userFundSnapshot:       userFund,
             status:                 orderStatus.NEW,
             type:                   orderTypes.FIRST,
-            scheduledPayDate:       getScheduledDate(new Date(), new Date())
+            scheduledPayDate:       new Date()
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());

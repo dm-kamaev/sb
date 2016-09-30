@@ -1,14 +1,16 @@
 'use strict';
 
 const sequelize = require('../../../components/sequelize');
-var StateMentService = {};
+const await = require('asyncawait/await');
+const async = require('asyncawait/async');
+var StatementService = {};
 
-StateMentService.parseStatement = function(file) {
-    var arr = file.toString().split('\n'),
+StatementService.parseStatement = function(file) {
+    var arr = file.toString().split('\r\n'),
         orders = []
 
     for (var i = 0; i < arr.length; i++) {
-        if (~arr[i].indexOf('СекцияДокумент')) {
+        if (~arr[i].indexOf('СекцияДокумент=Банковский ордер')) {
             var order = {
                 // sberAcquOrderNumber:
                 bankNumber: arr[++i].split('=')[1],
@@ -30,10 +32,39 @@ StateMentService.parseStatement = function(file) {
             orders.push(order)
         }
     }
+    return orders;
 
     // sequelize.models.Statement.create({
     //     fileName:
     // })
 }
 
-module.exports = StateMentService;
+StatementService.handleStatement = function(data) {
+    return await(sequelize.sequelize.transaction(async(t => {
+        var orders = await(sequelize.sequelize.query('SELECT * FROM "StatementItem" WHERE "sberAcquOrderNumber" IN (:sberAcquOrderIds)', {
+            type: sequelize.sequelize.QueryTypes.SELECT,
+            replacements: {
+                sberAcquOrderIds: data.bankOrders.map(order => order.sberAcquOrderNumber)
+            }
+        }));
+
+        if (orders.length) return {
+            success: false,
+            orders
+        };
+
+        var statement = await(sequelize.models.Statement.create(data));
+
+        var statementItem = await(sequelize.models.StatementItem.bulkCreate(data.bankOrders.map(order => Object.assign(order, {
+           statementId: statement.id
+        }))));
+
+        return {
+            success: true,
+            statement,
+            statementItem
+        }
+    })))
+};
+
+module.exports = StatementService;
