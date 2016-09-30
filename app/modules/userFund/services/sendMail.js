@@ -9,6 +9,7 @@ const sequelize = require('../../../components/sequelize');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const userFundService = require('../services/userFundService');
+const microService = require('../../micro/services/microService.js');
 const logger = require('../../../components/logger').getLogger('main');
 const mailService = require('../../auth/services/mailService.js');
 
@@ -38,7 +39,7 @@ exports.userFund = class  {
      */
     removeUserFunds(data) {
         data.map((user) => {
-            user.email = restGetUserData_(user.authId).email;
+            user.email = microService.getUserData(user.authId).email;
             return user;
         }).forEach((user) => {
             var email = user.email,
@@ -92,7 +93,7 @@ exports.userFundSubscription = class {
      */
     disableSubscriptions (data) {
         data.map((user) => {
-            user.email = restGetUserData_(user.authId).email;
+            user.email = microService.getUserData(user.authId).email;
             return user;
         }).forEach((user) => {
             var email = user.email,
@@ -123,14 +124,3 @@ exports.userFundSubscription = class {
         }
     }
 };
-
-
-/**
- * HTTP request for get user data
- * @param  {[int]} authId
- * @return {[obj]}
- */
-function restGetUserData_(authId) {
-    var resp = await(axios.get(`/user/${authId}`));
-    return resp.data || {};
-}
