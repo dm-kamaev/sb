@@ -48,6 +48,7 @@ UserService.findSberUserById = function (id, include) {
     }));
 };
 
+
 UserService.getOrders = function (id) {
     return await(sequelize.sequelize.query(`SELECT
   "scheduledPayDate",
@@ -59,7 +60,8 @@ UserService.getOrders = function (id) {
   "userFundId",
   "Order".type as type,
   "title",
-  "description"
+  "description",
+  "Order"."userFundSnapshot" as "userFundSnapshot"
 FROM "Order"
 JOIN "UserFundSubscription"
     ON "UserFundSubscription"."id" = "Order"."userFundSubscriptionId"
@@ -92,6 +94,11 @@ UserService.findCardBySberUserId = function (sberUserId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id: sberUserId
+        },
+        include: {
+            model: sequelize.models.Card,
+            as:    'currentCard',
+            required: false
         }
     }));
 };
@@ -158,14 +165,26 @@ UserService.setAuthId = function (id, authId) {
     }));
 };
 
+
+/**
+ * update Auth User
+ * @param  {[int]} authId   [description]
+ * @param  {[obj]} userData {
+*      "firstName": "Vasya",
+*      "lastName": "Ivanov"
+*      "email":    "vasya-ivanov@mail.ru"
+* }
+* @return {[type]}          [description]
+*/
 UserService.updateAuthUser = function (authId, userData) {
     var response = await(axios.patch(`/user/${authId}`, {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email
+        firstName: userData.firstName  || '',
+        lastName:  userData.lastName   || '',
+        email:     userData.email      || ''
     }));
     return response.data;
 };
+
 
 UserService.setUserFund = function (userFundId, oldUserFundId) {
     return await(sequelize.sequelize.transaction(t => {
@@ -218,15 +237,38 @@ UserService.createCard = function (sberUserId, data) {
     }));
 };
 
-UserService.getSberUsers = function () {
-    return await(sequelize.models.SberUser.findAll({
+
+/**
+ * remove card
+ * @param  {[int]} sberUserId
+ * @return {[type]}            [description]
+ */
+UserService.removeCard = function (sberUserId) {
+    return await(sequelize.models.Card.update({
+        deletedAt: new Date()
+    } ,{
         where: {
-            authId: {
-                $ne: null
-            }
+            sberUserId
         }
-    }))
+    }));
+};
+
+
+
+UserService.getSberUsers = function (condinitions) {
+    var where = {
+        authId: {
+            $ne: null
+        }
+    };
+    if (condinitions) {
+        Object.keys(condinitions).forEach(key => {
+            where[key] = condinitions[key];
+        });
+    }
+    return await(sequelize.models.SberUser.findAll({ where }));
 }
+
 
 UserService.getAuthUsersByIds = function (ids) {
     var response = await(axios.get('/users', {
@@ -261,7 +303,7 @@ LEFT JOIN "Order" ON "Order"."sberAcquOrderNumber" = (SELECT "Order"."sberAcquOr
                                                           WHERE "Order"."userFundSubscriptionId" = "UserFundSubscription".id
                                                           ORDER BY "Order"."createdAt" DESC
                                                           LIMIT 1)
-JOIN "DesiredAmountHistory" ON "UserFundSubscription"."currentAmountId" = "DesiredAmountHistory".id                                                           
+JOIN "DesiredAmountHistory" ON "UserFundSubscription"."currentAmountId" = "DesiredAmountHistory".id
 JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId"
 WHERE "sberUserId" = :id`, {
         type: sequelize.sequelize.QueryTypes.SELECT,

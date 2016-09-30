@@ -3,7 +3,9 @@
 
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
+const util = require('util');
 const errors = require('../../../components/errors');
+const logger = require('../../../components/logger').getLogger('main');
 const userService = require('../services/userService');
 const userFundService = require('../../userFund/services/userFundService');
 const userView = require('../views/userView');
@@ -56,7 +58,9 @@ class UserController extends Controller {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.toggleEnabled(id, false));
         if (!res[0]) throw new errors.NotFoundError('Userfund', id);
-    };
+    }
+
+
     /**
      * @api {put} /user/ update user
      * @apiName update user
@@ -66,18 +70,28 @@ class UserController extends Controller {
      *
      * @apiParamExample {json} example:
      * {
-     * 		"firstName": "Max",
-     * 		"lastName": "Rylkin"
+     *     "firstName": "Vasya",
+     *     "lastName": "Ivanov",
+     *     "email":    "vasya-ivanov@mail.ru"
      * }
      */
     actionUpdateUser(actionContext) {
-        var authId = actionContext.request.user.authId,
-            userData = actionContext.request.body;
-
+        var request = actionContext.request,
+            user    = request.user  || {};
+        var authId   = user.authId  || null,
+            userData = request.body || {};
         if (!authId) throw new errors.HttpError('Unathorized', 403);
-        await(userService.updateAuthUser(authId, userData));
-        return null;
-    };
+
+        try {
+            await(userService.updateAuthUser(authId, userData));
+            return null;
+        } catch (error) {
+            if (error.data) { throw new errors.ValidationError(error.data); }
+            throw new errors.HttpError(util.inspect(error, { depth:4 }), 503);
+        }
+    }
+
+
     /**
      * @api {get} /user get user
      * @apiName get current user

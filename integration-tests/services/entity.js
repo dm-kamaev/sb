@@ -10,13 +10,17 @@ var service = {};
 
 module.exports = service;
 
-service.generateEntities = function(number) {
+service.generateEntities = function(number, type) {
     var result = [];
     for (var i = 0; i < number; i++) {
         var entity = {};
         entity.title = chance.word();
         entity.description = chance.sentence();
-        entity.type = service.getRandomType();
+        if(type != undefined) {
+            entity.type = type;
+        } else {
+            entity.type = service.getRandomType();
+        }
         entity.published = true;
         entity.entities = [];
         result.push(entity);

@@ -7,6 +7,7 @@ const entityService = require('../services/entityService');
 const entityView = require('../views/entityView');
 const userFundView = require('../../userFund/views/userFundView');
 const errors = require('../../../components/errors');
+const logger = require('../../../components/logger').getLogger('main');
 const _ = require('lodash');
 
 class EntityController extends Controller {
@@ -56,13 +57,13 @@ class EntityController extends Controller {
             actionContext.response.set('Location', `/entity/${entity.id}`);
             return entityView.renderEntity(entity);
         } catch (err) {
-            if (err.name == 'SequelizeValidationError') {
+            if (err.name === 'SequelizeValidationError') {
                 throw new errors.ValidationError(err.errors);
             } else {
                 throw err;
             }
         }
-    };
+    }
     /**
      * @api {get} /entity/:type get entities by type
      * @apiName get entities by type
@@ -113,7 +114,7 @@ class EntityController extends Controller {
         var published = actionContext.request.published;
         var entities = await(entityService.getEntitiesByType(type, userFundId, published));
         return entityView.renderEntities(entities);
-    };
+    }
     /**
      * @api {get} /entity/:id get Entity by id
      * @apiName get Entity
@@ -136,13 +137,16 @@ class EntityController extends Controller {
      * @apiError (Error 404) NotFoundError entity with this id not found
      */
     actionGetEntity(actionContext, id) {
-        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
-            published = actionContext.request.published,
-            include = actionContext.request.query.include;
+        var request = actionContext.request,
+            user    = request.user || {};
+        var userFundId = (user.userFund) ? user.userFund.id : null,
+            published  = request.published,
+            include    = request.query.include;
+
         var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return entityView.renderEntity(entity);
-    };
+    }
     /**
      * @api {delete} /entity/:id delete entity by id
      * @apiName delete Entity
@@ -155,7 +159,7 @@ class EntityController extends Controller {
         var deleted = await(entityService.deleteEntity(id));
         if (!deleted) throw new errors.NotFoundError('Entity', id);
         return null;
-    };
+    }
     /**
      * @api {put} /entity/:id update entity by id
      * @apiName update Entity
@@ -191,13 +195,13 @@ class EntityController extends Controller {
             }
             return null;
         } catch (err) {
-            if (err.name == 'SequelizeValidationError') {
+            if (err.name === 'SequelizeValidationError') {
                 throw new errors.ValidationError(err.errors);
             } else {
                 throw err;
             }
         }
-    };
+    }
     /**
      * @api {get} /entity/:id/:type get associated entities by id
      * @apiName get Entity By Associated Id
@@ -213,18 +217,20 @@ class EntityController extends Controller {
      */
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
-            var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
-                published = actionContext.request.published;
+            var request    = actionContext.request,
+                sberUserId = request.user.id;
+            var userFundId = (request.user.userFund) ? request.user.userFund.id : null,
+                published  = request.published;
             var entities =
                 await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
             return entityView.renderEntities(entities);
         } catch (err) {
-            if (err.message == 'Not found') {
+            if (err.message === 'Not found') {
                 throw new errors.NotFoundError('Entity', id);
             }
             throw err;
         }
-    };
+    }
 
     /**
      * @api {post} /entity/:id/:otherId associate entities
@@ -239,14 +245,14 @@ class EntityController extends Controller {
         try {
             await(entityService.associateEntity(id, otherId));
         } catch (err) {
-            if (err.message == 'Relation exists') {
+            if (err.message === 'Relation exists') {
                 throw new errors.HttpError('Relation exists', 400);
             }
             var ids = [id, otherId].join(' OR ');
             throw new errors.NotFoundError('Entity', ids);
         }
         return null;
-    };
+    }
     /**
      * @api {get} /entity get all entities
      * @apiName All Entities
@@ -256,11 +262,13 @@ class EntityController extends Controller {
      *
      */
     actionGetAllEntities(actionContext) {
-        var userFundId = actionContext.request.user && actionContext.request.user.userFund.id,
-            published = actionContext.request.published;
+        var request = actionContext.request,
+            user    = request.user || {};
+        var userFundId = (user.userFund) ? user.userFund.id : null,
+            published  = request.published;
         var entities = await(entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
-    };
+    }
     /**
      * @api {delete} /entity/:id/:otherId remove entities association
      * @apiName remove association
@@ -279,7 +287,7 @@ class EntityController extends Controller {
             throw new errors.HttpError('Relation don\'t exists', 400);
         }
         return null;
-    };
+    }
     /**
      * @api {get} /entity/fund/today get today created Funds
      * @apiName get today created funds
@@ -293,7 +301,7 @@ class EntityController extends Controller {
         return {
             count: count
         };
-    };
+    }
     /**
      * @api {get} /entity/:id/user-fund get user funds
      * @apiName get user funds associated with this entity
@@ -308,7 +316,7 @@ class EntityController extends Controller {
             entity = await(entityService.getUserFunds(id, published));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return userFundView.renderUserFunds(entity.userFund);
-    };
+    }
     /**
      * @api {post} /entity/publishall publish all (test)
      * @apiName publish all
@@ -316,7 +324,7 @@ class EntityController extends Controller {
      */
     actionPublishAll(actionContext) {
         return await(entityService.publishAll());
-    };
+    }
     /**
      * @api {get} /entity/all get entities with include
      * @apiNane get entities with include
@@ -364,13 +372,14 @@ class EntityController extends Controller {
     actionGetEntitiesWithNested(actionContext) {
         var includes = actionContext.request.query.include;
         var type = actionContext.request.query.type;
+        var entities;
         try {
-            var entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
+             entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
         } catch (err) {
             throw new errors.HttpError('Wrong "include" or "type" query param!', 400);
         }
         return entityView.renderEntities(entities);
-    };
+    }
 }
 
 module.exports = EntityController;

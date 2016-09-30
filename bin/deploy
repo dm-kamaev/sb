@@ -20,6 +20,11 @@ else
 fi
 npm run config $env
 
+if [ "$env" = "prod" ] || [ "$env" = "demo" ]; then
+    echo "Build microservices config"
+    $gulp buildServicesProdConfig
+fi
+
 cd sber-emulator
 npm run config
 cd ..

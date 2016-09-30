@@ -3,11 +3,10 @@
 const services = require('../../services');
 const config_db = require('../../config/db.json');
 const db = require('pg-promise')()(config_db);
-const log = console.log;
+const chakram = require('chakram');
+const expect = chakram.expect;
 
 exports.switchSubscription = function(context) {
-    var chakram = context.chakram, expect  = context.expect;
-
     chakram.addMethod('checkTurnOnSubscribe', function(respObj) {
         var statusCode = respObj.response.statusCode,
             body       = respObj.response.body;
@@ -29,8 +28,6 @@ exports.switchSubscription = function(context) {
 
 
 exports.checkStatusSubscription = function(context) {
-    var chakram = context.chakram, expect = context.expect;
-
     chakram.addMethod('checkStatusSubscribe', function(enabled) {
         this.assert(
             context.enabled === enabled,

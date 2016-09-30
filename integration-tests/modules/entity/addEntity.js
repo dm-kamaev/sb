@@ -1,11 +1,10 @@
 'use strict'
 
 const services = require('../../services');
-const log = console.log;
+const chakram = require('chakram');
+const expect = chakram.expect;
 
 module.exports = function(context) {
-    var chakram = context.chakram, expect  = context.expect;
-
     chakram.addMethod('checkAddEntity', function(respObj) {
         var statusCode = respObj.response.statusCode,
             body       = respObj.response.body;

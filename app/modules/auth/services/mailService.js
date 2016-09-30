@@ -72,4 +72,48 @@ MailService.sendUserRecurrentPayments = function(email, emailData) {
     return emailData;
 };
 
+
+/**
+ * send email to user about problems with recurrent payments
+ * @param  {[str]}  email      adress
+ * @param  {[obj]}  emailData
+ * @return {[obj]}
+ */
+MailService.sendUserRemovedUserFund = function(email, emailData) {
+    var letter = new Letter(
+      'Ваш юзер фонд был удален',
+      '<div>' + emailData.data + '</div>',
+      'html'
+    );
+    try {
+        await(mailSender.sendMail(email, letter));
+    } catch (err) {
+        logger.critical('ERROR AT SENDING MAIL ', err.message)
+    }
+    // need for debug
+    return emailData;
+};
+
+
+/**
+ * send email to user about problems with recurrent payments
+ * @param  {[str]}  email      adress
+ * @param  {[obj]}  emailData
+ * @return {[obj]}
+ */
+MailService.sendUserDisableSubcription = function(email, emailData) {
+    var letter = new Letter(
+      'Ваш платежи приостановлены',
+      '<div>' + emailData.data + '</div>',
+      'html'
+    );
+    try {
+        await(mailSender.sendMail(email, letter));
+    } catch (err) {
+        logger.critical('ERROR AT SENDING MAIL ', err.message)
+    }
+    // need for debug
+    return emailData;
+};
+
 module.exports = MailService;

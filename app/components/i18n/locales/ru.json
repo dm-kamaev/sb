@@ -1,4 +1,7 @@
 {
+	"Your payments to User fund \"{{userFundName}}\" stopped, he was removed": "Ваши платежи в Юзер фонд \"{{userFundName}}\" остановлены, он был удален",
+	"Your User Fund \"{{userFundName}}\" removed.": "Ваш Юзер фонд \"{{userFundName}}\" был удален",
+	"Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}": "Не найдена подписка для пользователя с id: {{sberUserId}} и userFundId: {{userFundId}}",
 	"User Fund was removed": "Юзер фонд был удален",
 	"Subscription included": "Подписка включена",
 	"Subscription off": "Подписка выключена",
@@ -20,5 +23,6 @@
 	"Failed create order in Sberbank acquiring. errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'": "Не удалось создать платеж в Сбербанк эквайринг. errorCode: '{{errorCode}}', errorMessage: '{{errorMessage}}'",
 	"You changed the monthly payment amount.": "Вы изменили сумму ежемесячного платежа.",
 	"Failed connection with sberbank acquiring (first pay). {{error}}": "Ошибка соединения со сбербанк эквайринг (первый платеж). {{error}}",
-	"Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}"
+	"Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}",
+	"SberUser": "SberUser"
 }

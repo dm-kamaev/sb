@@ -17,8 +17,15 @@
     <property name="packaging.target.current-path" value="${packaging.target.basedir}/current"/>
     <property name="packaging.target.shared.path" value="/opt/${packaging.project}/shared"/>
 
+    <property name="nginx.sites-enabled.path" value="/etc/nginx/sites-enabled"/>
+    <property name="sber.nginx-config-name" value="sber-vmeste-${params.env}.conf"/>
+
     <property name="packaging.source.supervisor"
             value="${packaging.target.current-path}/environment/supervisord/${packaging.project}.conf"/>
+    <property name="multicaster.source.supervisor"
+            value="${packaging.target.current-path}/environment/supervisord/callback-multicaster.conf"/>
+    <property name="multicaster.target.supervisor"
+            value="/etc/supervisor/conf.d/callback-multicaster.conf"/>
 
     <property name="packaging.source.media.path" value="${basedir}/public/uploads/entities"/>
     <property name="packaging.target.shared.media" value="${packaging.target.shared.path}/public/uploads/entities"/>
@@ -44,6 +51,7 @@
              packaging.supervisor.link,
              user.supervisor.link,
              auth.supervisor.link,
+             multicaster.supervisor.link,
              sber.make-tmp-dir,
              user.migrate,
              sber.migrate-database,
@@ -51,6 +59,10 @@
              user.create-runtime-dir,
              sber.build-test-environment,
              packaging.release.folder.link,
+             sber.check-nginx-config,
+             sber.link-nginx-config,
+             nginx.config-test,
+             nginx.restart,
              packaging.rollback-script,
              packaging.supervisor.restart,
 	         packaging.crontab.install,
@@ -106,6 +118,24 @@
       </exec>
   </target>
 
+  <target name="sber.check-demo-env">
+      <condition property="demo-environment">
+          <contains string="${params.env}" substring="demo"/>
+      </condition>
+  </target>
+
+  <target name="multicaster.supervisor.link"
+        depends="sber.check-demo-env,
+                multicaster.supervisor.unlink"
+        if="demo-environment">
+      <echo message="Link ${multicaster.source.supervisor} ${multicaster.target.supervisor}"/>
+      <symlink link="${multicaster.target.supervisor}" resource="${multicaster.source.supervisor}"/>
+  </target>
+
+  <target name="multicaster.supervisor.unlink" depends="sber.check-demo-env" if="demo-environment">
+      <symlink action="delete" link="${multicaster.target.supervisor}"/>
+  </target>
+
   <target name="packaging.shared-folders.link.media" depends="packaging.shared-folders.unlink.media">
         <symlink link="${packaging.source.media.path}" resource="${packaging.target.shared.media}"/>
     </target>
@@ -152,4 +182,30 @@
             <arg line="run tests"/>
         </exec>
     </target>
+
+    <target name="sber.check-nginx-config">
+        <available file="${nginx.sites-enabled.path}/${sber.nginx-config-name}"
+            property="nginx-config-linked"/>
+    </target>
+
+    <target name="sber.link-nginx-config"
+            depends="sber.check-nginx-config"
+            unless="nginx-config-linked">
+        <symlink link="${nginx.sites-enabled.path}"
+                resource="${packaging.target.current-path}/environment/nginx/${sber.nginx-config-name}"
+                failonerror="on"/>
+    </target>
+
+    <target name="nginx.config-test">
+        <exec executable="nginx" failonerror="on">
+            <arg line="-t"/>
+        </exec>
+    </target>
+
+    <target name="nginx.restart">
+        <exec executable="service" failonerror="on">
+            <arg line="nginx restart"/>
+        </exec>
+    </target>
+
 </project>

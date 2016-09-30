@@ -9,6 +9,7 @@ const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const errors = require('../../../components/errors');
+const excel = require('../../../components/excel');
 const orderStatus = require('../enums/orderStatus');
 const orderTypes = require('../enums/orderTypes');
 const os = require('os');
@@ -106,11 +107,7 @@ OrderService.firstPayOrSendMessage = function (params) {
         throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
     }
 
-    if (!params.currentCardId) {
-
-        // var res = getListDirectionTopicFunds_(entities),
-        //     listDirectionsTopicsFunds = res.listDirectionsTopicsFunds,
-        //     listFunds = res.listFunds;
+    if (!params.isActiveCard) {
 
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
@@ -121,15 +118,14 @@ OrderService.firstPayOrSendMessage = function (params) {
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
-        // var sberAcquOrderNumber = orderItems[0].sberAcquOrderNumber;
 
         var responceSberAcqu;
         try {
             responceSberAcqu = sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: `http://${os.hostname()}:${config.port}/#success?app=${params.isCordova}`,
-                failUrl: `http://${os.hostname()}:${config.port}/#failure?app=${params.isCordova}`,
+                returnUrl: `${config.hostname}/#success?app=${params.isCordova}`,
+                failUrl: `${config.hostname}/#failure?app=${params.isCordova}`,
                 language: 'ru',
                 clientId: params.sberUserId,
             });
@@ -552,6 +548,139 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
     }))
 }
 
+
+// TODO: add sberbank report to arguments
+OrderService.generateReportTest = async(function (sberOrderId) {
+    // TODO: sber report parsing
+    // TODO: order conflict error handling
+    var orders = await(sequelize.models.Order.findAll({
+        attributes: ['amount', 'userFundSnapshot'],
+        where: {
+            status: orderStatus.PAID,
+            sberAcquOrderId: sberOrderId,
+            userFundSnapshot: {
+                $ne: null
+            }
+        }
+    }));
+    // TODO: move to private method
+    return countPayments_(orders);
+});
+
+
+/**
+ * count payments to all funds
+ * @param {[array]} paidOrders
+ * @return {[object]} {
+ *      payments: [{"id": 1, "payment": 123456, "title": "qwerty"}],
+ *      sumModulo: 2345
+ *  }
+ */
+function countPayments_(paidOrders) {
+    var fundsArray = [];
+    var sumModulo = 0;
+    paidOrders.forEach(order => {
+        var orderFunds = getFundsFromOrder_(order);
+        var fundPayment = Math.trunc(order.amount / orderFunds.count);
+        var modulo = order.amount - (fundPayment * orderFunds.count);
+        orderFunds.funds = _.map(orderFunds.funds, ord => {
+            ord.payment = fundPayment;
+            return ord;
+        });
+        fundsArray.push(orderFunds.funds);
+        sumModulo += modulo;
+    });
+    var result = {
+        payments: [],
+        sumModulo: sumModulo
+    }
+    fundsArray = _.flattenDeep(fundsArray);
+    fundsArray = _.groupBy(fundsArray, 'id');
+    _.forIn(fundsArray, function (val, key) {
+        var res = {
+            id: key,
+            title: val[0].title,
+            payment: _.sumBy(val, 'payment')
+        };
+
+        result.payments.push(res);
+    });
+    return result;
+}
+
+
+/**
+ * get funds array and funds count from order
+ * @param {[object]} order
+ * @return {object} {
+ *      funds: [{"id": 1}, {"id": 2}],
+ *      count: 2
+ *  }
+ */
+function getFundsFromOrder_(order) {
+    var funds = order.userFundSnapshot.fund;
+    var directionFunds = _.map(order.userFundSnapshot.direction,
+        direction => {
+            return direction.fund;
+        }
+    );
+    var topicFunds = _.map(order.userFundSnapshot.topic, topic => {
+        return topic.fund;
+    });
+    var topicDirectionFunds = _.map(order.userFundSnapshot.topic,
+        topic => {
+            return _.map(topic.direction, direction => {
+                return direction.fund;
+            });
+        }
+    );
+    var orderFunds = _.concat(funds, directionFunds, topicFunds,
+        topicDirectionFunds);
+    orderFunds = _.flattenDeep(orderFunds);
+    var fundsCount = orderFunds.length;
+
+    return {
+        funds: orderFunds,
+        count: fundsCount
+    };
+}
+
+
+/**
+ * recommendation write in excel.
+ * get calculated data for accountant, transform and write in .xlsx
+ * @param  {[type]} countPayments { payments: [{"id": 1, "payment": 123456, "title": "qwerty"}], sumModulo: 2345 }
+ * @return {[type]}
+ */
+OrderService.writeInExcel = function (countPayments) {
+    var fundPayments      = countPayments.payments,
+        remainderDivision = countPayments.sumModulo;
+    var dataForSheet = [
+        [ 'id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)' ]
+    ];
+    fundPayments.forEach((fundPayment) => {
+        dataForSheet.push(
+            [ fundPayment.id, fundPayment.title, fundPayment.payment ]
+        );
+    });
+    dataForSheet.push([ 'Остатки', ' ', remainderDivision ]);
+
+    var sheet = excel.createSheets(
+      [
+        {
+          name: 'Рекомендация',
+          value: dataForSheet,
+        }
+      ]
+    );
+    excel.write(
+        '../../../../public/uploads/recommendation/Рекомендация_'+
+        moment().format('YYYY_DD_MM')+'.xlsx',
+        sheet
+    );
+};
+
+
 /**
  * disable user's subsription and return list user fund id
  * @param  {[int]} sberUserId
@@ -559,7 +688,7 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
  */
 function disableUserFundSubscription_(sberUserId) {
     var userFundSubscriptions =
-        userFundService.updateSubscriptions(sberUserId, {
+        userFundService.updateSubscriptionsReturn(sberUserId, {
             enabled: false
         });
     return userFundSubscriptions.map(subsription => subsription.userFundId);
@@ -623,9 +752,7 @@ function sendEmailOwnerUserFund_(userFundIds) {
     }).forEach((user) => {
         var email = user.email,
             userFundName = user.userFundName;
-        if (!email) {
-            return;
-        }
+        if (!email) { return; }
         var data = i18n.__(
             'Your User Fund "{{userFundName}}" deactivated.', {
                 userFundName
@@ -651,10 +778,15 @@ function restGetUserData_(authId) {
 }
 
 
-function isEmptyUserFund_ (userFund){
+function isEmptyUserFund_ (userFund) {
     if (!userFund) { return true; }
-    if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) { return true; }
-    return false;
+    if (
+        !userFund.fund.length &&
+        !userFund.topic.length &&
+        !userFund.direction.length
+       ) {
+        return true;
+    }
 }
 
 module.exports = OrderService;
