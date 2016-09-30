@@ -1,0 +1,13 @@
+{
+  "userName": "Aventica-api",
+  "password": "tL4ilYyweW5DmEe",
+
+  "hostname":   "https://securepayments.sberbank.ru",
+
+  "registerOrder":  "/payment/rest/register.do?",
+  "getStatusOrder": "/payment/rest/getOrderStatusExtended.do?",
+  "payByBind":      "/payment/rest/paymentOrderBinding.do",
+
+  "recurringFrequency": "28",
+  "recurringExpiry": "21000101"
+}

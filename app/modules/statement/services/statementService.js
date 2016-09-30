@@ -1,9 +1,11 @@
 'use strict';
 
 const sequelize = require('../../../components/sequelize');
-var StateMentService = {};
+const await = require('asyncawait/await');
+const async = require('asyncawait/async');
+var StatementService = {};
 
-StateMentService.parseStatement = function(file) {
+StatementService.parseStatement = function(file) {
     var arr = file.toString().split('\r\n'),
         orders = []
 
@@ -37,4 +39,32 @@ StateMentService.parseStatement = function(file) {
     // })
 }
 
-module.exports = StateMentService;
+StatementService.handleStatement = function(data) {
+    return await(sequelize.sequelize.transaction(async(t => {
+        var orders = await(sequelize.sequelize.query('SELECT * FROM "StatementItem" WHERE "sberAcquOrderNumber" IN (:sberAcquOrderIds)', {
+            type: sequelize.sequelize.QueryTypes.SELECT,
+            replacements: {
+                sberAcquOrderIds: data.bankOrders.map(order => order.sberAcquOrderNumber)
+            }
+        }));
+
+        if (orders.length) return {
+            success: false,
+            orders
+        };
+
+        var statement = await(sequelize.models.Statement.create(data));
+
+        var statementItem = await(sequelize.models.StatementItem.bulkCreate(data.bankOrders.map(order => Object.assign(order, {
+           statementId: statement.id
+        }))));
+
+        return {
+            success: true,
+            statement,
+            statementItem
+        }
+    })))
+};
+
+module.exports = StatementService;

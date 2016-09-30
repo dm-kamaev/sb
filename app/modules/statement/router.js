@@ -10,8 +10,14 @@ const upload = multer({
 const StatementController = require('./controllers/StatementController');
 const statementController = new StatementController();
 
+var controllersArray = {};
+controllersArray['v1'] = statementController;
+
+var VersionedController = require('nodules/controller').VersionedController;
+var versionedController = new VersionedController(controllersArray);
+
 statementRouter.post('/upload',
     upload.single('statement'),
-    statementController.actionUploadStatement);
+    versionedController.actionUploadStatement);
 
 module.exports = statementRouter;

@@ -123,7 +123,10 @@ class UserFundController extends Controller {
     actionGetEntities(actionContext, id) {
         var userFundId = actionContext.request.user.userFund.id;
         var entities = await(userFundService.getEntities(userFundId));
-        return entityView.renderEntities(entities);
+        var renderedEntities = entityView.renderEntities(entities);
+        return renderedEntities.map(entity => Object.assign(entity, {
+            checked: true
+        }));
     }
 
 
