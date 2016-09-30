@@ -8,6 +8,7 @@ const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
+const microService = require('../../micro/services/microService.js');
 const errors = require('../../../components/errors');
 const excel = require('../../../components/excel');
 const orderStatus = require('../enums/orderStatus');
@@ -17,11 +18,6 @@ const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const moment = require('moment');
 const _ = require('lodash');
-
-const userConfig = require('../../../../config/user-config/config');
-const axios = require('axios').create({
-    baseURL: `http://${userConfig.host}:${userConfig.port}`
-});
 
 
 var OrderService = {};
@@ -114,7 +110,6 @@ OrderService.firstPayOrSendMessage = function (params) {
             userFundSnapshot:       userFund,
             status:                 orderStatus.NEW,
             type:                   orderTypes.FIRST,
-            scheduledPayDate:       getScheduledDate(new Date(), new Date())
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
@@ -489,7 +484,7 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         sberUserId = sberUser.id,
         authId     = sberUser.authId;
 
-    var userEmail = restGetUserData_(authId).email;
+    var userEmail = microService.getUserData(authId).email;
     if (!userEmail) {
         throw new errors.NotFoundError('email', authId);
     }
@@ -747,7 +742,7 @@ function sendEmailOwnerUserFund_(userFundIds) {
             userFundName: userFund.title
         };
     }).map((user) => {
-        user.email = restGetUserData_(user.authId).email;
+        user.email = microService.getUserData(user.authId).email;
         return user;
     }).forEach((user) => {
         var email = user.email,
@@ -764,17 +759,6 @@ function sendEmailOwnerUserFund_(userFundIds) {
             }
         );
     });
-}
-
-
-/**
- * HTTP request for get user data
- * @param  {[int]} authId
- * @return {[obj]}
- */
-function restGetUserData_(authId) {
-    var resp = await(axios.get(`/user/${authId}`));
-    return resp.data || {};
 }
 
 
