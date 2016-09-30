@@ -108,13 +108,13 @@ OrderService.firstPayOrSendMessage = function (params) {
     }
 
     if (!params.isActiveCard) {
-
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
-            amount: params.amount,
-            userFundSnapshot: userFund,
-            status: orderStatus.NEW,
-            type: orderTypes.FIRST
+            amount:                 params.amount,
+            userFundSnapshot:       userFund,
+            status:                 orderStatus.NEW,
+            type:                   orderTypes.FIRST,
+            scheduledPayDate:       getScheduledDate(new Date(), new Date())
         };
         var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
