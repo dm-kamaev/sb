@@ -18,10 +18,10 @@ var UserFundService = {};
 
 UserFundService.createUserFund = function(data) {
     return await(sequelize.models.UserFund.create({
-        title:       data.title,
+        title: data.title,
         description: data.description,
-        creatorId:   data.creatorId,
-        enabled:     data.enabled,
+        creatorId: data.creatorId,
+        enabled: data.enabled,
     }));
 };
 
@@ -114,13 +114,13 @@ UserFundService.getUserFundsWithSberUser = function(listId) {
  * @param  {[obj]} where optional param
  * @return {[type]}
  */
-UserFundService.getUserFunds = function (where) {
+UserFundService.getUserFunds = function(where) {
     if (where) { return await(sequelize.models.UserFund.findAll(where)); }
     return await(sequelize.models.UserFund.findAll());
 };
 
 
-UserFundService.getUserFund = function (where) {
+UserFundService.getUserFund = function(where) {
     return await(sequelize.models.UserFund.findOne({ where }));
 };
 
@@ -146,15 +146,15 @@ UserFundService.getTodayCreatedUserFunds = function() {
 * @param  {[int]}  userFundId
 * @return {[type]}
 */
-UserFundService.removeUserFund = function (userFundId) {
+UserFundService.removeUserFund = function(userFundId) {
     return await(sequelize.models.UserFund.update({
         deletedAt: new Date(),
-        enabled:false, // hide for another user
+        enabled: false, // hide for another user
     }, {
         where: {
-           id:userFundId,
-       },
-   }));
+            id: userFundId,
+        },
+    }));
 };
 
 
@@ -174,12 +174,12 @@ UserFundService.addEntity = function(id, entityId) {
                                         AND "Entity"."published" = true),
                                 CURRENT_TIMESTAMP,
                                 CURRENT_TIMESTAMP)`, {
-        type: sequelize.sequelize.QueryTypes.INSERT,
-        replacements: {
-            userFundId: id,
-            entityId
-        }
-    }))
+                                    type: sequelize.sequelize.QueryTypes.INSERT,
+                                    replacements: {
+                                        userFundId: id,
+                                        entityId
+                                    }
+                                }));
 };
 
 UserFundService.removeEntity = function(id, entityId) {
@@ -255,21 +255,21 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
 UserFundService.setAmount = function(params) {
     var sberUserId = params.sberUserId,
         userFundId = params.userFundId,
-        changer    = params.changer,
-        amount     = params.amount,
-        percent    = params.percent,
-        salary     = params.salary;
+        changer = params.changer,
+        amount = params.amount,
+        percent = params.percent,
+        salary = params.salary;
 
     function createTransaction(transact) {
         return sequelize.models.UserFundSubscription.findOrCreate({
-                where: {
-                    userFundId,
-                    sberUserId
-                }
-            }).spread(subscription => subscription)
+            where: {
+                userFundId,
+                sberUserId
+            }
+        }).spread(subscription => subscription)
               .then(createRecordAmount)
               .then(setCurrentAmountId)
-              .catch(err => { throw err });
+              .catch(err => { throw err; });
     }
 
     function createRecordAmount(subscription) {
@@ -280,12 +280,12 @@ UserFundService.setAmount = function(params) {
         };
         if (percent && salary) {
             recordAmount.percent = percent;
-            recordAmount.salary  = salary;
+            recordAmount.salary = salary;
         }
         return sequelize.models.DesiredAmountHistory.create(recordAmount);
     }
 
-    function setCurrentAmountId (desiredAmount) {
+    function setCurrentAmountId(desiredAmount) {
         return sequelize.models.UserFundSubscription.update({
             currentAmountId: desiredAmount.id
         }, {
@@ -313,13 +313,13 @@ UserFundService.changeAmount = function(sberUserId, subscriptionId, changer, amo
                     where: {
                         id: subscriptionId
                     }
-                })
+                });
             })
             .catch(err => {
                 throw err;
-            })
-    }))
-}
+            });
+    }));
+};
 
 UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
     var suuf = await(sequelize.models.UserFundSubscription.findOne({
@@ -384,7 +384,7 @@ UserFundService.updateUserFundSubscription = function(id, data) {
  * @param  {[obj]} data
  * @return {[type]}
  */
-UserFundService.updateSubscriptions = function (where, data) {
+UserFundService.updateSubscriptions = function(where, data) {
     return await(sequelize.models.UserFundSubscription.update(
         data, { where })
     );
@@ -519,12 +519,12 @@ UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
                                                                                            date_trunc('month',:currentDate::date - INTERVAL '5 days')
                                                                                            AND date_trunc('month', :currentDate::date))
   AND "UserFundSubscription"."createdAt" < "payDayHistory"."processedMonth"`, {
-        type: sequelize.sequelize.QueryTypes.SELECT,
-        replacements: {
-            allDates,
-            currentDate: nowDate || new Date().toISOString()
-        }
-    }));
+      type: sequelize.sequelize.QueryTypes.SELECT,
+      replacements: {
+          allDates,
+          currentDate: nowDate || new Date().toISOString()
+      }
+  }));
 };
 
 /**
@@ -576,16 +576,16 @@ UserFundService.getUserFundWithIncludes = function(id) {
             as: 'fund',
             required: false
         }]
-    }))
-}
+    }));
+};
 
 UserFundService.getUserFundSubscriptionById = function(subscriptionId) {
     return await(sequelize.models.UserFundSubscription.findOne({
         where: {
             id: subscriptionId
         }
-    }))
-}
+    }));
+};
 
 
 /**
@@ -595,7 +595,7 @@ UserFundService.getUserFundSubscriptionById = function(subscriptionId) {
  */
 UserFundService.getSubscriptions = function(where) {
     return await(sequelize.models.UserFundSubscription.findAll({ where }));
-}
+};
 
 UserFundService.getUserFundSubscriptionByOrder = function(sberAcquOrderNumber) {
     var order = await(sequelize.models.Order.findOne({
@@ -606,10 +606,10 @@ UserFundService.getUserFundSubscriptionByOrder = function(sberAcquOrderNumber) {
             model: sequelize.models.UserFundSubscription,
             as: 'userFundSubscription'
         }
-    }))
-    if (!order) throw new Error('Not found')
+    }));
+    if (!order) throw new Error('Not found');
 
-    return order.userFundSubscription
-}
+    return order.userFundSubscription;
+};
 
 module.exports = UserFundService;

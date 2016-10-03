@@ -92,15 +92,15 @@ module.exports = function(sequelize, DataTypes) {
                 OrderItem.hasMany(OrderItem, {
                     as: 'fund',
                     foreignKey: 'parentId'
-                })
+                });
                 OrderItem.hasMany(OrderItem, {
                     as: 'topic',
                     foreignKey: 'parentId'
-                })
+                });
                 OrderItem.hasMany(OrderItem, {
                     as: 'direction',
                     foreignKey: 'parentId'
-                })
+                });
             }
         }
     });

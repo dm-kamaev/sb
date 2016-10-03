@@ -29,9 +29,12 @@ logger.info('START: recurrent monthly payments');
 
     var subscriptions = userFundService.getUnhandledSubscriptions(allDates, nowDate);
     subscriptions.forEach(subscription => {
-        await(orderService.makeMonthlyPayment(subscription, nowDate));
+        try {
+            await(orderService.makeMonthlyPayment(subscription, nowDate));
+        } catch (err) {
+            logger.critical(err);
+        }
     });
-
 }))();
 
 

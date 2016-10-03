@@ -52,7 +52,7 @@ module.exports = function(sequelize, DataTypes) {
                 StatementItem.belongsTo(models.Statement, {
                     as: 'statement',
                     foreignKey: 'statementId'
-                })
+                });
             }
         }
     });

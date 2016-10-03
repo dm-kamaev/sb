@@ -23,7 +23,7 @@ const axios = require('axios').create({
  * send mail for action with userFund
  * @type {[type]}
  */
-exports.userFund = class  {
+exports.userFund = class {
     /**
      * constructor
      * @param  {[obj]} options {
@@ -31,7 +31,7 @@ exports.userFund = class  {
      * }
      * @return {[type]}         [description]
      */
-    constructor (options) { this.options = options || {}; }
+    constructor(options) { this.options = options || {}; }
     /**
      * send email to author UserFund when removed his userFund
      * @param  {[array]} data [ { authId: sberUser.authId, userFundName: userFund.title }, ... ]
@@ -49,8 +49,8 @@ exports.userFund = class  {
             }
             var data = i18n.__(
                 'Your User Fund "{{userFundName}}" removed.', {
-                userFundName
-            });
+                    userFundName
+                });
             this.sendEmail(email, data);
         });
     }
@@ -61,7 +61,7 @@ exports.userFund = class  {
      * @param  {[obj]}  data
      * @return {[type]}
      */
-    sendEmail (email, data) {
+    sendEmail(email, data) {
         var options = this.options;
         if (options.isReccurent === true) {
             await(mailService.sendUserRecurrentPayments(email, { data }));
@@ -84,14 +84,14 @@ exports.userFundSubscription = class {
      * }
      * @return {[type]}         [description]
      */
-    constructor (options) { this.options = options || {}; }
+    constructor(options) { this.options = options || {}; }
 
     /**
      * send email to the subscriber UserFund when subscription disabled
      * @param  {[array]} data [ { authId: sberUser.authId, userFundName: userFund.title }, ... ]
      * @return {[type]}
      */
-    disableSubscriptions (data) {
+    disableSubscriptions(data) {
         data.map((user) => {
             user.email = microService.getUserData(user.authId).email;
             return user;
@@ -103,8 +103,8 @@ exports.userFundSubscription = class {
             }
             var data = i18n.__(
                 'Your payments to User fund "{{userFundName}}" stopped, he was removed', {
-                userFundName
-            });
+                    userFundName
+                });
             this.sendEmail(email, data);
         });
     }
@@ -115,7 +115,7 @@ exports.userFundSubscription = class {
      * @param  {[obj]}  data
      * @return {[type]}
      */
-    sendEmail (email, data) {
+    sendEmail(email, data) {
         var options = this.options;
         if (options.isReccurent === true) {
             await(mailService.sendUserRecurrentPayments(email, { data }));

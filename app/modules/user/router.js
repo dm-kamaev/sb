@@ -3,7 +3,7 @@
 var userRouter = require('express').Router();
 const SECRET = require('../../../config/admin-config').secret;
 const checkToken = require('nodules/checkAuth').CheckToken(SECRET);
-const errors = require('../../components/errors')
+const errors = require('../../components/errors');
 
 var UserController = require('./controllers/UserController');
 var userController = new UserController();
@@ -16,10 +16,10 @@ var versionedController = new VersionedController(controllersArray);
 
 const checkRules = (req, res, next) => {
     if (req.header('Token-Header') == SECRET || req.user && req.user.id == req.params.id) {
-        return next()
+        return next();
     }
-    throw new errors.HttpError('Unathorized', 403)
-}
+    throw new errors.HttpError('Unathorized', 403);
+};
 
 userRouter.post('/user-fund', versionedController.actionCreateUserFund);
 // userRouter.delete('/user-fund', userController.actionDeleteUserFund);

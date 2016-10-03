@@ -11,7 +11,7 @@ const axios = require('axios').create({
 
 var UserService = {};
 
-UserService.findSberUserById = function (id, include) {
+UserService.findSberUserById = function(id, include) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id
@@ -32,7 +32,7 @@ UserService.findSberUserById = function (id, include) {
                 as: 'direction',
                 required: false
             }]
-        },{
+        }, {
             model: sequelize.models.Card,
             as: 'currentCard',
             required: false
@@ -55,7 +55,7 @@ UserService.findSberUserById = function (id, include) {
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
-UserService.getOrders = function (sberUserId) {
+UserService.getOrders = function(sberUserId) {
     var query =
     `SELECT
         "scheduledPayDate",
@@ -84,11 +84,11 @@ UserService.getOrders = function (sberUserId) {
     return await(sequelize.sequelize.query(query, {
         type: sequelize.sequelize.QueryTypes.SELECT,
         replacements: {
-            id:     sberUserId,
+            id: sberUserId,
             status: orderStatus.PAID
         }
     }));
-}
+};
 
 
 /**
@@ -96,20 +96,20 @@ UserService.getOrders = function (sberUserId) {
  * @param  {[int]} sberUserId [description]
  * @return {[type]}           [description]
  */
-UserService.findCardBySberUserId = function (sberUserId) {
+UserService.findCardBySberUserId = function(sberUserId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             id: sberUserId
         },
         include: {
             model: sequelize.models.Card,
-            as:    'currentCard',
+            as: 'currentCard',
             required: false
         }
     }));
 };
 
-UserService.findSberUserByAuthId = function (authId) {
+UserService.findSberUserByAuthId = function(authId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
             authId
@@ -122,7 +122,7 @@ UserService.findSberUserByAuthId = function (authId) {
     }));
 };
 
-UserService.findAuthUserByPhone = function (phoneNumber) {
+UserService.findAuthUserByPhone = function(phoneNumber) {
     var authUsers = await(axios.get('/users', {
         params: {
             phone: phoneNumber
@@ -132,7 +132,7 @@ UserService.findAuthUserByPhone = function (phoneNumber) {
     return authUsers.data[0];
 };
 
-UserService.createAuthUser = function (userData) {
+UserService.createAuthUser = function(userData) {
     var response = await(axios.post('/user', {
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -142,7 +142,7 @@ UserService.createAuthUser = function (userData) {
     return response.data;
 };
 
-UserService.createSberUser = function (authId) {
+UserService.createSberUser = function(authId) {
     return await(sequelize.models.SberUser.create({
         authId,
         userFund: {
@@ -156,12 +156,12 @@ UserService.createSberUser = function (authId) {
     }));
 };
 
-UserService.findAuthUserByAuthId = function (authId) {
+UserService.findAuthUserByAuthId = function(authId) {
     var response = await(axios.get(`/user/${authId}`));
     return response.data;
 };
 
-UserService.setAuthId = function (id, authId) {
+UserService.setAuthId = function(id, authId) {
     return await(sequelize.models.SberUser.update({
         authId
     }, {
@@ -182,17 +182,17 @@ UserService.setAuthId = function (id, authId) {
 * }
 * @return {[type]}          [description]
 */
-UserService.updateAuthUser = function (authId, userData) {
+UserService.updateAuthUser = function(authId, userData) {
     var response = await(axios.patch(`/user/${authId}`, {
-        firstName: userData.firstName  || '',
-        lastName:  userData.lastName   || '',
-        email:     userData.email      || ''
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        email: userData.email || ''
     }));
     return response.data;
 };
 
 
-UserService.setUserFund = function (userFundId, oldUserFundId) {
+UserService.setUserFund = function(userFundId, oldUserFundId) {
     return await(sequelize.sequelize.transaction(t => {
         return sequelize.models.UserFundEntity.destroy({
             where: {
@@ -206,12 +206,12 @@ UserService.setUserFund = function (userFundId, oldUserFundId) {
                 where: {
                     userFundId
                 }
-            })
-        })
-    }))
+            });
+        });
+    }));
 };
 
-UserService.findAuthUserByEmail = function (email) {
+UserService.findAuthUserByEmail = function(email) {
     var response = await(axios.get('/users', {
         params: {
             email
@@ -222,7 +222,7 @@ UserService.findAuthUserByEmail = function (email) {
     return users[0];
 };
 
-UserService.createCard = function (sberUserId, data) {
+UserService.createCard = function(sberUserId, data) {
     return await(sequelize.sequelize.transaction((t) => {
         return sequelize.models.Card.create({
             sberUserId,
@@ -249,10 +249,10 @@ UserService.createCard = function (sberUserId, data) {
  * @param  {[int]} sberUserId
  * @return {[type]}            [description]
  */
-UserService.removeCard = function (sberUserId) {
+UserService.removeCard = function(sberUserId) {
     return await(sequelize.models.Card.update({
         deletedAt: new Date()
-    } ,{
+    }, {
         where: {
             sberUserId
         }
@@ -261,7 +261,7 @@ UserService.removeCard = function (sberUserId) {
 
 
 
-UserService.getSberUsers = function (condinitions) {
+UserService.getSberUsers = function(condinitions) {
     var where = {
         authId: {
             $ne: null
@@ -273,20 +273,20 @@ UserService.getSberUsers = function (condinitions) {
         });
     }
     return await(sequelize.models.SberUser.findAll({ where }));
-}
+};
 
 
-UserService.getAuthUsersByIds = function (ids) {
+UserService.getAuthUsersByIds = function(ids) {
     var response = await(axios.get('/users', {
         params: {
             id: ids
         }
-    }))
+    }));
 
     return response.data;
-}
+};
 
-UserService.getUserFundSubscriptions = function (id) {
+UserService.getUserFundSubscriptions = function(id) {
     return await(sequelize.sequelize.query(`SELECT
   "UserFundSubscription".id as id,
   "UserFundSubscription"."userFundId" as "userFundId",
@@ -312,11 +312,11 @@ LEFT JOIN "Order" ON "Order"."sberAcquOrderNumber" = (SELECT "Order"."sberAcquOr
 JOIN "DesiredAmountHistory" ON "UserFundSubscription"."currentAmountId" = "DesiredAmountHistory".id
 JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId"
 WHERE "sberUserId" = :id`, {
-        type: sequelize.sequelize.QueryTypes.SELECT,
-        replacements: {
-            id
-        }
-    }))
-}
+    type: sequelize.sequelize.QueryTypes.SELECT,
+    replacements: {
+        id
+    }
+}));
+};
 
 module.exports = UserService;

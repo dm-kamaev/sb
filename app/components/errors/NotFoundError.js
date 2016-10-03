@@ -10,16 +10,16 @@ class NotFoundError extends Error {
    */
     constructor() {
         if (arguments.length === 2) {
-          var modelName = arguments[0], id = arguments[1];
-          super(i18n.__('Can\'t find {{modelName}} with id {{id}}', {
-              modelName,
-              id: id || 'null'
-          }));
+            var modelName = arguments[0], id = arguments[1];
+            super(i18n.__('Can\'t find {{modelName}} with id {{id}}', {
+                modelName,
+                id: id || 'null'
+            }));
         } else {
-          super(arguments[0]);
+            super(arguments[0]);
         }
 
-        this.name       = 'NotFoundError';
+        this.name = 'NotFoundError';
         this.statusCode = 404;
         Error.captureStackTrace(this, this.constructor);
     }

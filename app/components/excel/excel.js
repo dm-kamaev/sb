@@ -1,8 +1,8 @@
 'use strict';
 
 const excel4node = require('excel4node');
-const logger     = require('../logger').getLogger('main');
-const await      = require('asyncawait/await');
+const logger = require('../logger').getLogger('main');
+const await = require('asyncawait/await');
 
 
 /**
@@ -11,9 +11,9 @@ const await      = require('asyncawait/await');
  * @param  {[obj]} wb    –– object which created exports.createSheets
  * @return {[promise]}
  */
-exports.write = function (path, wb) {
-    return await(new Promise(function (resolve, reject) {
-        wb.write(path, function (err, res) {
+exports.write = function(path, wb) {
+    return await(new Promise(function(resolve, reject) {
+        wb.write(path, function(err, res) {
             if (err) {
                 reject(err);
             } else {
@@ -39,7 +39,7 @@ exports.createSheets = function(data) {
                 'zoomScale': 200,
             },
         };
-        var ws    = wb.addWorksheet(sheet.name, options);
+        var ws = wb.addWorksheet(sheet.name, options);
         var style = wb.createStyle(sheet.style || {});
         setCell_(ws, sheet.value, style);
     });
@@ -60,7 +60,7 @@ function setCell_(ws, rows, style) {
         iterateColumn();
     }
 
-    function iterateColumn () {
+    function iterateColumn() {
         for (var c = 0, l1 = row.length; c < l1; c++) {
             var el = row[c];
             var num_row = r + 1,
@@ -72,7 +72,7 @@ function setCell_(ws, rows, style) {
                 cell.number(el).style(style);
             } else {
                 logger.critical(
-                    'Not valid type for elements => type element "'+typeof(el)+'", only number or string'
+                    'Not valid type for elements => type element "' + typeof (el) + '", only number or string'
                 );
             }
         }

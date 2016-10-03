@@ -109,11 +109,9 @@ AuthService.login = function(email, password) {
     return response.data;
 };
 
-AuthService.generateToken = function(email) {
+AuthService.generateToken = function(data) {
     return await(new Promise((resolve, reject) => {
-        jwt.sign({
-            email
-        }, JWT_SECRET, {
+        jwt.sign(data, JWT_SECRET, {
             expiresIn: '2 days'
         }, (err, token) => {
             if (err) reject(err);

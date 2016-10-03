@@ -7,7 +7,7 @@ var StatementService = {};
 
 StatementService.parseStatement = function(file) {
     var arr = file.toString().split('\r\n'),
-        orders = []
+        orders = [];
 
     for (var i = 0; i < arr.length; i++) {
         if (~arr[i].indexOf('СекцияДокумент=Банковский ордер')) {
@@ -26,10 +26,10 @@ StatementService.parseStatement = function(file) {
                 payerBIK: arr[++i].split('=')[1],
                 payerCorrespondentBill: arr[++i].split('=')[1],
                 jsonParams: arr[i + 22].split('=')[1]
-            }
+            };
 
-            i += 22
-            orders.push(order)
+            i += 22;
+            orders.push(order);
         }
     }
     return orders;
@@ -37,7 +37,7 @@ StatementService.parseStatement = function(file) {
     // sequelize.models.Statement.create({
     //     fileName:
     // })
-}
+};
 
 StatementService.handleStatement = function(data) {
     return await(sequelize.sequelize.transaction(async(t => {
@@ -56,15 +56,15 @@ StatementService.handleStatement = function(data) {
         var statement = await(sequelize.models.Statement.create(data));
 
         var statementItem = await(sequelize.models.StatementItem.bulkCreate(data.bankOrders.map(order => Object.assign(order, {
-           statementId: statement.id
+            statementId: statement.id
         }))));
 
         return {
             success: true,
             statement,
             statementItem
-        }
-    })))
+        };
+    })));
 };
 
 module.exports = StatementService;

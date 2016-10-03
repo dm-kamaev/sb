@@ -10,6 +10,7 @@ exports.renderUser = function(authUser, sberUser) {
         userFund: sberUser.userFund ?
             userFundView.renderUserFund(sberUser.userFund) : null,
         card: sberUser.currentCard,
+        verified: sberUser.verified,
         loggedIn: !!sberUser.authId
     };
 };

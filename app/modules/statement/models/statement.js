@@ -40,7 +40,7 @@ module.exports = function(sequelize, DataTypes) {
                 Statement.hasMany(models.StatementItem, {
                     as: 'statementItem',
                     foreignKey: 'statementId'
-                })
+                });
             }
         }
     });
