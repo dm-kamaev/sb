@@ -3,6 +3,7 @@
 const config = require('../../../../config/config.json');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
+const util = require('util');
 const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
@@ -138,7 +139,7 @@ OrderService.firstPayOrSendMessage = function (params) {
             }));
             var textError = i18n.__(
                 'Failed connection with sberbank acquiring (first pay). {{error}}', {
-                    error: JSON.stringify(err)
+                    error: util.inspect(err, { depth: 5 })
                 }
             );
             throw new errors.AcquiringError(textError);
@@ -434,7 +435,7 @@ OrderService.findOrderWithProblemCard = function(userFundSubscriptionId, nowDate
         }
     }).filter(function (order) {
         var orderMonth = moment(order.scheduledPayDate).format('YYYY-MM');
-        return previousMonth === orderMonth
+        return previousMonth === orderMonth;
     }));
 };
 
@@ -460,9 +461,7 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         authId     = sberUser.authId;
 
     var userEmail = microService.getUserData(authId).email;
-    if (!userEmail) {
-        throw new errors.NotFoundError('email', authId);
-    }
+    if (!userEmail) { throw new errors.NotFoundError('email', authId);  }
 
     var data = '';
     // this is the first time the payment failed
@@ -495,11 +494,20 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
         // get list user fund which haven't subscribers and disable their
         // and send email owner
         if (hasNotSubscribers.length) {
+            var userFunds = await(userFundService.getUserFunds({
+                id: {
+                    $in: hasNotSubscribers,
+                }
+            }));
+            console.log('HERE', hasNotSubscribers)
+            console.log('HERE', userFunds);
+            console.log('HERE', userFunds.map(userFund=> userFund.sberUserId));
             disableUserFunds_(hasNotSubscribers);
             sendEmailOwnerUserFund_(hasNotSubscribers);
         }
     }
 };
+
 
 OrderService.getOrderComposition = function(sberAcquOrderNumber) {
     return await(sequelize.sequelize.query(`
