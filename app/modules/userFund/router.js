@@ -19,7 +19,7 @@ userFundRouter.get('/:id(\\d+)', versionedController.actionGetUserFund);
 userFundRouter.get('/count', versionedController.actionCountUserFunds);
 // userFundRouter.post('/', userFundController.actionCreateUserFund);
 // userFundRouter.delete('/:id(\\d+)', userFundController.actionDeleteUserFund);
-// userFundRouter.put('/:id(\\d+)', userFundController.actionUpdateUserFund);
+userFundRouter.put('/:id(\\d+)', userFundController.actionUpdateUserFund);
 userFundRouter.use(anonymous)
 
 userFundRouter.post('/:entityId(\\d+)', versionedController.actionAddEntity);

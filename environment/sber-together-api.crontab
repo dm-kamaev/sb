@@ -1,1 +1,3 @@
-
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+*/30 * * * * /opt/sber-together-api/current/app/scripts/checkOrderStatus.sh
+0 12 * * * /opt/sber-together-api/current/app/scripts/monthlyPayments.sh
