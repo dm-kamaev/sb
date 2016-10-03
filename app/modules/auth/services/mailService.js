@@ -17,8 +17,8 @@ process.on('unhandledRejection', err => logger.error(err));
 
 var MailService = {};
 
-MailService.sendMail = function(email, emailData) {
-    var letter = new Letter('Подтвердите ваш почтовый ящик', `<div style = "color: red">${emailData}</div>`, 'html');
+MailService.sendMail = function(email, emailData, title) {
+    var letter = new Letter(title || 'Подтвердите ваш почтовый ящик', `<div style = "color: red">${emailData}</div>`, 'html');
     try {
         await(mailSender.sendMail(email, letter));
     } catch (err) {

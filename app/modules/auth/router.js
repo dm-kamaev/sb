@@ -16,8 +16,9 @@ authRouter.get('/test', versionedController.actionTest);
 authRouter.post('/logout', versionedController.actionLogout);
 authRouter.get('/verify', versionedController.actionVerifyEmail);
 authRouter.post('/send', versionedController.actionSendVerification);
+authRouter.post('/send-reset', versionedController.actionSendRecoverEmail);
+authRouter.post('/reset', versionedController.actionRecoverPassword);
 authRouter.use(loggedIn);
-authRouter.post('/recover', versionedController.actionSendRecoverEmail);
 authRouter.post('/register', versionedController.actionRegister);
 authRouter.post('/login', versionedController.actionLogin);
 

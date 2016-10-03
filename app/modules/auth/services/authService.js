@@ -42,9 +42,9 @@ AuthService.register = function(userData) {
         lastName = userData.lastName,
         email = userData.email,
         password = userData.password,
-        mailRegex = new RegExp(['^[a-z0-9\u007F-\uffff!#$%&\'*+\/=?^_`{|}~-]+(?:\.'+
-                                '[a-z0-9\u007F-\uffff!#$%&\'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9]'+
-                                '(?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$'].join(''), 'i')
+        mailRegex = new RegExp(['^[a-z0-9\\u007F-\\uffff!#$%&\\\'*+\\/=?^_`{|}~-]+(?:\\.' +
+                                '[a-z0-9\\u007F-\\uffff!#$%&\\\'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9]' +
+                                '(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z]{1,}$'].join(''), 'i');
 
     if (!email || !password || password.length < 6 || !firstName || !lastName ||
         firstName.length > 20 || lastName.length > 20 || !mailRegex.test(email)) {
@@ -92,6 +92,12 @@ AuthService.register = function(userData) {
         }
         throw err;
     }
+};
+
+AuthService.changePassword = function(authUserId, password) {
+    await(axios.put(`/user/${authUserId}`, {
+        password
+    }));
 };
 
 AuthService.login = function(email, password) {
