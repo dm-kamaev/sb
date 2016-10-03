@@ -22,6 +22,18 @@ const _ = require('lodash');
 
 var OrderService = {};
 
+
+/**
+ * update orders by fields
+ * @param  {[obj]} where
+ * @param  {[obj]} data
+ * @return {[type]}       [description]
+ */
+OrderService.update = function (where, data) {
+    return await(sequelize.models.Order.update(data, { where }));
+};
+
+
 OrderService.getOrderWithInludes = function (sberAcquOrderNumber) {
     return await(sequelize.models.Order.findOne({
         where: {
