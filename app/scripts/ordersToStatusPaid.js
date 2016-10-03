@@ -3,6 +3,7 @@
 // for test (for frontend developers)
 // switch status for orders (like sberbank callback)
 // author: dmitrii kamaev
+// EXAMPLE use: node app/scripts/ordersToStatusPaid.js --sberUserId 300 --status paid
 
 const logger = require('../components/logger').getLogger('main');
 const orderService = require('../modules/orders/services/orderService.js');
