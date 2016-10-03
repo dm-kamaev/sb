@@ -22,7 +22,7 @@ const MicroServices = {};
  * @param  {[int]} authId
  * @return {[obj]}
  */
-MicroServices.getUserData = function (authId) {
+MicroServices.getUserData = function(authId) {
     return await(axios.get(`/user/${authId}`)).data || {};
 };
 module.exports = MicroServices;

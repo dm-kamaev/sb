@@ -44,7 +44,7 @@ MailService.sendMailCron = function(email, emailData) {
     try {
         await(mailSender.sendMail(email, letter));
     } catch (err) {
-        logger.critical('ERROR AT SENDING MAIL ', err.message)
+        logger.critical('ERROR AT SENDING MAIL ', err.message);
     }
     // need for debug
     return emailData;
@@ -66,7 +66,7 @@ MailService.sendUserRecurrentPayments = function(email, emailData) {
     try {
         await(mailSender.sendMail(email, letter));
     } catch (err) {
-        logger.critical('ERROR AT SENDING MAIL ', err.message)
+        logger.critical('ERROR AT SENDING MAIL ', err.message);
     }
     // need for debug
     return emailData;
@@ -88,7 +88,7 @@ MailService.sendUserRemovedUserFund = function(email, emailData) {
     try {
         await(mailSender.sendMail(email, letter));
     } catch (err) {
-        logger.critical('ERROR AT SENDING MAIL ', err.message)
+        logger.critical('ERROR AT SENDING MAIL ', err.message);
     }
     // need for debug
     return emailData;
@@ -110,7 +110,7 @@ MailService.sendUserDisableSubcription = function(email, emailData) {
     try {
         await(mailSender.sendMail(email, letter));
     } catch (err) {
-        logger.critical('ERROR AT SENDING MAIL ', err.message)
+        logger.critical('ERROR AT SENDING MAIL ', err.message);
     }
     // need for debug
     return emailData;

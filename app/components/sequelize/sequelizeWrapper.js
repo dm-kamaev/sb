@@ -9,7 +9,7 @@ var log = logger.getLogger('sequelize');
 var sequelizeWrapper = new SequelizeWrapper({
     sequelize: sequelize,
     logging: log.info.bind(log),
-    /*logging: function (query) {
+    /* logging: function (query) {
         log.info(query
             .replace(/SELECT/, '\nSELECT')
             .replace(/INSERT/, '\nINSERT')

@@ -9,7 +9,15 @@ const authService = require('../services/authService');
 const userFundService = require('../../userFund/services/userFundService');
 const mailService = require('../services/mailService');
 const os = require('os');
-const VERIFY_LINK = `http://${os.hostname()}:3000/auth/verify?token=`;
+const config = require('../../../../config/config');
+
+const HOSTNAME = `http://${os.hostname()}:${config.port}`
+const VERIFY_LINK = `${HOSTNAME}/auth/verify?token=`;
+const RECOVER_LINK = `${HOSTNAME}/auth/recover?token=`;
+const SUCCESS_MAIL_REDIRECT = `${HOSTNAME}#success?type=mail`;
+const FAILURE_MAIL_REDIRECT = `${HOSTNAME}#failure?type=mail`;
+const getVerifyLink_ = token => VERIFY_LINK + token;
+const getRecoverLink_ = token => RECOVER_LINK + token;
 
 class AuthController extends Controller {
     /**
@@ -173,7 +181,9 @@ class AuthController extends Controller {
 
         try {
             var authUser = await(authService.register(userData));
-            var token = await(authService.generateToken(userData.email));
+            var token = await(authService.generateToken({
+              email: userData.email
+            }));
             await(mailService.sendMail(userData.email, VERIFY_LINK + token));
             var sberUser = ctx.request.user || userService.createSberUser(authUser.id);
             await(userService.setAuthId(sberUser.id, authUser.id));
@@ -244,8 +254,10 @@ class AuthController extends Controller {
         var token = ctx.request.query.token;
         try {
             var email = await(authService.verifyToken(token)).email;
+            console.log(email);
         } catch (err) {
             if (err.name == 'TokenExpiredError') {
+                ctx.response.redirect(FAILURE_MAIL_REDIRECT)
                 throw new errors.HttpError('Link expired', 410);
             }
             throw new errors.HttpError('Invalid token', 400);
@@ -254,32 +266,62 @@ class AuthController extends Controller {
         var sberUser = await(userService.findSberUserByAuthId(authUser.id));
         var verified = await(authService.verifyUser(sberUser.id));
 
-        if (!verified[0]) {
-            var errMsg = `User with id ${sberUser.id} already verifed his email`;
-            throw new errors.HttpError(errMsg);
-        }
+        ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
     };
     /**
      * @api {post} /auth/send send verification mail
      * @apiName send verification mail
      * @apiGroup Auth
-     *
      */
     actionSendVerification(ctx) {
         var sberUser = ctx.request.user;
         if (!sberUser || !sberUser.authId) throw new errors.HttpError('Unathorized', 403);
+        if (sberUser.verified) throw new errors.HttpError('Already verified', 403);
 
         var authUser = await(userService.findAuthUserByAuthId(sberUser.authId)),
             email = authUser.email;
 
-        var token = await(authService.generateToken(email));
+        var token = await(authService.generateToken({
+            email
+        }));
         var letterText = await(mailService.sendMail(email,
             VERIFY_LINK + token));
         // need for debug
-        //TODO: remove
+        // TODO: remove
         return letterText;
         return null;
     };
+
+    actionRecoverPassword(ctx) {
+        var token = ctx.request.data.token,
+            password = ctx.data.password
+    };
+    /**
+     * @api {post} /auth/recover recover password
+     * @apiName recover password
+     * @apiGroup Auth
+     *
+     * @apiParam {String} email email of account owner
+     * @apiParamExample {json} example:
+     * {
+     *    "email": "msrylkin@gmail.com"
+     * }
+     */
+    actionSendRecoverEmail(ctx) {
+        var sessionUser = ctx.request.user;
+        if (sessionUser && sessionUser.authId) throw new errors.HttpError('Already logged in', 403);
+
+        var email = ctx.data.email,
+            authUser = userService.findAuthUserByEmail(email),
+            sberUser = userService.findSberUserByAuthId(authUser.id);
+
+        var token = authService.generateToken({
+            id: sberUser.id
+        });
+        var letterText = await(mailService.sendMail(email, getRecoverLink_(token)));
+            // TODO: remove
+        return letterText;
+    }
 }
 
 module.exports = AuthController;

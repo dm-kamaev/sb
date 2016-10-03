@@ -8,7 +8,6 @@ module.exports = {
     down: function(queryInterface, Sequelize) {
         return queryInterface.sequelize
               .query('ALTER TABLE "UserFund" ADD CONSTRAINT "UserFund_creatorId_key" UNIQUE ("creatorId")');
-
     }
 };
 

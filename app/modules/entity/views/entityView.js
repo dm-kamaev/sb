@@ -1,7 +1,7 @@
 'use strict';
 
 const os = require('os');
-const config = require('../../../../config/config.json')
+const config = require('../../../../config/config.json');
 
 exports.renderEntity = function(entity) {
     return {

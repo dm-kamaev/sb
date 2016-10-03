@@ -3,6 +3,7 @@
 const logger = require('../components/logger').getLogger('main');
 const axios = require('axios');
 const sequelize = require('../components/sequelize');
+const orderStatus = require('../modules/orders/enums/orderStatus');
 
 var immediate = process.argv.some(e => e === 'immediate');
 
@@ -13,7 +14,7 @@ sequelize.models.Order.findAll({
             $lt: immediate ? new Date() : new Date() - 1000 * 60 * 21
         },
         sberAcquActionCode: null,
-        status: 'waitingForPay'
+        status: orderStatus.WAITING_FOR_PAY
     }
 })
     .then(orders => {

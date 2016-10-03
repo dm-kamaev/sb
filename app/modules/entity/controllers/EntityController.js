@@ -138,10 +138,10 @@ class EntityController extends Controller {
      */
     actionGetEntity(actionContext, id) {
         var request = actionContext.request,
-            user    = request.user || {};
+            user = request.user || {};
         var userFundId = (user.userFund) ? user.userFund.id : null,
-            published  = request.published,
-            include    = request.query.include;
+            published = request.published,
+            include = request.query.include;
 
         var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
@@ -217,10 +217,10 @@ class EntityController extends Controller {
      */
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
-            var request    = actionContext.request,
+            var request = actionContext.request,
                 sberUserId = request.user.id;
             var userFundId = (request.user.userFund) ? request.user.userFund.id : null,
-                published  = request.published;
+                published = request.published;
             var entities =
                 await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
             return entityView.renderEntities(entities);
@@ -263,9 +263,9 @@ class EntityController extends Controller {
      */
     actionGetAllEntities(actionContext) {
         var request = actionContext.request,
-            user    = request.user || {};
+            user = request.user || {};
         var userFundId = (user.userFund) ? user.userFund.id : null,
-            published  = request.published;
+            published = request.published;
         var entities = await(entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
     }
@@ -374,7 +374,7 @@ class EntityController extends Controller {
         var type = actionContext.request.query.type;
         var entities;
         try {
-             entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
+            entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
         } catch (err) {
             throw new errors.HttpError('Wrong "include" or "type" query param!', 400);
         }

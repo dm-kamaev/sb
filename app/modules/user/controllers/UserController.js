@@ -44,8 +44,8 @@ class UserController extends Controller {
         var authId = sberUser.authId;
         var authUser = await(userService.findAuthUserByAuthId(authId));
         var renderedUser = userView.renderUser(authUser, sberUser);
-        delete renderedUser.loggedIn
-        return renderedUser
+        delete renderedUser.loggedIn;
+        return renderedUser;
     };
     /**
      * @api {delete} /user/user-fund disable user-fund
@@ -77,8 +77,8 @@ class UserController extends Controller {
      */
     actionUpdateUser(actionContext) {
         var request = actionContext.request,
-            user    = request.user  || {};
-        var authId   = user.authId  || null,
+            user = request.user || {};
+        var authId = user.authId || null,
             userData = request.body || {};
         if (!authId) throw new errors.HttpError('Unathorized', 403);
 
@@ -87,7 +87,7 @@ class UserController extends Controller {
             return null;
         } catch (error) {
             if (error.data) { throw new errors.ValidationError(error.data); }
-            throw new errors.HttpError(util.inspect(error, { depth:4 }), 503);
+            throw new errors.HttpError(util.inspect(error, { depth: 4 }), 503);
         }
     }
 
@@ -147,12 +147,12 @@ class UserController extends Controller {
             authUsers = userService.getAuthUsersByIds(ids);
 
         return sberUsers.map(sberUser => {
-            var authUser = authUsers.find(authUser => authUser.id == sberUser.authId)
-            var renderedUser = userView.renderUser(authUser, sberUser)
-            delete renderedUser.loggedIn
-            delete renderedUser.userFund
-            return renderedUser
-        })
+            var authUser = authUsers.find(authUser => authUser.id == sberUser.authId);
+            var renderedUser = userView.renderUser(authUser, sberUser);
+            delete renderedUser.loggedIn;
+            delete renderedUser.userFund;
+            return renderedUser;
+        });
     }
 
     /**
@@ -182,14 +182,14 @@ class UserController extends Controller {
     actionUpdateUserById(ctx, id) {
         var sberUser = userService.findSberUserById(id);
         try {
-            var authUser = userService.updateAuthUser(sberUser.authId, ctx.data)
+            var authUser = userService.updateAuthUser(sberUser.authId, ctx.data);
         } catch (err) {
             if (err.data && err.data[0].code == 'ValidationError') {
-                throw new errors.ValidationError(err.data[0].validationErrors)
+                throw new errors.ValidationError(err.data[0].validationErrors);
             }
             throw err;
         }
-        return userView.renderUser(authUser, sberUser)
+        return userView.renderUser(authUser, sberUser);
     }
 
     /**
@@ -203,7 +203,7 @@ class UserController extends Controller {
      *    }
      */
     actionGetSubscriptions(ctx, id) {
-        return userService.getUserFundSubscriptions(id)
+        return userService.getUserFundSubscriptions(id);
     }
 
     /**
@@ -220,7 +220,7 @@ class UserController extends Controller {
      */
     actionChangeAmount(ctx, id, subscriptionId) {
         var amount = ctx.data.amount;
-        return userFundService.changeAmount(id, subscriptionId, 'admin', amount)
+        return userFundService.changeAmount(id, subscriptionId, 'admin', amount);
     }
 };
 

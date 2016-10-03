@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function prettyJSON (obj) {
+module.exports = function prettyJSON(obj) {
     if (typeof obj === 'string') {
         return obj;
     } else {

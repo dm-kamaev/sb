@@ -167,21 +167,21 @@ class UserFundController extends Controller {
      */
     actionSetAmount(actionContext) {
         var request = actionContext.request,
-            user    = request.user  || {};
-        var sberUserId    = user.id || null,
-            changer       = 'user',
+            user = request.user || {};
+        var sberUserId = user.id || null,
+            changer = 'user',
             ownUserFundId = (user.userFund) ? user.userFund.id : null,
-            data          = actionContext.data || {},
+            data = actionContext.data || {},
             // now user can only pay to own userFund
             userFundId = data.userFundId || ownUserFundId,
-            amount     = data.amount || null,
-            isCordova  = data.app,
+            amount = data.amount || null,
+            isCordova = data.app,
             // null –– current amount, integer –– a percentage of your salary
-            percent    = data.percent || null,
+            percent = data.percent || null,
             // null –– current amount, integer –– salary per month in cents
-            salary     = data.salary || null;
+            salary = data.salary || null;
 
-        if (!sberUserId)    { throw new errors.NotFoundError(i18n.__('SberUser'), sberUserId); }
+        if (!sberUserId) { throw new errors.NotFoundError(i18n.__('SberUser'), sberUserId); }
         if (!ownUserFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), ownUserFundId); }
         // check whether userFund enabled if he is not the owner
         // if now first pay then user's userfund is always disabled, but for another userfund
@@ -240,12 +240,12 @@ class UserFundController extends Controller {
      * @apiError (Error 422) ValidationError wrong type
      */
     actionSwitchingSubscriptions(actionContext) {
-        var sberUserId    = actionContext.request.user.id,
+        var sberUserId = actionContext.request.user.id,
             ownUserFundId = actionContext.request.user.userFund.id,
             // if don't get from the request UserFundId then this is user's UserFund
-            userFundId    = actionContext.data.userFundId || ownUserFundId,
-            enabled       = actionContext.data.enabled;
-        if (typeof(enabled) === 'boolean') {
+            userFundId = actionContext.data.userFundId || ownUserFundId,
+            enabled = actionContext.data.enabled;
+        if (typeof (enabled) === 'boolean') {
             var message = (enabled) ? i18n.__('Subscription included') : i18n.__('Subscription off');
             await(
                 userFundService.switchSubscription(sberUserId, userFundId, { enabled })
@@ -265,7 +265,7 @@ class UserFundController extends Controller {
      * @apiGroup UserFund
      */
     actionRemoveUserFund(actionContext) {
-        var user       = actionContext.request.user || {},
+        var user = actionContext.request.user || {},
             sberUserId = user.id || null,
             userFundId = (user.userFund) ? user.userFund.id : null;
 
@@ -288,7 +288,7 @@ class UserFundController extends Controller {
             }
         })) || [];
         var dataForMail = sberUsers.map(sberUser => {
-            return { authId: sberUser.authId, userFundName: userFund.title }
+            return { authId: sberUser.authId, userFundName: userFund.title };
         });
 
         await(userFundService.updateSubscriptions(
@@ -300,10 +300,10 @@ class UserFundController extends Controller {
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund
         await(userFundService.createUserFund({
-            title:      '',
-            description:'',
-            creatorId:  sberUserId,
-            enabled:    false
+            title: '',
+            description: '',
+            creatorId: sberUserId,
+            enabled: false
         }));
 
         return { message: i18n.__('User Fund was removed') };
@@ -316,19 +316,19 @@ class UserFundController extends Controller {
      * @apiGroup UserFund
      */
     actionGetStatusSubscriptionUserFund(actionContext, id) {
-        var request       = actionContext.request,
-            sberUserId    = request.user.id,
+        var request = actionContext.request,
+            sberUserId = request.user.id,
             ownUserFundId = (request.user.userFund) ? request.user.userFund.id : null,
             // if don't get from the request UserFundId, then this is user's UserFund
-            userFundId    = id || ownUserFundId;
+            userFundId = id || ownUserFundId;
 
         var res = await(userFundService.getUserFundSubscriptionId(sberUserId, userFundId));
         if (!res) {
             var message = i18n.__(
                 'Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}', {
-                sberUserId,
-                userFundId: userFundId || 'null'
-            });
+                    sberUserId,
+                    userFundId: userFundId || 'null'
+                });
             return { message };
         }
         return { enabled: res.enabled };

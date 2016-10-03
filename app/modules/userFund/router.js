@@ -1,8 +1,8 @@
 'use strict';
 
 var userFundRouter = require('express').Router();
-const errors = require('../../components/errors')
-const anonymous = require('../../components/server/middleware/anonymous')
+const errors = require('../../components/errors');
+const anonymous = require('../../components/server/middleware/anonymous');
 
 var UserFundController = require('./controllers/UserFundController');
 var userFundController = new UserFundController();
@@ -20,7 +20,7 @@ userFundRouter.get('/count', versionedController.actionCountUserFunds);
 // userFundRouter.post('/', userFundController.actionCreateUserFund);
 // userFundRouter.delete('/:id(\\d+)', userFundController.actionDeleteUserFund);
 userFundRouter.put('/:id(\\d+)', userFundController.actionUpdateUserFund);
-userFundRouter.use(anonymous)
+userFundRouter.use(anonymous);
 
 userFundRouter.post('/:entityId(\\d+)', versionedController.actionAddEntity);
 userFundRouter.delete('/:entityId(\\d+)',
@@ -28,13 +28,13 @@ userFundRouter.delete('/:entityId(\\d+)',
 userFundRouter.get('/entity', versionedController.actionGetEntities);
 userFundRouter.use((req, res, next) => {
     if (req.user && req.user.authId) return next();
-    throw new errors.HttpError('Unathorized', 403)
+    throw new errors.HttpError('Unathorized', 403);
 });
 userFundRouter.post('/amount', versionedController.actionSetAmount);
 userFundRouter.get('/amount', versionedController.actionGetCurrentAmount);
 
 userFundRouter.post('/switching-subscriptions', versionedController.actionSwitchingSubscriptions);
-userFundRouter.post('/remove-userFund',         versionedController.actionRemoveUserFund);
+userFundRouter.post('/remove-userFund', versionedController.actionRemoveUserFund);
 userFundRouter.get(
   '/get-status-subscription-userFund/:id(\\d+)?',
   versionedController.actionGetStatusSubscriptionUserFund

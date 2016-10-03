@@ -39,7 +39,7 @@ module.exports = function(sequelize, DataTypes) {
             }
         },
         percent: {
-            type:         DataTypes.INTEGER,
+            type: DataTypes.INTEGER,
             defaultValue: null,
             validate: {
                 min: {
@@ -53,7 +53,7 @@ module.exports = function(sequelize, DataTypes) {
             }
         },
         salary: {
-            type:         DataTypes.INTEGER,
+            type: DataTypes.INTEGER,
             defaultValue: null,
             validate: {
                 min: {
