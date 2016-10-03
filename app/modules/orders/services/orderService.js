@@ -55,22 +55,18 @@ OrderService.getOrderWithInludes = function (sberAcquOrderNumber) {
  * @return {[type]}
  */
 OrderService.getSberUser = function (userFundSubscriptionId) {
-    var res = await(sequelize.models.Order.findOne({
+    var res = await(sequelize.models.UserFundSubscription({
         where: {
-            userFundSubscriptionId
+            id: userFundSubscriptionId
         },
-        include: [{
-            model: sequelize.models.UserFundSubscription,
-            as: 'userFundSubscription',
-            include: [{
-                model: sequelize.models.SberUser,
-                as: 'sberUser',
-            }]
-        }]
+        include: {
+            model: sequelize.models.SberUser,
+            as: 'sberUser'
+        }
     }));
     // TODO: Add handler for error
     // return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
-    return res.userFundSubscription.sberUser;
+    return res.sberUser;
 };
 
 
@@ -208,35 +204,6 @@ function getAcquiringOrderStatus_(order) {
 
 
 /**
- * get array with Direction,Topic,Funds and array with funds, where
- * Direction,Topic convert to Funds
- * @param  {[array]} entities [description]
- * @return {
- *           listDirectionsTopicsFunds: [ 'fund', 'МОЙ ФОНД' ], [ 'topic', 'Рак крови' ],
- *           listFunds:                 [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
- *         }
- */
-function getListDirectionTopicFunds_(entities) {
-    var listDirectionsTopicsFunds = [],
-        listFunds = [];
-    for (var i = 0, l = entities.length; i < l; i++) {
-        var entity = entities[i].dataValues,
-            type = entity.type;
-        listDirectionsTopicsFunds.push([type, entity.title]);
-        if (type === 'direction' || type === 'topic') {
-            listFunds = listFunds.concat(await(entityService.getListFundsName(entity.id)));
-        } else {
-            listFunds.push(entity.title);
-        }
-    }
-    return {
-        listDirectionsTopicsFunds,
-        listFunds
-    };
-}
-
-
-/**
  * study responce sberbank acquiring
  * @param  {[int]}  sberAcquOrderNumber
  * @param  {[obj]}  responceSberAcqu
@@ -280,16 +247,14 @@ function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
  * @return {[object]}   [ get id insert ]
  */
 OrderService.createOrder = function (data) {
-    return await(sequelize.sequelize.transaction(t => {
-        return sequelize.models.Order.create({
-                userFundSubscriptionId: data.userFundSubscriptionId,
-                type: data.type,
-                amount: data.amount,
-                status: data.status,
-                userFundSnapshot: data.userFundSnapshot,
-                scheduledPayDate: data.scheduledPayDate
-            })
-    })).sberAcquOrderNumber;
+    return await(sequelize.models.Order.create({
+            userFundSubscriptionId: data.userFundSubscriptionId,
+            type: data.type,
+            amount: data.amount,
+            status: data.status,
+            userFundSnapshot: data.userFundSnapshot,
+            scheduledPayDate: data.scheduledPayDate
+    })).sberAcquOrderNumber
 };
 
 function createPayDate_(subscriptionId, payDate) {
@@ -345,7 +310,7 @@ OrderService.getMissingDays = function (allDates, date) {
 OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
     var userFund = userFundService.getUserFundWithIncludes(userFundSubscription.userFundId)
 
-    if (!userFund.fund.length && !userFund.topic.length && !userFund.direction.length) {
+    if (isEmptyUserFund_(userFund)) {
         // this should never happened
         return;
     }
@@ -420,8 +385,6 @@ OrderService.makeMonthlyPayment = function (userFundSubscription, nowDate) {
         amount: orderStatusExtended.amount,
         status: orderStatusExtended.actionCode === 0 ? orderStatus.PAID : orderStatus.FAILED
     })
-
-
 
 };
 
@@ -527,15 +490,16 @@ OrderService.failedReccurentPayment = function (sberAcquOrderNumber, userFundSub
 };
 
 OrderService.getOrderComposition = function(sberAcquOrderNumber) {
-    return await(sequelize.sequelize.query(`SELECT
-    entities -> 'id' AS "id",
-    entities -> 'type' as "type",
-    entities -> 'title' AS "title",
-    entities -> 'description' AS "description"
+    return await(sequelize.sequelize.query(`
+    SELECT
+        entities -> 'id' AS "id",
+        entities -> 'type' as "type",
+        entities -> 'title' AS "title",
+        entities -> 'description' AS "description"
     FROM (SELECT jsonb_array_elements(("Order"."userFundSnapshot" -> 'topic') ||
                              ("Order"."userFundSnapshot" -> 'fund') ||
                              ("Order"."userFundSnapshot" -> 'direction')) AS entities
-  FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
+    FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
         type: sequelize.sequelize.QueryTypes.SELECT,
         replacements: {
             sberAcquOrderNumber
@@ -763,14 +727,9 @@ function sendEmailOwnerUserFund_(userFundIds) {
 
 
 function isEmptyUserFund_ (userFund) {
-    if (!userFund) { return true; }
-    if (
-        !userFund.fund.length &&
-        !userFund.topic.length &&
-        !userFund.direction.length
-       ) {
-        return true;
-    }
+    return userFund && (userFund.fund.length ||
+                        userFund.topic.length ||
+                        userFund.direction.length)
 }
 
 module.exports = OrderService;
