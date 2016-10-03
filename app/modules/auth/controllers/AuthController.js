@@ -11,9 +11,9 @@ const mailService = require('../services/mailService');
 const os = require('os');
 const config = require('../../../../config/config');
 
-const HOSTNAME = `http://${os.hostname()}:${config.port}`
+const HOSTNAME = `http://${os.hostname()}:${config.port}`;
 const VERIFY_LINK = `${HOSTNAME}/auth/verify?token=`;
-const RECOVER_LINK = `${HOSTNAME}/auth/recover?token=`;
+const RECOVER_LINK = `${HOSTNAME}#recover?token=`;
 const SUCCESS_MAIL_REDIRECT = `${HOSTNAME}#success?type=mail`;
 const FAILURE_MAIL_REDIRECT = `${HOSTNAME}#failure?type=mail`;
 const getVerifyLink_ = token => VERIFY_LINK + token;
@@ -182,7 +182,7 @@ class AuthController extends Controller {
         try {
             var authUser = await(authService.register(userData));
             var token = await(authService.generateToken({
-              email: userData.email
+                email: userData.email
             }));
             await(mailService.sendMail(userData.email, VERIFY_LINK + token));
             var sberUser = ctx.request.user || userService.createSberUser(authUser.id);
@@ -257,7 +257,7 @@ class AuthController extends Controller {
             console.log(email);
         } catch (err) {
             if (err.name == 'TokenExpiredError') {
-                ctx.response.redirect(FAILURE_MAIL_REDIRECT)
+                ctx.response.redirect(FAILURE_MAIL_REDIRECT);
                 throw new errors.HttpError('Link expired', 410);
             }
             throw new errors.HttpError('Invalid token', 400);
@@ -291,14 +291,37 @@ class AuthController extends Controller {
         return letterText;
         return null;
     };
-
+    /**
+     * @api {post} /auth/reset reset password
+     * @apiName reset password
+     * @apiGroup Auth
+     *
+     * @apiParam {String} password
+     * @apiParam {String} token
+     *
+     * @apiParamExample {json} example:
+     * {
+     *    "token": "TOKEN",
+     *    "password": "123qwe"
+     * }
+     */
     actionRecoverPassword(ctx) {
-        var token = ctx.request.data.token,
-            password = ctx.data.password
+        var token = ctx.data.token,
+            password = ctx.data.password;
+
+        try {
+            var sberUserId = await(authService.verifyToken(token)).sberUserId;
+        } catch (err) {
+            throw new errors.HttpError('Invalid token', 400);
+        }
+
+        var sberUser = userService.findSberUserById(sberUserId);
+        var authUser = userService.findAuthUserByAuthId(sberUser.authId);
+        authService.changePassword(authUser.id, password);
     };
     /**
-     * @api {post} /auth/recover recover password
-     * @apiName recover password
+     * @api {post} /auth/send-reset recover password
+     * @apiName send reset password mail
      * @apiGroup Auth
      *
      * @apiParam {String} email email of account owner
@@ -309,17 +332,19 @@ class AuthController extends Controller {
      */
     actionSendRecoverEmail(ctx) {
         var sessionUser = ctx.request.user;
-        if (sessionUser && sessionUser.authId) throw new errors.HttpError('Already logged in', 403);
 
         var email = ctx.data.email,
-            authUser = userService.findAuthUserByEmail(email),
-            sberUser = userService.findSberUserByAuthId(authUser.id);
+            authUser = userService.findAuthUserByEmail(email);
+
+        if (!authUser) throw new errors.NotFoundError('User', email)
+
+        var sberUser = userService.findSberUserByAuthId(authUser.id);
 
         var token = authService.generateToken({
-            id: sberUser.id
+            sberUserId: sberUser.id
         });
-        var letterText = await(mailService.sendMail(email, getRecoverLink_(token)));
-            // TODO: remove
+        var letterText = await(mailService.sendMail(email, getRecoverLink_(token), 'Восстановление пароля'));
+        // TODO: remove
         return letterText;
     }
 }

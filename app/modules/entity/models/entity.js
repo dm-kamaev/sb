@@ -89,23 +89,6 @@ module.exports = function(sequelize, DataTypes) {
                     }
                 });
             }
-        },
-        hooks: {
-            beforeCreate: function(entity, opts, cb) {
-                if (entity.imgUrl) return cb(null, opts);
-                switch (entity.type.toLowerCase()) {
-                case 'fund':
-                    entity.imgUrl = 'entity_pics/defaultFund.png';
-                    break;
-                case 'topic':
-                    entity.imgUrl = 'entity_pics/defaultTopic.png';
-                    break;
-                case 'direction':
-                    entity.imgUrl = 'entity_pics/defaultDirection.png';
-                    break;
-                }
-                cb(null, opts);
-            }
         }
     });
     return Entity;

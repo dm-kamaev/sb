@@ -2,6 +2,7 @@
     "hosts": [
         "http://sber-vmeste.qa.lan:3000",
         "http://localhost:3000",
-        "http://192.168.9.69:3000"
+        "http://192.168.9.69:3000",
+        "http://www58.lan:3000"
     ]
 }
