@@ -3,9 +3,11 @@
 const config = require('../../../../config/config.json');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
+const util = require('util');
 const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
+const sendMail        = require('../../userFund/services/sendMail.js');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const microService = require('../../micro/services/microService.js');
@@ -66,8 +68,8 @@ OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
  * @param  {[int]} userFundSubscriptionId
  * @return {[type]}
  */
-OrderService.getSberUser = function(userFundSubscriptionId) {
-    var res = await(sequelize.models.UserFundSubscription({
+OrderService.getSberUser = function (userFundSubscriptionId) {
+    var res = await(sequelize.models.UserFundSubscription.findOne({
         where: {
             id: userFundSubscriptionId
         },
@@ -76,8 +78,7 @@ OrderService.getSberUser = function(userFundSubscriptionId) {
             as: 'sberUser'
         }
     }));
-    // TODO: Add handler for error
-    // return res.userFundSubscription.dataValues.sberUser.dataValues.authId;
+    if (!res) { throw new errors.NotFoundError('subscription', userFundSubscriptionId); }
     return res.sberUser;
 };
 
@@ -139,7 +140,7 @@ OrderService.firstPayOrSendMessage = function(params) {
             }));
             var textError = i18n.__(
                 'Failed connection with sberbank acquiring (first pay). {{error}}', {
-                    error: JSON.stringify(err)
+                    error: util.inspect(err, { depth: 5 })
                 }
             );
             throw new errors.AcquiringError(textError);
@@ -440,7 +441,7 @@ OrderService.findOrderWithProblemCard = function(userFundSubscriptionId, nowDate
 
 
 /**
- * if payment failed
+ * if reccurent payment failed
  * @param  {[int]} sberAcquOrderNumber
  * @param  {[int]} userFundSubscriptionId
  * @param  {[str]} error                   text from sberbank accuring
@@ -460,9 +461,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         authId = sberUser.authId;
 
     var userEmail = microService.getUserData(authId).email;
-    if (!userEmail) {
-        throw new errors.NotFoundError('email', authId);
-    }
+    if (!userEmail) { throw new errors.NotFoundError('email', authId);  }
 
     var data = '';
     // this is the first time the payment failed
@@ -490,16 +489,37 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         );
 
         // get all user subscription and turn off their
-        var userFundIds = disableUserFundSubscription_(sberUserId);
+        var userFundIds       = disableUserFundSubscription_(sberUserId);
         var hasNotSubscribers = getUserFundsWithoutSubscribers_(userFundIds);
         // get list user fund which haven't subscribers and disable their
         // and send email owner
-        if (hasNotSubscribers.length) {
-            disableUserFunds_(hasNotSubscribers);
-            sendEmailOwnerUserFund_(hasNotSubscribers);
-        }
+        if (hasNotSubscribers.length) { disableUserFundsAndSendMail_(hasNotSubscribers); }
     }
 };
+
+
+/**
+ * disable UserFunds and send mail ownwer
+ * @param  {array} hasNotSubscribers [74, 73, 72]
+ * @return {[type]}
+ */
+function disableUserFundsAndSendMail_ (hasNotSubscribers) {
+    var userFundsWithSberUsers = userFundService.getUserFundsWithSberUser({
+        id: {
+            $in: hasNotSubscribers
+        }
+    }) || [];
+    var dataForMail = userFundsWithSberUsers.map(userFund => {
+        return {
+            authId: userFund.owner.authId,
+            userFundName: userFund.title,
+            reason: i18n.__('No paying users'),
+        }
+    });
+    disableUserFunds_(hasNotSubscribers);
+    new sendMail.userFund({ isReccurent: true }).disableUserFunds(dataForMail);
+}
+
 
 OrderService.getOrderComposition = function(sberAcquOrderNumber) {
     return await(sequelize.sequelize.query(`
@@ -654,8 +674,8 @@ OrderService.writeInExcel = function(countPayments) {
 
 /**
  * disable user's subsription and return list user fund id
- * @param  {[int]} sberUserId
- * @return {[array]}            [ 74, 73, ... ]
+ * @param  {[int]}   sberUserId
+ * @return {[array]} userFundIds  [ 74, 73, ... ]
  */
 function disableUserFundSubscription_(sberUserId) {
     var userFundSubscriptions =
@@ -668,21 +688,21 @@ function disableUserFundSubscription_(sberUserId) {
 
 /**
  * get list user fund id for deactive
- * @param  {[array]} userFundIds [ 73, 74, 1]
+ * @param  {[array]} userFundIds    [ 73, 74, 1]
  * @return {[array]}                [ 73, 74 ]
  */
 function getUserFundsWithoutSubscribers_(userFundIds) {
     var res = [];
     var activeSubscriptions = userFundService.searchActiveSubscription(userFundIds);
 
-    var listUserFundIdHasSubscribers = {};
+    var userFundIdHasSubscribers = {};
     // { '1': true, '73': true, '74': true }
-    activeSubscriptions.forEach((userFundSubsription) => {
-        listUserFundIdHasSubscribers[userFundSubsription.UserFundId] = true;
+    activeSubscriptions.forEach(userFundSubsription => {
+        userFundIdHasSubscribers[userFundSubsription.UserFundId] = true;
     });
 
-    return userFundIds.filter((userFundId) => {
-        if (!listUserFundIdHasSubscribers[userFundId]) {
+    return userFundIds.filter(userFundId => {
+        if (!userFundIdHasSubscribers[userFundId]) {
             return true;
         }
         return false;
@@ -695,53 +715,18 @@ function getUserFundsWithoutSubscribers_(userFundIds) {
  * @return {[type]}
  */
 function disableUserFunds_(userFundIds) {
-    userFundIds.forEach(function(userFundId) {
-        await(userFundService.updateUserFund(userFundId, {
+    userFundIds.forEach(userFundId => {
+        await (userFundService.updateUserFund(userFundId, {
             enabled: false
         }));
     });
 }
 
 
-/**
- * send email to author UserFund
- * @param  {[array]} userFundIds [74, 73]
- * @return {[type]}
- */
-function sendEmailOwnerUserFund_(userFundIds) {
-    var userFundWithSberUsers = await(
-        userFundService.getUserFundsWithSberUser(userFundIds)
-    );
-    userFundWithSberUsers.map((userFund) => {
-        return {
-            authId: userFund.owner.authId,
-            userFundName: userFund.title
-        };
-    }).map((user) => {
-        user.email = microService.getUserData(user.authId).email;
-        return user;
-    }).forEach((user) => {
-        var email = user.email,
-            userFundName = user.userFundName;
-        if (!email) { return; }
-        var data = i18n.__(
-            'Your User Fund "{{userFundName}}" deactivated.', {
-                userFundName
-            }
-        );
-        mailService.sendUserRecurrentPayments(
-            email, {
-                data
-            }
-        );
-    });
-}
-
-
-function isEmptyUserFund_(userFund) {
-    return !(userFund && (userFund.fund.length ||
-                         userFund.topic.length ||
-                         userFund.direction.length));
+function isEmptyUserFund_ (userFund) {
+    return userFund && (userFund.fund.length ||
+                        userFund.topic.length ||
+                        userFund.direction.length)
 }
 
 module.exports = OrderService;

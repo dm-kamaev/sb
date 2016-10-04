@@ -56,6 +56,30 @@ exports.userFund = class {
     }
 
     /**
+     * send email to author UserFund when disable his userFund
+     * @param  {[array]} data [ { authId: sberUser.authId, userFundName: userFund.title }, ... ]
+     * @return {[type]}
+     */
+    disableUserFunds(data) {
+        data.map(user => {
+            user.email = microService.getUserData(user.authId).email;
+            return user;
+        }).forEach(user => {
+            var email        = user.email,
+                userFundName = user.userFundName,
+                reason       = user.reason;
+            if (!email) { return; }
+            var data = i18n.__(
+                'Your User Fund "{{userFundName}}" deactivated. {{reason}}', {
+                    userFundName,
+                    reason
+                }
+            );
+            this.sendEmail(email, data);
+        });
+    }
+
+    /**
      * send mail: select format
      * @param  {[str]}  email
      * @param  {[obj]}  data

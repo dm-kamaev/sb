@@ -91,16 +91,12 @@ UserFundService.getUserFundWithSberUser = function(id) {
 
 /**
  * get list user funds with data about user
- * @param  {[array]} listId [ 74, 73 ]
+ * @param  {[array]} where
  * @return {[type]}
  */
-UserFundService.getUserFundsWithSberUser = function(listId) {
+UserFundService.getUserFundsWithSberUser = function(where) {
     return await(sequelize.models.UserFund.findAll({
-        where: {
-            id: {
-                $in: listId
-            }
-        },
+        where,
         include: {
             model: sequelize.models.SberUser,
             as: 'owner',
@@ -114,8 +110,8 @@ UserFundService.getUserFundsWithSberUser = function(listId) {
  * @param  {[obj]} where optional param
  * @return {[type]}
  */
-UserFundService.getUserFunds = function(where) {
-    if (where) { return await(sequelize.models.UserFund.findAll(where)); }
+UserFundService.getUserFunds = function (where) {
+    if (where) { return await(sequelize.models.UserFund.findAll({ where })); }
     return await(sequelize.models.UserFund.findAll());
 };
 
