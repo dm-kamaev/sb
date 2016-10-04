@@ -12,7 +12,6 @@ const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const mailService = require('../../auth/services/mailService.js');
 const microService = require('../../micro/services/microService.js');
 const errors = require('../../../components/errors');
-const excel = require('../../../components/excel');
 const orderStatus = require('../enums/orderStatus');
 const orderTypes = require('../enums/orderTypes');
 const os = require('os');
@@ -420,27 +419,6 @@ OrderService.getMissingDays = function(allDates, date) {
 
 
 /**
- * find orders with status "problemWithCard" in previous month
- * @param  {[int]} userFundSubscriptionId
- * @param {Object} [nowDate]
- * @return {[type]}
- */
-OrderService.findOrderWithProblemCard = function(userFundSubscriptionId, nowDate) {
-    var now = nowDate || new Date();
-    var previousMonth = moment(now).subtract(1, 'month').format('YYYY-MM');
-    return await(sequelize.models.Order.findAll({
-        where: {
-            userFundSubscriptionId,
-            status: orderStatus.PROBLEM_WITH_CARD
-        }
-    }).filter(function(order) {
-        var orderMonth = moment(order.scheduledPayDate).format('YYYY-MM');
-        return previousMonth === orderMonth;
-    }));
-};
-
-
-/**
  * if reccurent payment failed
  * @param  {[int]} sberAcquOrderNumber
  * @param  {[int]} userFundSubscriptionId
@@ -453,7 +431,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         status: orderStatus.PROBLEM_WITH_CARD
     }));
     var problemOrderInPreviousMonth = await(
-        OrderService.findOrderWithProblemCard(userFundSubscriptionId, nowDate)
+        findOrderWithProblemCard_(userFundSubscriptionId, nowDate)
     );
 
     var sberUser = await(OrderService.getSberUser(userFundSubscriptionId)),
@@ -496,6 +474,27 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         if (hasNotSubscribers.length) { disableUserFundsAndSendMail_(hasNotSubscribers); }
     }
 };
+
+
+/**
+ * find orders with status "problemWithCard" in previous month
+ * @param  {[int]} userFundSubscriptionId
+ * @param {Object} [nowDate]
+ * @return {[type]}
+ */
+function findOrderWithProblemCard_ (userFundSubscriptionId, nowDate) {
+    var now = nowDate || new Date();
+    var previousMonth = moment(now).subtract(1, 'month').format('YYYY-MM');
+    return await(sequelize.models.Order.findAll({
+        where: {
+            userFundSubscriptionId,
+            status: orderStatus.PROBLEM_WITH_CARD
+        }
+    }).filter(order => {
+        var orderMonth = moment(order.scheduledPayDate).format('YYYY-MM');
+        return previousMonth === orderMonth;
+    }));
+}
 
 
 /**
@@ -635,41 +634,6 @@ function getFundsFromOrder_(order) {
         count: fundsCount
     };
 }
-
-
-/**
- * recommendation write in excel.
- * get calculated data for accountant, transform and write in .xlsx
- * @param  {[type]} countPayments { payments: [{"id": 1, "payment": 123456, "title": "qwerty"}], sumModulo: 2345 }
- * @return {[type]}
- */
-OrderService.writeInExcel = function(countPayments) {
-    var fundPayments = countPayments.payments,
-        remainderDivision = countPayments.sumModulo;
-    var dataForSheet = [
-        [ 'id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)' ]
-    ];
-    fundPayments.forEach((fundPayment) => {
-        dataForSheet.push(
-            [ fundPayment.id, fundPayment.title, fundPayment.payment ]
-        );
-    });
-    dataForSheet.push([ 'Остатки', ' ', remainderDivision ]);
-
-    var sheet = excel.createSheets(
-        [
-            {
-                name: 'Рекомендация',
-                value: dataForSheet,
-            }
-        ]
-    );
-    excel.write(
-        '../../../../public/uploads/recommendation/Рекомендация_' +
-        moment().format('YYYY_DD_MM') + '.xlsx',
-        sheet
-    );
-};
 
 
 /**

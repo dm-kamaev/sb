@@ -3,6 +3,9 @@
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
+const excel = require('../../../components/excel');
+const moment = require('moment');
+
 var StatementService = {};
 
 StatementService.parseStatement = function(file) {
@@ -67,4 +70,38 @@ StatementService.handleStatement = function(data) {
     })));
 };
 
+
+/**
+ * recommendation write in excel.
+ * get calculated data for accountant, transform and write in .xlsx
+ * @param  {[type]} countPayments { payments: [{"id": 1, "payment": 123456, "title": "qwerty"}], sumModulo: 2345 }
+ * @return {[type]}
+ */
+StatementService.writeInExcel = function(countPayments) {
+    var fundPayments = countPayments.payments,
+        remainderDivision = countPayments.sumModulo;
+    var dataForSheet = [
+        [ 'id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)' ]
+    ];
+    fundPayments.forEach((fundPayment) => {
+        dataForSheet.push(
+            [ fundPayment.id, fundPayment.title, fundPayment.payment ]
+        );
+    });
+    dataForSheet.push([ 'Остатки', ' ', remainderDivision ]);
+
+    var sheet = excel.createSheets(
+        [
+            {
+                name: 'Рекомендация',
+                value: dataForSheet,
+            }
+        ]
+    );
+    excel.write(
+        '../../../../public/uploads/recommendation/Рекомендация_' +
+        moment().format('YYYY_DD_MM') + '.xlsx',
+        sheet
+    );
+};
 module.exports = StatementService;
