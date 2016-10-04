@@ -3,6 +3,7 @@
 
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
+const async = require('asyncawait/async');
 const errors = require('../../../components/errors');
 const userService = require('../../user/services/userService');
 const authService = require('../services/authService');
@@ -21,65 +22,6 @@ const getRecoverLink_ = token => RECOVER_LINK + token;
 
 class AuthController extends Controller {
     /**
-     * @api {post} /auth find or create user
-     * @apiName find or create user
-     * @apiGroup AuthOld
-     *
-     * @apiParam {String} [firstName] user fist name
-     * @apiParam {String} [lastName] user last name
-     * @apiParam {String} phone phone number
-     *
-     * @apiParamExample {json} Example request:
-     * {
-     *     "firstName": "Max",
-     *     "lastName": "Rylkin"
-     * }
-     * @apiSuccess {Object} User created user
-     *
-     * @apiError (Error 422) ValidationError
-     *
-     */
-    actionFindOrCreateUser(actionContext) {
-        var userData = actionContext.request.body,
-            phoneData = actionContext.request.user.phone,
-            firstName = userData.firstName,
-            lastName = userData.lastName;
-
-        if (!phoneData || !phoneData.verified) {
-            throw new errors.HttpError('Unathorized', 403);
-        }
-
-        userData.phone = phoneData.number;
-
-        try {
-            var authUser = await(authService.createAuthUser(userData));
-
-            var sberUser = actionContext.request.user;
-            await(userService.setAuthId(sberUser.id, authUser.id));
-
-            return await(new Promise((resolve, reject) => {
-                actionContext.request.login(sberUser, (err) => {
-                    if (err) reject(new errors.HttpError(err.message, 400));
-                    resolve(actionContext.request.sessionID);
-                });
-            }));
-        } catch (err) {
-            if (err.name == 'ValidationError') {
-                throw new errors.ValidationError(err.validationErrors);
-            }
-            throw err;
-        }
-    };
-    /**
-     * @api {post} /auth/logout logout
-     * @apiName logout
-     * @apiGroup Auth
-     *
-     */
-    actionLogout(actionContext) {
-        return actionContext.request.logout();
-    };
-    /**
      * @api {get} /auth/test test
      * @apiName test
      * @apiGroup Auth
@@ -88,80 +30,12 @@ class AuthController extends Controller {
         return actionContext.request.user;
     };
     /**
-     * @api {post} /auth/sms send sms
-     * @apiName send sms
-     * @apiGroup AuthOld
-     *
-     * @apiParamExample {json} example request:
-     * {
-     *    "phone": "123456789"
-     * }
-     *
-     * @apiError (Error 400) TimerError
+     * @api {post} /auth/logout logout
+     * @apiName logout
+     * @apiGroup Auth
      */
-    actionSendSMS(actionContext) {
-        var phone = actionContext.request.body.phone,
-            userId = actionContext.request.user.id,
-            code = ('000' + ~~(Math.random() * 990 + 1)).slice(-3);
-
-        try {
-            await(authService.saveCode(phone, code, userId));
-            await(authService.sendCode(phone, code));
-            // need for debug
-            return code;
-            return null;
-        } catch (err) {
-            throw new errors.HttpError(err.message, 400);
-        }
-    };
-    /**
-     * @api {post} /auth/verify verify code
-     * @apiName verify code
-     * @apiGroup AuthOld
-     *
-     * @apiParamExample {json} example request:
-     * {
-     *    "code": "123"
-     * }
-     *
-     * @apiError (Error 400) HttpError wrong code
-     * @apiError (Error 403) HttpError Unathorized sms not sent yet.
-     * @apiError (Error 400) HttpError Already logged in
-     */
-    actionVerifyCode(actionContext) {
-        var phoneData = actionContext.request.user.phone;
-
-        if (!phoneData) throw new errors.HttpError('Unathorized', 403);
-
-        var sessionUser = actionContext.request.user,
-            phone = sessionUser.phone.number,
-            code = actionContext.request.body.code;
-
-        var res = await(authService.verifyCode(phone, code));
-        if (!res[0]) throw new errors.HttpError('Wrong code', 400);
-
-        var authUser = await(userService.findAuthUserByPhone(phone));
-        if (!authUser) return {
-            data: 'need register'
-        };
-
-        var sberUser = await(userService.findSberUserByAuthId(authUser.id));
-
-        if (!sberUser) {
-            sberUser = sessionUser;
-            await(userService.setAuthId(sberUser.id, authUser.id));
-        } else if (!sberUser.userFund.enabled &&
-            await(userFundService.getEntities(sessionUser.id)).length) {
-            await(userService.setUserFund(sberUser.id, sessionUser.userFund.id));
-        }
-
-
-        return await(new Promise((resolve, reject) => {
-            actionContext.request.login(sberUser, (err) => {
-                if (err) reject(new errors.HttpError(err.message, 400));
-                resolve(actionContext.request.sessionID);
-            });
-        }));
+    actionLogout(actionContext) {
+        return actionContext.request.logout();
     };
     /**
      * @api {post} /auth/register register
@@ -179,29 +53,28 @@ class AuthController extends Controller {
     actionRegister(ctx) {
         var userData = ctx.data;
 
-        try {
-            var authUser = await(authService.register(userData));
-            var token = await(authService.generateToken({
-                email: userData.email
-            }));
-            await(mailService.sendMail(userData.email, VERIFY_LINK + token));
-            var sberUser = ctx.request.user || userService.createSberUser(authUser.id);
-            await(userService.setAuthId(sberUser.id, authUser.id));
+        return new Promise((resolve, reject) => {
+            authService.register(userData, (err, authUser) => {
+                var token = authService.generateToken({
+                    email: userData.email
+                }, async((err, token) => {
+                    mailService.sendMail(userData.email, getVerifyLink_(token));
 
-            // ctx.status = 201;
+                    var draftUser = ctx.request.user,
+                        sberUser = draftUser || userService.createSberUser(authUser.id);
+                    if (!sberUser.authId) {
+                        userService.setAuthId(sberUser.id, authUser.id);
+                    }
 
-            return await(new Promise((resolve, reject) => {
-                ctx.request.login(sberUser, (err) => {
-                    if (err) reject(new errors.HttpError(err.message, 400));
-                    resolve(ctx.request.sessionID);
-                });
-            }));
-        } catch (err) {
-            if (err.name == 'ValidationError') {
-                throw new errors.ValidationError(err.validationErrors);
-            }
-            throw err;
-        }
+                    ctx.status = 201;
+
+                    ctx.request.login(sberUser, (err) => {
+                        if (err) reject(new errors.HttpError(err.message, 400));
+                        resolve(ctx.request.sessionID);
+                    });
+                }));
+            });
+        });
     };
     /**
      * @api {post} /auth/login login
@@ -219,29 +92,29 @@ class AuthController extends Controller {
             password = ctx.data.password,
             sessionUser = ctx.request.user;
 
-        try {
-            await(authService.login(email, password));
+        return new Promise((resolve, reject) => {
+            authService.login(ctx.data, async(err => {
+                console.log('login');
+                if (err) reject(err)
+                if (err) throw err;
 
-            var authUser = await(userService.findAuthUserByEmail(email));
-            var sberUser = await(userService.findSberUserByAuthId(authUser.id));
+                var authUser = userService.findAuthUserByEmail(email),
+                    sberUser = userService.findSberUserByAuthId(authUser.id);
 
-            if (!sberUser) {
-                sberUser = sessionUser || userService.createSberUser(authUser.id);
-                await(userService.setAuthId(sberUser.id, authUser.id));
-            } else if (!sberUser.userFund.enabled && sessionUser &&
-                await(userFundService.getEntities(sessionUser.id)).length) {
-                await(userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id));
-            }
+                if (!sberUser) {
+                    sberUser = sessionUser || userService.createSberUser(authUser.id);
+                    userService.setAuthId(sberUser.id, authUser.id);
+                } else if (!sberUser.userFund.enabled && sessionUser &&
+                    userFundService.getEntities(sessionUser.id).length) {
+                    userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
+                }
 
-            return await(new Promise((resolve, reject) => {
                 ctx.request.login(sberUser, (err) => {
                     if (err) reject(new errors.HttpError(err.message, 400));
                     resolve(ctx.request.sessionID);
                 });
             }));
-        } catch (err) {
-            throw new errors.NotFoundError('User');
-        }
+        })
     };
     /**
      * @api {get} /auth/verify verify email
@@ -252,21 +125,19 @@ class AuthController extends Controller {
      */
     actionVerifyEmail(ctx) {
         var token = ctx.request.query.token;
-        try {
-            var email = await(authService.verifyToken(token)).email;
-            console.log(email);
-        } catch (err) {
-            if (err.name == 'TokenExpiredError') {
-                ctx.response.redirect(FAILURE_MAIL_REDIRECT);
-                throw new errors.HttpError('Link expired', 410);
-            }
-            throw new errors.HttpError('Invalid token', 400);
-        }
-        var authUser = await(userService.findAuthUserByEmail(email));
-        var sberUser = await(userService.findSberUserByAuthId(authUser.id));
-        var verified = await(authService.verifyUser(sberUser.id));
 
-        ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
+        return new Promise((resolve, reject) => {
+            authService.verifyToken(token, async((err, decoded) => {
+                if (err) return ctx.response.redirect(FAILURE_MAIL_REDIRECT);
+                if (err && err.name != 'JsonWebTokenError') logger.critical(err);
+
+                var authUser = userService.findAuthUserByEmail(decoded.email);
+                var sberUser = userService.findSberUserByAuthId(authUser.id);
+                var verified = authService.verifyUser(sberUser.id);
+
+                ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
+            }));
+        })
     };
     /**
      * @api {post} /auth/send send verification mail
@@ -275,21 +146,27 @@ class AuthController extends Controller {
      */
     actionSendVerification(ctx) {
         var sberUser = ctx.request.user;
-        if (!sberUser || !sberUser.authId) throw new errors.HttpError('Unathorized', 403);
-        if (sberUser.verified) throw new errors.HttpError('Already verified', 403);
+        if (!sberUser || !sberUser.authId) {
+            throw new errors.HttpError('Unathorized', 403);
+        }
+        if (sberUser.verified) {
+            throw new errors.HttpError('Already verified', 403);
+        }
 
-        var authUser = await(userService.findAuthUserByAuthId(sberUser.authId)),
+        var authUser = userService.findAuthUserByAuthId(sberUser.authId),
             email = authUser.email;
 
-        var token = await(authService.generateToken({
-            email
-        }));
-        var letterText = await(mailService.sendMail(email,
-            VERIFY_LINK + token));
-        // need for debug
-        // TODO: remove
-        return letterText;
-        return null;
+        return new Promise((resolve, reject) => {
+            authService.generateToken({
+                email
+            }, async((err, token) => {
+                if (err) reject(err);
+
+                var letterText = mailService.sendMail(email, getVerifyLink_(token));
+                // TODO: remove
+                resolve(letterText);
+            }));
+        })
     };
     /**
      * @api {post} /auth/reset reset password
@@ -309,15 +186,18 @@ class AuthController extends Controller {
         var token = ctx.data.token,
             password = ctx.data.password;
 
-        try {
-            var sberUserId = await(authService.verifyToken(token)).sberUserId;
-        } catch (err) {
-            throw new errors.HttpError('Invalid token', 400);
-        }
+        return new Promise((resolve, reject) => {
+            authService.verifyToken(token, async((err, decoded) => {
+                if (err) reject(new errors.HttpError(err.message, 400))
 
-        var sberUser = userService.findSberUserById(sberUserId);
-        var authUser = userService.findAuthUserByAuthId(sberUser.authId);
-        authService.changePassword(authUser.id, password);
+                var sberUser = userService.findSberUserById(decoded.sberUserId);
+                var authUser = userService.findAuthUserByAuthId(sberUser.authId);
+                authService.changePassword(authUser.id, password, (err) => {
+                    if (err) reject(err);
+                    resolve('SUCCESS')
+                });
+            }));
+        })
     };
     /**
      * @api {post} /auth/send-reset recover password
@@ -340,12 +220,20 @@ class AuthController extends Controller {
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
-        var token = authService.generateToken({
-            sberUserId: sberUser.id
-        });
-        var letterText = await(mailService.sendMail(email, getRecoverLink_(token), 'Восстановление пароля'));
-        // TODO: remove
-        return letterText;
+        return new Promise((resolve, reject) => {
+            authService.generateToken({
+                sberUserId: sberUser.id
+            }, {
+                expiresIn: '2 days'
+            }, async((err, token) => {
+                if (err) reject(err);
+                var letterText = mailService.sendMail(email,
+                    getRecoverLink_(token),
+                    'Восстановление пароля');
+                // TODO: remove
+                resolve(letterText);
+            }));
+        })
     }
 }
 

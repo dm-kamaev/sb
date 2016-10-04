@@ -69,11 +69,27 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-    var status = err.statusCode || 500;
-    res.status(status).json([{
+    console.log('hereasd');
+    var status;
+    switch (err.name || err.data && err.data[0].code) {
+        case 'ValidationError':
+            status = 422;
+            break;
+        case 'NotFoundError':
+            status = 404;
+            break;
+        case 'AcquiringError':
+            status = 503;
+            break;
+        default:
+            status = 500;
+    }
+
+    res.status(err.status || err.statusCode || status).json([{
         code: err.name,
-        message: err.message || 'Internal server error',
-        validationErrors: err.validationErrors
+        message: err.message || err.data && err.data[0].message || 'Internal server error',
+        validationErrors: err.validationErrors ||
+                  err.data && err.data[0].validationErrors
     }]);
     if (status >= 500) {
         // logger.critical(prettyJSON(err));
