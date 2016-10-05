@@ -12,19 +12,6 @@ const axios = require('axios').create({
 const _ = require('lodash');
 const os = require('os');
 
-class TimerError extends Error {
-    constructor(time) {
-        var diff = time - new Date(new Date() - TIMEOUT),
-            mins = Math.floor(diff / (1000 * 60)),
-            seconds = Math.floor(diff / 1000) % 60;
-
-        super(`Попробуйте снова через ${mins}:${seconds}`);
-
-        this.name = 'TimerError';
-        Error.captureStackTrace(this, this.constructor);
-    }
-}
-
 class ValidationError extends Error {
     constructor(validationErrors) {
         super('ValidationError');
@@ -37,14 +24,108 @@ class ValidationError extends Error {
 
 var AuthService = {};
 
-AuthService.register = function(userData) {
+/**
+ * register - Description
+ *
+ * @param {Object} userData object contained user information
+ * @param {String} userData.firstName
+ * @param {String} userData.lastName
+ * @param {String} userData.email
+ * @param {String} userData.password
+ * @param {registerCallback} cb   callback on result
+ *
+ * @return {type} Description
+ */
+AuthService.register = function(userData, cb) {
+
+    validateUser_(userData, (err) => {
+        if (err) throw err;
+        var response = await (axios.post('/user', {
+            firstName: _.capitalize(userData.firstName),
+            lastName: _.capitalize(userData.lastName),
+            email: userData.email,
+            password: userData.password
+        }));
+        return cb(null, response.data)
+    })
+};
+
+/**
+ * callback used in register
+ * @callback registerCallback
+ * @param {Object} err error
+ * @param {Object} authUser created auth user
+ */
+
+
+/**
+ * changePassword - change password for user
+ *
+ * @param {Number} authUserId id of user on microservice
+ * @param {String} password  password candidate
+ */
+AuthService.changePassword = function(authUserId, password, cb) {
+    validatePassword_(password, (err) => {
+        axios.put(`/user/${authUserId}`, {
+                password
+            })
+            .then(res => cb(null, res), err => cb(err))
+    })
+
+};
+
+AuthService.login = function(userData, cb) {
+    var email = userData.email,
+        password = userData.password;
+
+    axios.post(`/user/${email}`, {
+            password
+        })
+        .then(res => cb(null, res), err => cb(err))
+};
+
+AuthService.generateToken = function(data, options, cb) {
+    //method can pass two args
+    if (typeof options == 'function' && typeof cb == 'undefined') {
+        cb = options;
+        options = {}
+    }
+
+    jwt.sign(data, JWT_SECRET, options, (err, token) => {
+        if (err) return cb(err);
+        cb(null, token);
+    });
+};
+
+AuthService.verifyToken = function(token, cb) {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) return cb(err);
+        cb(null, decoded);
+    });
+};
+
+AuthService.verifyUser = function(sberUserId) {
+    return await (sequelize.models.SberUser.update({
+        verified: true
+    }, {
+        where: {
+            id: sberUserId,
+            verified: false
+        }
+    }));
+};
+
+function validateUser_(userData, cb) {
     var firstName = userData.firstName,
         lastName = userData.lastName,
         email = userData.email,
         password = userData.password,
-        mailRegex = new RegExp(['^[a-z0-9\\u007F-\\uffff!#$%&\\\'*+\\/=?^_`{|}~-]+(?:\\.' +
-                                '[a-z0-9\\u007F-\\uffff!#$%&\\\'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9]' +
-                                '(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z]{1,}$'].join(''), 'i');
+        mailRegex = new RegExp([
+            '^[a-z0-9\\u007F-\\uffff!#$%&\\\'*+\\/=?' +
+            '^_`{|}~-]+(?:\\.' +
+            '[a-z0-9\\u007F-\\uffff!#$%&\\\'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9]' +
+            '(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z]{1,}$'
+        ].join(''), 'i');
 
     if (!email || !password || password.length < 6 || !firstName || !lastName ||
         firstName.length > 20 || lastName.length > 20 || !mailRegex.test(email)) {
@@ -74,144 +155,23 @@ AuthService.register = function(userData) {
             lastName: 'Поле "Фамилия" пустое'
         });
 
-        throw new ValidationError(valErrors);
+        return cb(new ValidationError(valErrors))
     }
 
-    try {
-        var response = await(axios.post('/user', {
-            firstName: _.capitalize(firstName),
-            lastName: _.capitalize(lastName),
-            email,
-            password
-        }));
+    cb(null)
+}
 
-        return response.data;
-    } catch (err) {
-        if (err.data && err.data[0].code == 'ValidationError') {
-            throw new ValidationError(err.data[0].validationErrors);
-        }
-        throw err;
-    }
-};
+function validatePassword_(password, cb) {
+    var valErrors = []
+    password ? password.length > 6 ? null : valErrors.push({
+        password: 'Минимальная длина пароя 6 символов'
+    }) : valErrors.push({
+        password: 'Поле пароль не может быть пустым'
+    });
 
-AuthService.changePassword = function(authUserId, password) {
-    await(axios.put(`/user/${authUserId}`, {
-        password
-    }));
-};
+    if (valErrors.length) return cb(new ValidationError(valErrors))
 
-AuthService.login = function(email, password) {
-    try {
-        var response = await(axios.post(`/user/${email}`, {
-            password
-        }));
-    } catch (err) {
-        if (err.data && err.data[0].code == 'NotFoundError') {
-            throw new Error('Not found');
-        }
-        throw err;
-    }
-
-    return response.data;
-};
-
-AuthService.generateToken = function(data) {
-    return await(new Promise((resolve, reject) => {
-        jwt.sign(data, JWT_SECRET, {
-            expiresIn: '2 days'
-        }, (err, token) => {
-            if (err) reject(err);
-            resolve(token);
-        });
-    }));
-};
-
-AuthService.verifyToken = function(token) {
-    return await(new Promise((resolve, reject) => {
-        jwt.verify(token, JWT_SECRET, (err, decoded) => {
-            if (err) reject(err);
-            resolve(decoded);
-        });
-    }));
-};
-
-AuthService.verifyUser = function(sberUserId) {
-    return await(sequelize.models.SberUser.update({
-        verified: true
-    }, {
-        where: {
-            id: sberUserId,
-            verified: false
-        }
-    }));
-};
-
-// >>>> old, but can be used later
-AuthService.createAuthUser = function(userData) {
-    var firstName = userData.firstName,
-        lastName = userData.lastName;
-    if (!firstName || !lastName ||
-        firstName.length > 20 || lastName.length > 20) {
-        var valErrors = [];
-
-        firstName ? firstName.length > 20 ? valErrors.push({
-            fistName: 'Поле "Имя" содержит больше 20 символов'
-        }) : null : valErrors.push({
-            fistName: 'Поле "Имя" пустое'
-        });
-
-        lastName ? lastName.length > 20 ? valErrors.push({
-            lastName: 'Поле "Фамилия" содержит больше 20 символов'
-        }) : null : valErrors.push({
-            lastName: 'Поле "Фамилия" пустое'
-        });
-
-        throw new ValidationError(valErrors);
-    }
-
-    var response = await(axios.post('/user', {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: userData.phone,
-        password: '+'
-    }));
-
-    return response.data;
-};
-
-AuthService.saveCode = function(phone, code, sberUserId) {
-    var send = await(sequelize.models.Phone.findOne({
-        where: {
-            number: phone,
-            updatedAt: {
-                $gt: new Date(new Date() - TIMEOUT)
-            }
-        }
-    }));
-
-    // if (send) throw new TimerError(send.updatedAt);
-
-    return await(sequelize.models.Phone.upsert({
-        number: phone,
-        code,
-        sberUserId,
-        verified: false
-    }));
-};
-
-AuthService.sendCode = function(phone, code) {
-    // sending SMS to the user...
-};
-
-AuthService.verifyCode = function(phone, code) {
-    return await(sequelize.models.Phone.update({
-        verified: true
-    }, {
-        where: {
-            number: phone,
-            code
-        }
-    }));
-};
+    cb(null)
+}
 
 module.exports = AuthService;

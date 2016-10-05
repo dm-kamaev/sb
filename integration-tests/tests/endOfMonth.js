@@ -304,8 +304,8 @@ describe('Yesterday recurrent test', function () {
         var date = new Date(dateString).toUTCString();
         return chakram.waitFor([
             db.none(`UPDATE "UserFundSubscription"
-                     SET "createdAt" = '${date}' 
-                     WHERE "sberUserId" = '${userId}' 
+                     SET "createdAt" = '${date}'
+                     WHERE "sberUserId" = '${userId}'
                      AND "userFundId" = '${userFundId}'`)
         ])
     });
