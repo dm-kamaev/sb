@@ -84,25 +84,12 @@ AuthService.login = function(userData, cb) {
         .then(res => cb(null, res), err => cb(err))
 };
 
-// AuthService.login = function(userData) {
-//     var email = userData.email,
-//         password = userData.password;
-//
-//     return axios.post(`/user/${email}`, {
-//             password
-//         })
-// };
-
 AuthService.generateToken = function(data, options, cb) {
     //method can pass two args
     if (typeof options == 'function' && typeof cb == 'undefined') {
         cb = options;
         options = {}
     }
-
-    console.log(data)
-    console.log(options);
-    console.log(cb);
 
     jwt.sign(data, JWT_SECRET, options, (err, token) => {
         if (err) return cb(err);

@@ -107,7 +107,6 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
 OrderService.firstPayOrSendMessage = function(params) {
     // if user with unconfirmed payment, then do first pay
     var userFund = userFundService.getUserFundWithIncludes(params.userFundId);
-    console.log(!!isEmptyUserFund_(userFund));
     if (isEmptyUserFund_(userFund)) {
         throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
     }
@@ -116,7 +115,7 @@ OrderService.firstPayOrSendMessage = function(params) {
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
-            userFundSnapshot: userFund,
+            userFundSnapshot: userFund, 
             status: orderStatus.NEW,
             type: orderTypes.FIRST,
         };
@@ -688,9 +687,9 @@ function disableUserFunds_(userFundIds) {
 
 
 function isEmptyUserFund_ (userFund) {
-    return userFund && (userFund.fund.length ||
-                        userFund.topic.length ||
-                        userFund.direction.length)
+    return !(userFund && (userFund.topic.length ||
+                          userFund.direction.length ||
+                          userFund.fund.length))
 }
 
 module.exports = OrderService;

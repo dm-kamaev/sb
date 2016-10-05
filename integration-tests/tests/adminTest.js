@@ -150,7 +150,8 @@ describe('Admin operations', function() {
     it('Should update user', function() {
         var changedName = 'NEW_NAME'
         return chakram.put(services.url(`user/${this.sberUserId}`), {
-            firstName: changedName
+            firstName: changedName,
+            lastName: this.lastName
         }, adminOptions)
         .then(res => {
             var user = res.body;

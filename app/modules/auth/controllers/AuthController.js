@@ -53,7 +53,7 @@ class AuthController extends Controller {
     actionRegister(ctx) {
         var userData = ctx.data;
 
-        return new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             authService.register(userData, (err, authUser) => {
                 var token = authService.generateToken({
                     email: userData.email
@@ -66,7 +66,7 @@ class AuthController extends Controller {
                         userService.setAuthId(sberUser.id, authUser.id);
                     }
 
-                    ctx.status = 201;
+                    // ctx.status = 201;
 
                     ctx.request.login(sberUser, (err) => {
                         if (err) reject(new errors.HttpError(err.message, 400));
@@ -74,7 +74,7 @@ class AuthController extends Controller {
                     });
                 }));
             });
-        });
+        }));
     };
     /**
      * @api {post} /auth/login login
@@ -92,11 +92,9 @@ class AuthController extends Controller {
             password = ctx.data.password,
             sessionUser = ctx.request.user;
 
-        return new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             authService.login(ctx.data, async(err => {
-                console.log('login');
-                if (err) reject(err)
-                if (err) throw err;
+                if (err) return reject(err)
 
                 var authUser = userService.findAuthUserByEmail(email),
                     sberUser = userService.findSberUserByAuthId(authUser.id);
@@ -114,7 +112,7 @@ class AuthController extends Controller {
                     resolve(ctx.request.sessionID);
                 });
             }));
-        })
+        }))
     };
     /**
      * @api {get} /auth/verify verify email
@@ -126,7 +124,7 @@ class AuthController extends Controller {
     actionVerifyEmail(ctx) {
         var token = ctx.request.query.token;
 
-        return new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             authService.verifyToken(token, async((err, decoded) => {
                 if (err) return ctx.response.redirect(FAILURE_MAIL_REDIRECT);
                 if (err && err.name != 'JsonWebTokenError') logger.critical(err);
@@ -137,7 +135,7 @@ class AuthController extends Controller {
 
                 ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
             }));
-        })
+        }))
     };
     /**
      * @api {post} /auth/send send verification mail
@@ -156,7 +154,7 @@ class AuthController extends Controller {
         var authUser = userService.findAuthUserByAuthId(sberUser.authId),
             email = authUser.email;
 
-        return new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             authService.generateToken({
                 email
             }, async((err, token) => {
@@ -166,7 +164,7 @@ class AuthController extends Controller {
                 // TODO: remove
                 resolve(letterText);
             }));
-        })
+        }))
     };
     /**
      * @api {post} /auth/reset reset password
@@ -186,7 +184,7 @@ class AuthController extends Controller {
         var token = ctx.data.token,
             password = ctx.data.password;
 
-        return new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             authService.verifyToken(token, async((err, decoded) => {
                 if (err) reject(new errors.HttpError(err.message, 400))
 
@@ -194,10 +192,10 @@ class AuthController extends Controller {
                 var authUser = userService.findAuthUserByAuthId(sberUser.authId);
                 authService.changePassword(authUser.id, password, (err) => {
                     if (err) reject(err);
-                    resolve('SUCCESS')
+                    resolve()
                 });
             }));
-        })
+        }))
     };
     /**
      * @api {post} /auth/send-reset recover password
@@ -220,7 +218,7 @@ class AuthController extends Controller {
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
-        return new Promise((resolve, reject) => {
+        return await(new Promise((resolve, reject) => {
             authService.generateToken({
                 sberUserId: sberUser.id
             }, {
@@ -233,7 +231,7 @@ class AuthController extends Controller {
                 // TODO: remove
                 resolve(letterText);
             }));
-        })
+        }))
     }
 }
 

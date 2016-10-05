@@ -69,7 +69,6 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-    console.log('hereasd');
     var status;
     switch (err.name || err.data && err.data[0].code) {
         case 'ValidationError':
@@ -81,11 +80,11 @@ app.use((err, req, res, next) => {
         case 'AcquiringError':
             status = 503;
             break;
-        default:
-            status = 500;
     }
 
-    res.status(err.status || err.statusCode || status).json([{
+    status = status || err.statusCode || err.status || 500;
+
+    res.status(status).json([{
         code: err.name,
         message: err.message || err.data && err.data[0].message || 'Internal server error',
         validationErrors: err.validationErrors ||
