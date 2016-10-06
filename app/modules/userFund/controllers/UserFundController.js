@@ -54,7 +54,7 @@ class UserFundController extends Controller {
     actionGetUserFund(ctx, id) {
         var includes = ctx.request.query.include || false,
             nested = ctx.request.query.nested || false;
-        var userFund = await(userFundService.getUserFund(id, includes, nested));
+        var userFund = userFundService.getUserFund(id, includes, nested);
         if (!userFund) { throw new errors.NotFoundError(i18n.__('UserFund'), id); }
         return userFundView.renderUserFund(userFund);
     }
@@ -269,7 +269,7 @@ class UserFundController extends Controller {
             sberUserId = user.id || null,
             userFundId = (user.userFund) ? user.userFund.id : null;
 
-        var userFund = await(userFundService.getUserFund({ id: userFundId })) || {};
+        var userFund = await(userFundService.getUserFund(userFundId)) || {};
         var sberUser = userService.findSberUserById(sberUserId) || {};
 
         // removed UF, card and send email owner
