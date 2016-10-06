@@ -3,6 +3,7 @@
 const await = require('asyncawait/await');
 const config = require('../../../../config/auth-config/config');
 const sequelize = require('../../../components/sequelize');
+const logger = require('../../../components/logger').getLogger('microServiceAuth');
 const TIMEOUT = 1000 * 60 * 5;
 const JWT_SECRET = require('../../../../config/config').jwt_secret;
 const jwt = require('jsonwebtoken');
@@ -39,7 +40,10 @@ var AuthService = {};
 AuthService.register = function(userData, cb) {
 
     validateUser_(userData, (err) => {
-        if (err) throw err;
+        if (err) {
+            logger.critical(err);
+            throw err;
+        }
         var response = await (axios.post('/user', {
             firstName: _.capitalize(userData.firstName),
             lastName: _.capitalize(userData.lastName),
@@ -69,10 +73,14 @@ AuthService.changePassword = function(authUserId, password, cb) {
         axios.put(`/user/${authUserId}`, {
                 password
             })
-            .then(res => cb(null, res), err => cb(err))
+            .then(
+                res => cb(null, res),
+                err => { logger.critical(err);  cb(err); }
+            )
     })
 
 };
+
 
 AuthService.login = function(userData, cb) {
     var email = userData.email,
@@ -81,25 +89,29 @@ AuthService.login = function(userData, cb) {
     axios.post(`/user/${email}`, {
             password
         })
-        .then(res => cb(null, res), err => cb(err))
+        .then(
+            res => cb(null, res),
+            err => { logger.critical(err);  cb(err); }
+        )
 };
+
 
 AuthService.generateToken = function(data, options, cb) {
     //method can pass two args
-    if (typeof options == 'function' && typeof cb == 'undefined') {
+    if (typeof options === 'function' && typeof cb === 'undefined') {
         cb = options;
         options = {}
     }
 
     jwt.sign(data, JWT_SECRET, options, (err, token) => {
-        if (err) return cb(err);
+        if (err) { return cb(err); }
         cb(null, token);
     });
 };
 
 AuthService.verifyToken = function(token, cb) {
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) return cb(err);
+        if (err) { return cb(err); }
         cb(null, decoded);
     });
 };
@@ -169,7 +181,7 @@ function validatePassword_(password, cb) {
         password: 'Поле пароль не может быть пустым'
     });
 
-    if (valErrors.length) return cb(new ValidationError(valErrors))
+    if (valErrors.length) { return cb(new ValidationError(valErrors)); }
 
     cb(null)
 }

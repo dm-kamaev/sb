@@ -5,6 +5,7 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const config = require('../../../../config/user-config/config');
 const orderStatus = require('../../orders/enums/orderStatus.js');
+const UserApi     = require('../../micro/services/microService.js').UserApi;
 const axios = require('axios').create({
     baseURL: `http://${config.host}:${config.port}`
 });
@@ -122,25 +123,26 @@ UserService.findSberUserByAuthId = function(authId) {
     }));
 };
 
+
 UserService.findAuthUserByPhone = function(phoneNumber) {
-    var authUsers = await(axios.get('/users', {
-        params: {
-            phone: phoneNumber
-        }
-    }));
-
-    return authUsers.data[0];
+    var users = new UserApi().getUserByParams({ phone: phoneNumber });
+    return users[0] || {};
 };
 
+
+/**
+ * create auth user
+ * @param  {[obj]} userData
+ * @return {[obj]} { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'LALAL1', lastName: 'LALAL', gender: null, phone: '123131', email: null, password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
+ */
 UserService.createAuthUser = function(userData) {
-    var response = await(axios.post('/user', {
+    return new UserApi().createAuthUser({
         firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: userData.phone
-    }));
-
-    return response.data;
+        lastName:  userData.lastName,
+        phone:     userData.phone
+    });
 };
+
 
 UserService.createSberUser = function(authId) {
     return await(sequelize.models.SberUser.create({
@@ -156,10 +158,16 @@ UserService.createSberUser = function(authId) {
     }));
 };
 
+
+/**
+ * find auth user by auth id
+ * @param  {[int]} authId
+ * @return {[obj]} { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
+ */
 UserService.findAuthUserByAuthId = function(authId) {
-    var response = await(axios.get(`/user/${authId}`));
-    return response.data;
+    return new UserApi().getUserData(authId);
 };
+
 
 UserService.setAuthId = function(id, authId) {
     return await(sequelize.models.SberUser.update({
@@ -180,15 +188,16 @@ UserService.setAuthId = function(id, authId) {
 *      "lastName": "Ivanov"
 *      "email":    "vasya-ivanov@mail.ru"
 * }
-* @return {[type]}          [description]
+* @return {[obj]}  { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
 */
+
 UserService.updateAuthUser = function(authId, userData) {
-    var response = await(axios.patch(`/user/${authId}`, {
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        email: userData.email || ''
-    }));
-    return response.data;
+    return new UserApi().updateAuthUser({
+        authId,
+        firstName:userData.firstName || '',
+        lastName: userData.lastName  || '',
+        email:    userData.email     || ''
+    });
 };
 
 
@@ -211,16 +220,17 @@ UserService.setUserFund = function(userFundId, oldUserFundId) {
     }));
 };
 
-UserService.findAuthUserByEmail = function(email) {
-    var response = await(axios.get('/users', {
-        params: {
-            email
-        }
-    }));
 
-    var users = response.data;
-    return users[0];
+/**
+ * find auth user by email
+ * @param  {[str]} email
+ * @return {[obj]}  { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
+ */
+UserService.findAuthUserByEmail = function(email) {
+    var users = new UserApi().getUserByParams({ email });
+    return users[0] || {};
 };
+
 
 UserService.createCard = function(sberUserId, data) {
     return await(sequelize.sequelize.transaction((t) => {
@@ -276,15 +286,16 @@ UserService.getSberUsers = function(condinitions) {
 };
 
 
+/**
+ * get auth users by ids
+ * @param  {[str]} ids "1,2"
+ * @return {[type]} [  { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }, ... ]
+ */
 UserService.getAuthUsersByIds = function(ids) {
-    var response = await(axios.get('/users', {
-        params: {
-            id: ids
-        }
-    }));
-
-    return response.data;
+    return new UserApi().getUserByParams({ id: ids });
 };
+
+
 
 UserService.getUserFundSubscriptions = function(id) {
     return await(sequelize.sequelize.query(`SELECT
