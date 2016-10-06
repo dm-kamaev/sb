@@ -9,6 +9,8 @@ const path = require('path');
 
 const debugForm = require('./middleware/debugForm');
 
+process.on('unhandledRejection', unhandledFailedPromise);
+
 var app = express();
 
 const entityRoutes = require('../../modules/entity/router');
@@ -97,3 +99,9 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = http.createServer(app);
+
+
+
+function unhandledFailedPromise (reason, p) {
+    logger.critical('Reason=', reason, 'Promise=', p);
+}
