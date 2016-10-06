@@ -2,6 +2,7 @@
 
 const os = require('os');
 const config = require('../../../../config/config.json');
+const BASE_URL = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
 
 exports.renderEntity = function(entity) {
     return {
@@ -11,7 +12,7 @@ exports.renderEntity = function(entity) {
         description: entity.description,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
-        imgUrl: `${config.hostname}/${entity.imgUrl}`,
+        imgUrl: `${BASE_URL}/${entity.imgUrl}`,
         checked: entity.userFund && !!entity.userFund.length || false, // if user checked this entity
         published: entity.published,
         funds: entity.fund && exports.renderEntities(entity.fund),

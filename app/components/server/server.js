@@ -9,8 +9,6 @@ const path = require('path');
 
 const debugForm = require('./middleware/debugForm');
 
-process.on('unhandledRejection', unhandledFailedPromise);
-
 var app = express();
 
 const entityRoutes = require('../../modules/entity/router');
@@ -42,7 +40,7 @@ app.use(bodyparser.urlencoded({
 
 app.use(metaTags);
 
-app.set('views', path.join(__dirname, '../../../../public/meta_templates'));
+app.set('views', path.join(__dirname, '../../../public/meta_templates'));
 app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
@@ -99,9 +97,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = http.createServer(app);
-
-
-
-function unhandledFailedPromise (reason, p) {
-    logger.critical('Reason=', reason, 'Promise=', p);
-}
