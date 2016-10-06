@@ -5,5 +5,6 @@ module.exports = {
     NotFoundError: require('./NotFoundError'),
     ValidationError: require('./ValidationError'),
     StatusError: require('./StatusError'),
-    AcquiringError: require('./AcquiringError')
+    AcquiringError: require('./AcquiringError'),
+    MicroServiceError: require('./MicroServiceError'),
 };

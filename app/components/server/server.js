@@ -76,6 +76,9 @@ app.use((err, req, res, next) => {
         case 'ValidationError':
             status = 422;
             break;
+        case 'MicroServiceError':
+            status = 422;
+            break;
         case 'NotFoundError':
             status = 404;
             break;
@@ -89,11 +92,10 @@ app.use((err, req, res, next) => {
     res.status(status).json([{
         code: err.name,
         message: err.message || err.data && err.data[0].message || 'Internal server error',
-        validationErrors: err.validationErrors ||
+        validationErrors: err.microServiceErrors || err.validationErrors ||
                   err.data && err.data[0].validationErrors
     }]);
     if (status >= 500) {
-        // logger.critical(prettyJSON(err));
         logger.critical(err);
     }
 });
