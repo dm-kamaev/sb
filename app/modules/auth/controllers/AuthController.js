@@ -52,6 +52,8 @@ class AuthController extends Controller {
      */
     actionRegister(ctx) {
         var userData = ctx.data;
+        
+            userData.email = userData.email && userData.email.toLowerCase()
 
         return await(new Promise((resolve, reject) => {
             authService.register(userData, (err, authUser) => {
@@ -88,7 +90,7 @@ class AuthController extends Controller {
      * }
      */
     actionLogin(ctx) {
-        var email = ctx.data.email,
+        var email = ctx.data.email && ctx.data.email.toLowerCase(),
             password = ctx.data.password,
             sessionUser = ctx.request.user;
 
@@ -211,7 +213,7 @@ class AuthController extends Controller {
     actionSendRecoverEmail(ctx) {
         var sessionUser = ctx.request.user;
 
-        var email = ctx.data.email,
+        var email = ctx.data.email && ctx.data.email.toLowerCase(),
             authUser = userService.findAuthUserByEmail(email);
 
         if (!authUser) throw new errors.NotFoundError('User', email)
