@@ -115,7 +115,7 @@ OrderService.firstPayOrSendMessage = function(params) {
         var data = {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
-            userFundSnapshot: userFund, 
+            userFundSnapshot: userFund,
             status: orderStatus.NEW,
             type: orderTypes.FIRST,
         };
@@ -687,9 +687,10 @@ function disableUserFunds_(userFundIds) {
 
 
 function isEmptyUserFund_ (userFund) {
-    return !(userFund && (userFund.topic.length ||
-                          userFund.direction.length ||
-                          userFund.fund.length))
+    return !(
+        userFund &&
+        (userFund.topic.length || userFund.direction.length || userFund.fund.length)
+    );
 }
 
 module.exports = OrderService;
