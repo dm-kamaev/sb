@@ -1,0 +1,33 @@
+#!/bin/bash
+# run on macmini
+set -e
+
+lib_dir=node_modules/deployment
+
+scriptpath=$(dirname $0)
+gulp="./node_modules/.bin/gulp"
+cd $scriptpath/../
+
+echo "Prepare for packaging"
+
+echo "Install npm dependencies"
+if [ -d node_modules/ ]; then
+    npm update
+    npm run update
+else
+    npm install
+fi
+npm run config $env
+
+if [ "$env" = "prod" ] || [ "$env" = "demo" ]; then
+    echo "Build microservices config"
+    $gulp buildServicesProdConfig
+fi
+
+cd sber-emulator
+npm run config
+cd ..
+
+echo "Build frontend"
+$gulp frontend
+$gulp apidoc
