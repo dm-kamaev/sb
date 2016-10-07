@@ -1,10 +1,11 @@
 'use strict';
 
 const await = require('asyncawait/await');
+const async = require('asyncawait/async');
 const config = require('../../../../config/auth-config/config');
 const sequelize = require('../../../components/sequelize');
+const UserApi     = require('../../micro/services/microService.js').UserApi;
 const logger = require('../../../components/logger').getLogger('microServiceAuth');
-const TIMEOUT = 1000 * 60 * 5;
 const JWT_SECRET = require('../../../../config/config').jwt_secret;
 const jwt = require('jsonwebtoken');
 const axios = require('axios').create({
@@ -38,21 +39,18 @@ var AuthService = {};
  * @return {type} Description
  */
 AuthService.register = function(userData, cb) {
-
     validateUser_(userData, (err) => {
-        if (err) {
-            logger.critical(err);
-            throw err;
-        }
-        var response = await (axios.post('/user', {
+        if (err) { throw err; }
+        var user = new UserApi().register({
             firstName: _.capitalize(userData.firstName),
-            lastName: _.capitalize(userData.lastName),
+            lastName:  _.capitalize(userData.lastName),
             email: userData.email,
             password: userData.password
-        }));
-        return cb(null, response.data)
+        });
+        return cb(null, user)
     })
 };
+
 
 /**
  * callback used in register
@@ -68,32 +66,15 @@ AuthService.register = function(userData, cb) {
  * @param {Number} authUserId id of user on microservice
  * @param {String} password  password candidate
  */
-AuthService.changePassword = function(authUserId, password, cb) {
+AuthService.changePassword = function(authId, password, cb) {
     validatePassword_(password, (err) => {
-        axios.put(`/user/${authUserId}`, {
-                password
-            })
-            .then(
-                res => cb(null, res),
-                err => { logger.critical(err);  cb(err); }
-            )
-    })
-
+        new UserApi().changePassword({ authId, password }, cb);
+    });
 };
 
 
-AuthService.login = function(userData, cb) {
-    var email = userData.email,
-        password = userData.password;
+AuthService.login = function(userData, cb) { new UserApi().login(userData, cb); };
 
-    axios.post(`/user/${email}`, {
-            password
-        })
-        .then(
-            res => cb(null, res),
-            err => { logger.critical(err);  cb(err); }
-        )
-};
 
 
 AuthService.generateToken = function(data, options, cb) {
