@@ -28,7 +28,7 @@ class AuthController extends Controller {
      */
     actionTest(actionContext) {
         return actionContext.request.user;
-    };
+    }
     /**
      * @api {post} /auth/logout logout
      * @apiName logout
@@ -36,7 +36,7 @@ class AuthController extends Controller {
      */
     actionLogout(actionContext) {
         return actionContext.request.logout();
-    };
+    }
     /**
      * @api {post} /auth/register register
      * @apiName Register
@@ -52,11 +52,12 @@ class AuthController extends Controller {
      */
     actionRegister(ctx) {
         var userData = ctx.data;
-        
-            userData.email = userData.email && userData.email.toLowerCase()
 
-        return await(new Promise((resolve, reject) => {
-            authService.register(userData, (err, authUser) => {
+        userData.email = userData.email && userData.email.toLowerCase()
+
+        // TODO: !!! REFACTORING!!!!
+        var register = function (resolve, reject) {
+            return function (err, authUser) {
                 var token = authService.generateToken({
                     email: userData.email
                 }, async((err, token) => {
@@ -71,13 +72,17 @@ class AuthController extends Controller {
                     // ctx.status = 201;
 
                     ctx.request.login(sberUser, (err) => {
-                        if (err) reject(new errors.HttpError(err.message, 400));
+                        if (err) { reject(new errors.HttpError(err.message, 400)); }
                         resolve(ctx.request.sessionID);
                     });
                 }));
-            });
+            }
+        };
+
+        return await(new Promise((resolve, reject) => {
+            authService.register(userData, register(resolve, reject));
         }));
-    };
+    }
     /**
      * @api {post} /auth/login login
      * @apiName Login
@@ -93,10 +98,9 @@ class AuthController extends Controller {
         var email = ctx.data.email && ctx.data.email.toLowerCase(),
             password = ctx.data.password,
             sessionUser = ctx.request.user;
-
         return await(new Promise((resolve, reject) => {
             authService.login(ctx.data, async(err => {
-                if (err) return reject(err)
+                if (err) { return reject(err); }
 
                 var authUser = userService.findAuthUserByEmail(email),
                     sberUser = userService.findSberUserByAuthId(authUser.id);
@@ -110,12 +114,12 @@ class AuthController extends Controller {
                 }
 
                 ctx.request.login(sberUser, (err) => {
-                    if (err) reject(new errors.HttpError(err.message, 400));
+                    if (err) { reject(new errors.HttpError(err.message, 400)); }
                     resolve(ctx.request.sessionID);
                 });
             }));
         }))
-    };
+    }
     /**
      * @api {get} /auth/verify verify email
      * @apiName Verify email
@@ -128,8 +132,8 @@ class AuthController extends Controller {
 
         return await(new Promise((resolve, reject) => {
             authService.verifyToken(token, async((err, decoded) => {
-                if (err) return ctx.response.redirect(FAILURE_MAIL_REDIRECT);
-                if (err && err.name != 'JsonWebTokenError') logger.critical(err);
+                if (err) { return ctx.response.redirect(FAILURE_MAIL_REDIRECT); }
+                if (err && err.name !== 'JsonWebTokenError') { logger.critical(err); }
 
                 var authUser = userService.findAuthUserByEmail(decoded.email);
                 var sberUser = userService.findSberUserByAuthId(authUser.id);
@@ -138,7 +142,8 @@ class AuthController extends Controller {
                 ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
             }));
         }))
-    };
+    }
+
     /**
      * @api {post} /auth/send send verification mail
      * @apiName send verification mail
@@ -160,14 +165,15 @@ class AuthController extends Controller {
             authService.generateToken({
                 email
             }, async((err, token) => {
-                if (err) reject(err);
+                if (err) { reject(err); }
 
                 var letterText = mailService.sendMail(email, getVerifyLink_(token));
                 // TODO: remove
                 resolve(letterText);
             }));
         }))
-    };
+    }
+
     /**
      * @api {post} /auth/reset reset password
      * @apiName reset password
@@ -188,17 +194,17 @@ class AuthController extends Controller {
 
         return await(new Promise((resolve, reject) => {
             authService.verifyToken(token, async((err, decoded) => {
-                if (err) reject(new errors.HttpError(err.message, 400))
+                if (err) { reject(new errors.HttpError(err.message, 400)); }
 
                 var sberUser = userService.findSberUserById(decoded.sberUserId);
                 var authUser = userService.findAuthUserByAuthId(sberUser.authId);
                 authService.changePassword(authUser.id, password, (err) => {
-                    if (err) reject(err);
+                    if (err) { reject(err); }
                     resolve()
                 });
             }));
         }))
-    };
+    }
     /**
      * @api {post} /auth/send-reset recover password
      * @apiName send reset password mail
@@ -216,7 +222,7 @@ class AuthController extends Controller {
         var email = ctx.data.email && ctx.data.email.toLowerCase(),
             authUser = userService.findAuthUserByEmail(email);
 
-        if (!authUser) throw new errors.NotFoundError('User', email)
+        if (!authUser) { throw new errors.NotFoundError('User', email); }
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
@@ -226,7 +232,7 @@ class AuthController extends Controller {
             }, {
                 expiresIn: '2 days'
             }, async((err, token) => {
-                if (err) reject(err);
+                if (err) { reject(err); }
                 var letterText = mailService.sendMail(email,
                     getRecoverLink_(token),
                     'Восстановление пароля');

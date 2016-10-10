@@ -9,14 +9,9 @@ const sequelize = require('../../../components/sequelize');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const userFundService = require('../services/userFundService');
-const microService = require('../../micro/services/microService.js');
+const UserApi = require('../../micro/services/microService.js').UserApi;
 const logger = require('../../../components/logger').getLogger('main');
 const mailService = require('../../auth/services/mailService.js');
-
-const userConfig = require('../../../../config/user-config/config');
-const axios = require('axios').create({
-    baseURL: `http://${userConfig.host}:${userConfig.port}`
-});
 
 
 /**
@@ -32,21 +27,21 @@ exports.userFund = class {
      * @return {[type]}         [description]
      */
     constructor(options) { this.options = options || {}; }
+
     /**
      * send email to author UserFund when removed his userFund
      * @param  {[array]} data [ { authId: sberUser.authId, userFundName: userFund.title }, ... ]
      * @return {[type]}
      */
     removeUserFunds(data) {
-        data.map((user) => {
-            user.email = microService.getUserData(user.authId).email;
+        var userApi = new UserApi();
+        data.map(user => {
+            user.email = userApi.getUserData(user.authId).email;
             return user;
-        }).forEach((user) => {
+        }).forEach(user => {
             var email = user.email,
                 userFundName = user.userFundName;
-            if (!email) {
-                return;
-            }
+            if (!email) { return; }
             var data = i18n.__(
                 'Your User Fund "{{userFundName}}" removed.', {
                     userFundName
@@ -62,7 +57,8 @@ exports.userFund = class {
      */
     disableUserFunds(data) {
         data.map(user => {
-            user.email = microService.getUserData(user.authId).email;
+            var userApi = new UserApi();
+            user.email = userApi.getUserData(user.authId).email;
             return user;
         }).forEach(user => {
             var email        = user.email,
@@ -116,8 +112,9 @@ exports.userFundSubscription = class {
      * @return {[type]}
      */
     disableSubscriptions(data) {
+        var userApi = new UserApi();
         data.map((user) => {
-            user.email = microService.getUserData(user.authId).email;
+            user.email = userApi.getUserData(user.authId).email;
             return user;
         }).forEach((user) => {
             var email = user.email,

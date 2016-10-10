@@ -1,113 +1,164 @@
 'use strict';
 
-// methods for work with microservice
+// methods for work with microservice user and auth
 // author: dmitrii kamaev
 
-const config = require('../../../../config/config.json');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const util = require('util');
 const errors = require('../../../components/errors');
-const logger = require('../../../components/logger').getLogger('microServiceUser');
+const loggerUser = require('../../../components/logger').getLogger('microServiceUser');
+const loggerAuth = require('../../../components/logger').getLogger('microServiceAuth');
 
 const userConfig = require('../../../../config/user-config/config');
-const axios = require('axios').create({
+const axiosUser = require('axios').create({
     baseURL: `http://${userConfig.host}:${userConfig.port}`
+});
+
+const authConfig = require('../../../../config/auth-config/config');
+const axiosAuth = require('axios').create({
+    baseURL: `http://${authConfig.host}:${authConfig.port}`
 });
 
 
 const MicroServices = {};
 
-/**
- * HTTP request to microservices user for get user data
- * @param  {[int]} authId
- * @return {[obj]}
- */
-MicroServices.getUserData = function(authId) {
-    return await(axios.get(`/user/${authId}`)).data || {};
-};
-
 
 
 MicroServices.UserApi = class {
-  constructor() {}
+    constructor() {}
 
 
-  /**
-   * create auth user
-   * @param  {[type]}
-   * params {
-             firstName: userData.firstName,
-             lastName: userData.lastName,
-             phone: userData.phone
+    /**
+     * register user
+     * @param  {[obj]} params {
+     *    "firstName": "Dmitrii",
+     *    "lastName": "Kamaev",
+     *    "password": "123La123",
+     *    "email": "dkamaev@changers.team"
+     * }
+     * @return {[obj]}   { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
+     */
+    register (params) {
+        try {
+            return await(axiosAuth.post('/user', params)).data || {};
+        } catch (err) {
+            err = prettyJSON_(err)
+            loggerAuth.critical(err);
+            throw new errors.MicroServiceError(err);
+        }
     }
-   * @return {[obj]}     { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
-   */
-  createAuthUser(params) {
-    try {
-      return await(axios.post('/user', params)).data || {};
-    } catch (err) {
-      throw logCriticalError_(err);
-      return {};
+
+
+    /**
+     * login
+     * @param  {[obj]}    userData {
+     *      email: 'dkamaev@changers.team'
+     *      password: '12324131'
+     *
+     * }
+     * @param  {Function} cb       [description]
+     * @return {[type]}            [description]
+     */
+    login(userData, cb) {
+        var email = userData.email, password = userData.password;
+        axiosAuth.post(`/user/${email}`, {
+            password
+        }).then(res =>
+            cb(null, res)
+        ).catch(err => {
+            err = prettyJSON_(err);
+            loggerAuth.critical(err);
+            cb(err);
+        });
     }
-  }
 
 
-  /**
-   * update auth user
-   * @param  {[type]} params
-   * @return {[type]}  { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
-   */
-  updateAuthUser(params) {
-    try {
-      return await(axios.patch(`/user/${params.authId}`, {
-          firstName: params.firstName || '',
-          lastName:  params.lastName || '',
-          email:     params.email || ''
-      })).data || {};
-    } catch (err) {
-      throw logCriticalError_(err);
-      return {};
+    /**
+     * changed user's password
+     * @param  {[obj]}   userData {
+     *     authId: 21
+     *     password: '123456'
+     * }
+     * @param  {Function} cb       [description]
+     * @return {[type]}            [description]
+     */
+    changePassword (userData, cb) {
+        var authId = userData.authId, password = userData.password;
+        axiosAuth.put(`/user/${authId}`, {
+                password
+            }).then(res =>
+                cb(null, res)
+            ).catch(err => {
+                err = prettyJSON_(err);
+                loggerAuth.critical(err);
+                cb(err);
+            });
     }
-  }
 
 
-  /**
-   * get user data
-   * @param  {[int]} authId
-   * @return {[obj]}
-   */
-  getUserData(authId) {
-    try {
-      return await(axios.get(`/user/${authId}`)).data || {};
-    } catch (err) {
-      throw logCriticalError_(err);
-      return {};
+    /**
+     * get user data
+     * @param  {[int]} authId
+     * @return {[obj]} { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
+     */
+    getUserData(authId) {
+        try {
+            return await (axiosUser.get(`/user/${authId}`)).data || {};
+        } catch (err) {
+            err = prettyJSON_(err)
+            loggerUser.critical(err);
+            throw new errors.MicroServiceError(err);
+        }
     }
-  }
 
 
-  /**
-   * get users by params
-   * @param  {[obj]} params: { email: 'test@example.ru', id: '1,2' }
-   * @return {[obj]}
-   */
-  getUserByParams (params) {
-    try {
-      return await(axios.get('/users', { params })).data || [];
-    } catch (err) {
-      throw logCriticalError_(err);
-      return [];
+    /**
+     * get users by params
+     * @param  {[obj]} params: { email: 'test@example.ru', id: '1,2' }
+     * @return {[obj]} [ { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }, ... ]
+     */
+    getUserByParams(params) {
+        try {
+            return await (axiosUser.get('/users', {
+                params
+            })).data || [];
+        } catch (err) {
+            err = prettyJSON_(err)
+            loggerUser.critical(err);
+            throw new errors.MicroServiceError(err);
+        }
     }
-  }
+
+
+    /**
+     * update auth user
+     * @param  {[type]} params
+     * @return {[type]}  { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'UPDATE', lastName: 'UPDATE1', gender: null, phone: '123131', email: 'rambler', password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
+     */
+    updateAuthUser(userData) {
+        try {
+            return await (axiosUser.patch(`/user/${userData.authId}`, {
+                firstName: userData.firstName || '',
+                lastName: userData.lastName || '',
+                email:    userData.email || ''
+            })).data || {};
+        } catch (err) {
+            err = prettyJSON_(err)
+            loggerUser.critical(err);
+            throw new errors.MicroServiceError(err);
+        }
+    }
 };
 
 module.exports = MicroServices;
 
 
-function logCriticalError_ (err) {
-  if (typeof err === 'object') { err = util.inspect(err, { depth: 5 }); }
-  return new errors.MicroServiceError(err);
+
+
+function prettyJSON_ (obj) {
+    if (typeof obj === 'string') { return obj; }
+    return util.inspect(obj, { depth: 5 });
 }
 
 // async(() => {

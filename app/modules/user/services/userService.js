@@ -3,12 +3,8 @@
 const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
-const config = require('../../../../config/user-config/config');
 const orderStatus = require('../../orders/enums/orderStatus.js');
 const UserApi     = require('../../micro/services/microService.js').UserApi;
-const axios = require('axios').create({
-    baseURL: `http://${config.host}:${config.port}`
-});
 
 var UserService = {};
 
@@ -136,7 +132,7 @@ UserService.findAuthUserByPhone = function(phoneNumber) {
  * @return {[obj]} { id: 89, facebookId: null, vkId: null, okId: null, googleId: null, firstName: 'LALAL1', lastName: 'LALAL', gender: null, phone: '123131', email: null, password: null, photoUrl: null, status: 'active', birthDate: null, created_at: '2016-10-06', updated_at: '2016-10-06' }
  */
 UserService.createAuthUser = function(userData) {
-    return new UserApi().createAuthUser({
+    return new UserApi().register({
         firstName: userData.firstName,
         lastName:  userData.lastName,
         phone:     userData.phone
