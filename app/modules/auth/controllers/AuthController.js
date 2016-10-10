@@ -52,7 +52,7 @@ class AuthController extends Controller {
      */
     actionRegister(ctx) {
         var userData = ctx.data;
-        
+
             userData.email = userData.email && userData.email.toLowerCase()
 
         return await(new Promise((resolve, reject) => {
@@ -92,10 +92,11 @@ class AuthController extends Controller {
     actionLogin(ctx) {
         var email = ctx.data.email && ctx.data.email.toLowerCase(),
             password = ctx.data.password,
-            sessionUser = ctx.request.user;
+            sessionUser = ctx.request.user,
+            credentials = {email, password}
 
         return await(new Promise((resolve, reject) => {
-            authService.login(ctx.data, async(err => {
+            authService.login(credentials, async(err => {
                 if (err) return reject(err)
 
                 var authUser = userService.findAuthUserByEmail(email),
