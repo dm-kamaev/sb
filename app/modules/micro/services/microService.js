@@ -9,7 +9,6 @@ const util = require('util');
 const errors = require('../../../components/errors');
 const loggerUser = require('../../../components/logger').getLogger('microServiceUser');
 const loggerAuth = require('../../../components/logger').getLogger('microServiceAuth');
-
 const userConfig = require('../../../../config/user-config/config');
 const axiosUser = require('axios').create({
     baseURL: `http://${userConfig.host}:${userConfig.port}`
@@ -43,9 +42,7 @@ MicroServices.UserApi = class {
         try {
             return await(axiosAuth.post('/user', params)).data || {};
         } catch (err) {
-            err = prettyJSON_(err)
-            loggerAuth.critical(err);
-            throw new errors.MicroServiceError(err);
+            handlerForError_(err);
         }
     }
 
@@ -62,15 +59,13 @@ MicroServices.UserApi = class {
      */
     login(userData, cb) {
         var email = userData.email, password = userData.password;
-        axiosAuth.post(`/user/${email}`, {
-            password
-        }).then(res =>
-            cb(null, res)
-        ).catch(err => {
-            err = prettyJSON_(err);
-            loggerAuth.critical(err);
-            cb(err);
-        });
+        try {
+            return await(axiosAuth.post(`/user/${email}`, {
+                password
+            }));
+        } catch (err) {
+            handlerForError_(err);
+        }
     }
 
 
@@ -106,9 +101,7 @@ MicroServices.UserApi = class {
         try {
             return await (axiosUser.get(`/user/${authId}`)).data || {};
         } catch (err) {
-            err = prettyJSON_(err)
-            loggerUser.critical(err);
-            throw new errors.MicroServiceError(err);
+            handlerForError_(err);
         }
     }
 
@@ -124,9 +117,7 @@ MicroServices.UserApi = class {
                 params
             })).data || [];
         } catch (err) {
-            err = prettyJSON_(err)
-            loggerUser.critical(err);
-            throw new errors.MicroServiceError(err);
+            handlerForError_(err);
         }
     }
 
@@ -144,9 +135,7 @@ MicroServices.UserApi = class {
                 email:    userData.email || ''
             })).data || {};
         } catch (err) {
-            err = prettyJSON_(err)
-            loggerUser.critical(err);
-            throw new errors.MicroServiceError(err);
+           handlerForError_(err);
         }
     }
 };
@@ -154,19 +143,23 @@ MicroServices.UserApi = class {
 module.exports = MicroServices;
 
 
+/**
+ * handler for Error
+ * @param  {[obj]} err
+ * @return {[type]}
+ */
+function handlerForError_ (err) {
+    var textError = (err.data) ? prettyJSON_(err.data) : prettyJSON_(err);
+    loggerAuth.critical(textError);
+    if (err.data) { // Validations error from microservice
+        throw new errors.ValidationError(err.data[0].message);
+    } else { // another error
+        throw new errors.MicroServiceError(textError);
+    }
+}
 
 
 function prettyJSON_ (obj) {
     if (typeof obj === 'string') { return obj; }
     return util.inspect(obj, { depth: 5 });
 }
-
-// async(() => {
-//   var UserApi = MicroServices.UserApi;
-//   // var res = new user().getUserData(2111);
-//   // var resp = new userApi().getUserByParams({
-//   //   email: 'dm-kamaev@rambler.ru'
-//   // });
-//   var resp = new UserApi().getUserByParams({ id: '1,2' });
-//   console.log(resp);
-// })();

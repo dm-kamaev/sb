@@ -7,7 +7,10 @@ const async = require('asyncawait/async');
 const errors = require('../../../components/errors');
 const userService = require('../../user/services/userService');
 const authService = require('../services/authService');
+const logger = require('../../../components/logger').getLogger('main');
 const userFundService = require('../../userFund/services/userFundService');
+const UserApi     = require('../../micro/services/microService.js').UserApi;
+const PasswordAuth = require('../services/passwordAuth.js');
 const mailService = require('../services/mailService');
 const os = require('os');
 const config = require('../../../../config/config');
@@ -94,34 +97,30 @@ class AuthController extends Controller {
      *   "password": "123456"
      * }
      */
+    /*{
+      "email": "dkamaev@changers.team",
+      "password": "123456"
+    }*/
     actionLogin(ctx) {
-        var email = ctx.data.email && ctx.data.email.toLowerCase(),
-            password = ctx.data.password,
-            sessionUser = ctx.request.user,
-            credentials = {email, password}
+        var data    = ctx.data    || {},
+            request = ctx.request || {};
+        var email       = data.email && data.email.toLowerCase(),
+            password    = data.password,
+            sessionUser = request.user;
 
-        return await(new Promise((resolve, reject) => {
-            authService.login(credentials, async(err => {
-                if (err) return reject(err)
+        new UserApi().login({ email, password });
+        var tryLogin = new PasswordAuth({ ctx }).login(
+            checkSberUserOrSetUserFund_({ email, sessionUser })
+        );
 
-                var authUser = userService.findAuthUserByEmail(email),
-                    sberUser = userService.findSberUserByAuthId(authUser.id);
-
-                if (!sberUser) {
-                    sberUser = sessionUser || userService.createSberUser(authUser.id);
-                    userService.setAuthId(sberUser.id, authUser.id);
-                } else if (!sberUser.userFund.enabled && sessionUser &&
-                    userFundService.getEntities(sessionUser.id).length) {
-                    userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
-                }
-
-                ctx.request.login(sberUser, (err) => {
-                    if (err) { reject(new errors.HttpError(err.message, 400)); }
-                    resolve(ctx.request.sessionID);
-                });
-            }));
-        }))
+        if (!tryLogin.resolve) {
+            throw new errors.HttpError(tryLogin.message, 400);
+        } else {
+            return tryLogin.data;
+        }
     }
+
+
     /**
      * @api {get} /auth/verify verify email
      * @apiName Verify email
@@ -246,3 +245,29 @@ class AuthController extends Controller {
 }
 
 module.exports = AuthController;
+
+
+
+/**
+ * if not exist sberUser then create id for him
+ * if user authorized on another device (example phone) and create draft userFund
+ * then set the user current draft userFund (example web-page)
+ * @param  {[obj]} params { email, sessionUser }
+ * @return {[int]}        sberUser
+ */
+function checkSberUserOrSetUserFund_(params) {
+    var email = params.email, sessionUser = params.sessionUser;
+    var authUser = userService.findAuthUserByEmail(email),
+        sberUser = userService.findSberUserByAuthId(authUser.id);
+
+    if (!sberUser) {
+        sberUser = sessionUser || userService.createSberUser(authUser.id);
+        userService.setAuthId(sberUser.id, authUser.id);
+    } else if (!sberUser.userFund.enabled &&
+        sessionUser &&
+        userFundService.getEntities(sessionUser.id).length
+    ) {
+        userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
+    }
+    return sberUser;
+}

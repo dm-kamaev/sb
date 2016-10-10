@@ -163,7 +163,11 @@ OrderService.firstPayOrSendMessage = function(params) {
 
 
 OrderService.isAvalibleForPayment = function(order) {
-    return order.status === orderStatus.WAITING_FOR_PAY;
+    if (!order) {
+        return false;
+    } else {
+        return order.status === orderStatus.WAITING_FOR_PAY;
+    }
 };
 
 OrderService.getAcquiringOrder = function(order) {
