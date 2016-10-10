@@ -117,7 +117,8 @@ class UserController extends Controller {
      */
     actionFindUser(actionContext) {
         var sberUser = actionContext.request.user,
-            email = actionContext.request.query.email;
+            email = actionContext.request.query.email
+                    && actionContext.request.query.email.toLowerCase()
         if (email) {
             var authUser = await(userService.findAuthUserByEmail(email));
             if (!authUser || authUser.email != email) {
