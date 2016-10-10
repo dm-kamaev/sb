@@ -1,4 +1,4 @@
 {
-  "hostname": "http://sber-vmeste.qa.lan/",
+  "hostname": "http://sber-vmeste.qa.lan",
   "port" : 80
 }
