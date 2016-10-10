@@ -23,7 +23,7 @@ module.exports = (req, res, next) => {
     next();
 };
 
-nonSPARouter.get('/', async((req, res) => {
+nonSPARouter.all('*', async((req, res) => {
     if (req.query.entity) {
         return handleEntity_(req, res)
     } else if (req.query.userFund) {
