@@ -11,7 +11,7 @@ const await = require('asyncawait/await');
 const sizeOf = require('image-size');
 const path = require('path');
 const config = require('../../../../config/config');
-const BASE_URL = `http://${config.hostname}:${config.port}`
+const BASE_URL = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
 
 module.exports = (req, res, next) => {
     var ua = req.headers['user-agent'];
@@ -31,7 +31,7 @@ nonSPARouter.all('*', async((req, res) => {
     }
     res.render('layout', {
         url: BASE_URL,
-        title: 'Сбербанк вместе',
+        title: 'Сбербанк Вместе',
         descriptionText: 'Начните помогать осознанно.'
     });
 }));
@@ -44,12 +44,17 @@ function handleEntity_(req, res) {
             '../../../../public/uploads', entity.imgUrl);
         calculateSize_(imagePath, (err, dimensions) => {
             if (err) dimensions = {};
+            var suffix = {
+              fund: 'фонду',
+              topic: 'теме',
+              direction: 'направлению'
+            };
             return res.render('layout', {
                 imageUrl: renderedEntity.imgUrl,
                 imageWidth: dimensions.width,
                 imageHeight: dimensions.height,
-                url: `${BASE_URL}/#card?id=${req.query.entity}`,
-                title: renderedEntity.title,
+                url: `${BASE_URL}/?entity=${req.query.entity}#card?id=${req.query.entity}`,
+                title: `Я помогаю ${suffix[entity.type]}: ${renderedEntity.title}`,
                 descriptionText: renderedEntity.description
             });
         })

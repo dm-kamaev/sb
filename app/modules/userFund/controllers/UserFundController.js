@@ -107,7 +107,9 @@ class UserFundController extends Controller {
     actionRemoveEntity(actionContext, entityId) {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.removeEntity(id, entityId));
-        if (!res) { throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400); }
+        if (!res[0]) {
+          throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400);
+        }
         return null;
     }
 
