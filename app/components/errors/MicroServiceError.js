@@ -2,13 +2,15 @@
 
 class MicroServiceError extends Error {
     /**
-     * @constructor
-     * @param {Object[]} validationErrors
+     * [constructor description]
+     * @param  {[str]} error
+     * @return {[type]}
      */
     constructor(error) {
-        super('MicroService Error');
+        super('MicroServiceError');
 
         this.name = 'MicroServiceError';
+        this.statusCode = 422;
         this.microServiceErrors = error;
         Error.captureStackTrace(this, this.constructor);
     }
