@@ -26,12 +26,12 @@ module.exports = class Jwt {
     /**
      * generate token via jsonwebtoken
      * @param  {[obj]} data  { email: 'test@example.ru' }
-     * @return {[type]}      [description]
+     * @return {[type]}      { resolve: true || false, data: token, message: Error }
      */
     generateToken (data) {
         var options = this.options;
         try {
-            return await (new Promise(function(resolve, reject) {
+            return await(new Promise(function(resolve, reject) {
                 jwt.sign(data, JWT_SECRET, options, (err, token) => {
                     if (err) {
                         return reject(err);
@@ -43,5 +43,25 @@ module.exports = class Jwt {
             return { resolve:false, message: err.message || err };
         }
     }
+
+
+    /**
+     * verify token
+     * @param  {[str]} token
+     * @return {[str]}
+     */
+    verifyToken(token) {
+        try {
+            return await(new Promise(function(resolve, reject) {
+                jwt.verify(token, JWT_SECRET, (err, decoded) => {
+                    if (err) { return reject(err); }
+                    resolve({ resolve:true, data: decoded });
+                });
+            }));
+        } catch (err) {
+            return { resolve:false, message: err.message || err };
+        }
+    }
+
 };
 
