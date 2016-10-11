@@ -10,6 +10,8 @@ const authService = require('../services/authService');
 const userFundService = require('../../userFund/services/userFundService');
 const UserApi     = require('../../micro/services/microService.js').UserApi;
 const PasswordAuth = require('../services/passwordAuth.js');
+const Jwt = require('../services/jwt.js');
+const _ = require('lodash');
 const mailService = require('../services/mailService');
 const os = require('os');
 const config = require('../../../../config/config');
@@ -51,39 +53,38 @@ class AuthController extends Controller {
      *    "password": "123456",
      *    "email": "msrylkin@gmail.com"
      * }
-     */
+     *
+    */
+   // {
+   //          "email":     "dkamaev@changers.team",
+   //          "password":  "123456",
+   //          "firstName": "Dmitrii",
+   //          "lastName":  "Kamaev"
+   //        }
     actionRegister(ctx) {
-        var userData = ctx.data;
+        var request  = ctx.request,
+            userData = ctx.data || {};
+        var firstName = _.capitalize(userData.firstName || ''),
+            lastName  = _.capitalize(userData.lastName  || ''),
+            email     = userData.email && userData.email.toLowerCase(),
+            password  = userData.password;
+        var data = { firstName, lastName, email, password };
+        var tryValid = authService.validateUserData(data);
+        if (!tryValid.resolve) { throw new errors.ValidationError(tryValid.message); }
 
-        userData.email = userData.email && userData.email.toLowerCase()
+        var authUser = new UserApi().register(data);
+        var tryToken = new Jwt().generateToken({ email });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
+        var token = tryToken.data;
+        mailService.sendMail(userData.email, getVerifyLink_(token));
 
-        // TODO: !!! REFACTORING!!!!
-        var register = function (resolve, reject) {
-            return function (err, authUser) {
-                var token = authService.generateToken({
-                    email: userData.email
-                }, async((err, token) => {
-                    mailService.sendMail(userData.email, getVerifyLink_(token));
+        var draftUser = request.user || null,
+            sberUser  = draftUser || userService.createSberUser(authUser.id);
+        if (!sberUser.authId) { userService.setAuthId(sberUser.id, authUser.id); }
 
-                    var draftUser = ctx.request.user,
-                        sberUser = draftUser || userService.createSberUser(authUser.id);
-                    if (!sberUser.authId) {
-                        userService.setAuthId(sberUser.id, authUser.id);
-                    }
-
-                    // ctx.status = 201;
-
-                    ctx.request.login(sberUser, (err) => {
-                        if (err) { reject(new errors.HttpError(err.message, 400)); }
-                        resolve(ctx.request.sessionID);
-                    });
-                }));
-            }
-        };
-
-        return await(new Promise((resolve, reject) => {
-            authService.register(userData, register(resolve, reject));
-        }));
+        var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
+        if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
+        return tryLogin.data;
     }
     /**
      * @api {post} /auth/login login
@@ -111,12 +112,9 @@ class AuthController extends Controller {
         var tryLogin = new PasswordAuth({ ctx }).login(
             checkSberUserOrSetUserFund_({ email, sessionUser })
         );
+        if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
 
-        if (!tryLogin.resolve) {
-            throw new errors.HttpError(tryLogin.message, 400);
-        } else {
-            return tryLogin.data;
-        }
+        return tryLogin.data;
     }
 
 
