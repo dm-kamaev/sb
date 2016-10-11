@@ -65,8 +65,10 @@
              nginx.restart,
              packaging.rollback-script,
              packaging.supervisor.restart,
-	         packaging.crontab.install,
+	           packaging.crontab.install,
              sber.change-owner,
+             sber.change-cron-owner,
+             sber.change-cron-permissions,
              sber.run-integration-tests
              "/>
 
@@ -206,6 +208,16 @@
         <exec executable="service" failonerror="on">
             <arg line="nginx restart"/>
         </exec>
+    </target>
+
+    <target name="sber.change-cron-owner">
+      <exec executable="chown" dir="${basedir}">
+          <arg line="-R gorod ${basedir}/app/scripts/cron"/>
+      </exec>
+    </target>
+
+    <target name="sber.change-cron-permissions">
+      <chmod dir="${basedir}/app/scripts/cron" perm="ugo+x" includes="**/*.sh"/>
     </target>
 
 </project>
