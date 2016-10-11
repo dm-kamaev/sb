@@ -15,8 +15,8 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.TEXT,
             validate: {
                 len: {
-                    args: [0, 500],
-                    msg: 'Длина описания должна быть до 500 символов.'
+                    args: [0, 701],
+                    msg: 'Длина описания должна быть до 700 символов.'
                 }
             }
         },
