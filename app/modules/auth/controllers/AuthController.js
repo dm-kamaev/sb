@@ -164,9 +164,10 @@ class AuthController extends Controller {
         return null;
     }
 
+
     /**
-     * @api {post} /auth/reset reset password
-     * @apiName reset password
+     * @api {post} /auth/reset change password
+     * @apiName change password
      * @apiGroup Auth
      *
      * @apiParam {String} password
@@ -179,25 +180,31 @@ class AuthController extends Controller {
      * }
      */
     actionRecoverPassword(ctx) {
-        var token = ctx.data.token,
-            password = ctx.data.password;
+        var data     = ctx.data || {},
+            token    = data.token,
+            password = data.password;
 
-        return await(new Promise((resolve, reject) => {
-            authService.verifyToken(token, async((err, decoded) => {
-                if (err) { reject(new errors.HttpError(err.message, 400)); }
+        var tryVerify = new Jwt().verifyToken(token);
+        if (!tryVerify.resolve) { throw new errors.HttpError(tryVerify.message, 400); }
+        var decoded    = tryVerify.data,
+            sberUserId = decoded.sberUserId;
 
-                var sberUser = userService.findSberUserById(decoded.sberUserId);
-                var authUser = userService.findAuthUserByAuthId(sberUser.authId);
-                authService.changePassword(authUser.id, password, (err) => {
-                    if (err) { reject(err); }
-                    resolve()
-                });
-            }));
-        }))
+        var sberUser = userService.findSberUserById(sberUserId);
+        var authUser = userService.findAuthUserByAuthId(sberUser.authId),
+            authId   = authUser.id;
+
+        var tryValid = authService.validatePassword(password);
+        if (!tryValid.resolve) { throw new errors.ValidationError(tryValid.message); }
+
+        new UserApi().changePassword({ authId, password });
+
+        return null;
     }
+
+
     /**
-     * @api {post} /auth/send-reset recover password
-     * @apiName send reset password mail
+     * @api {post} /auth/send-reset send email for change password
+     * @apiName send email for change password
      * @apiGroup Auth
      *
      * @apiParam {String} email email of account owner
@@ -207,29 +214,32 @@ class AuthController extends Controller {
      * }
      */
     actionSendRecoverEmail(ctx) {
-        var sessionUser = ctx.request.user;
+        var request     = ctx.request || {},
+            data        = ctx.data    || {},
+            sessionUser = request.user;
 
-        var email = ctx.data.email && ctx.data.email.toLowerCase(),
+        var email    = data.email && data.email.toLowerCase(),
             authUser = userService.findAuthUserByEmail(email);
 
         if (!authUser) { throw new errors.NotFoundError('User', email); }
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
-        return await(new Promise((resolve, reject) => {
-            authService.generateToken({
-                sberUserId: sberUser.id
-            }, {
-                expiresIn: '2 days'
-            }, async((err, token) => {
-                if (err) { reject(err); }
-                var letterText = mailService.sendMail(email,
-                    getRecoverLink_(token),
-                    'Восстановление пароля');
-                // TODO: remove
-                resolve(letterText);
-            }));
-        }))
+        var tryToken = new Jwt({
+            expiresIn: '2 days'
+        }).generateToken({
+            sberUserId: sberUser.id
+        });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
+
+        var token = tryToken.data;
+        // for debug call return mailService
+        mailService.sendMail(
+            email,
+            getRecoverLink_(token),
+            'Восстановление пароля'
+        );
+        return null;
     }
 }
 
