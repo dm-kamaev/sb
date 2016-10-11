@@ -612,4 +612,12 @@ UserFundService.getUserFundSubscriptionByOrder = function(sberAcquOrderNumber) {
     return order.userFundSubscription;
 };
 
+UserFundService.countEntities = function(id) {
+    return await(sequelize.models.UserFundEntity.count({
+        where: {
+            userFundId: id
+        }
+    }))
+}
+
 module.exports = UserFundService;

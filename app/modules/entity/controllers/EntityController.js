@@ -218,8 +218,8 @@ class EntityController extends Controller {
     actionGetEntitiesByAssociatedId(actionContext, id, type) {
         try {
             var request = actionContext.request,
-                sberUserId = request.user.id;
-            var userFundId = (request.user.userFund) ? request.user.userFund.id : null,
+                sberUserId = request.user && request.user.id;
+            var userFundId = request.user && request.user.userFund.id || null,
                 published = request.published;
             var entities =
                 await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
