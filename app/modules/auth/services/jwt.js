@@ -1,15 +1,15 @@
 'use strict';
 
+// Wrapper for jsonwebtoken
+// author: dmitrii kamaev
+
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const util   = require('util');
 const JWT_SECRET = require('../../../../config/config').jwt_secret;
 const jwt = require('jsonwebtoken');
 
-/**
- * Wrapper for jsonwebtoken
- * @type {[type]}
- */
+
 module.exports = class Jwt {
     /**
      * [constructor description]
@@ -25,7 +25,7 @@ module.exports = class Jwt {
 
     /**
      * generate token via jsonwebtoken
-     * @param  {[type]} data [description]
+     * @param  {[obj]} data  { email: 'test@example.ru' }
      * @return {[type]}      [description]
      */
     generateToken (data) {

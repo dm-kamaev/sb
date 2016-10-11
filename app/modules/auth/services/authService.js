@@ -108,7 +108,7 @@ AuthService.verifyUser = function(sberUserId) {
     }));
 };
 
-
+// TODO: !!! REFACTORING !!!
 AuthService.validateUserData = function (userData) {
     var firstName = userData.firstName,
         lastName = userData.lastName,

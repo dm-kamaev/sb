@@ -142,34 +142,26 @@ class AuthController extends Controller {
         }))
     }
 
+
     /**
      * @api {post} /auth/send send verification mail
      * @apiName send verification mail
      * @apiGroup Auth
      */
     actionSendVerification(ctx) {
-        var sberUser = ctx.request.user;
-        if (!sberUser || !sberUser.authId) {
-            throw new errors.HttpError('Unathorized', 403);
-        }
-        if (sberUser.verified) {
-            throw new errors.HttpError('Already verified', 403);
-        }
+        var request  = ctx.request  || {},
+            sberUser = request.user || {};
+        if (!sberUser.authId) { throw new errors.HttpError('Unathorized', 403); }
+        if (sberUser.verified){ throw new errors.HttpError('Already verified', 403); }
 
         var authUser = userService.findAuthUserByAuthId(sberUser.authId),
-            email = authUser.email;
+            email    = authUser.email;
+        var tryToken = new Jwt().generateToken({ email });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
 
-        return await(new Promise((resolve, reject) => {
-            authService.generateToken({
-                email
-            }, async((err, token) => {
-                if (err) { reject(err); }
-
-                var letterText = mailService.sendMail(email, getVerifyLink_(token));
-                // TODO: remove
-                resolve(letterText);
-            }));
-        }))
+        var token = tryToken.data;
+        mailService.sendMail(email, getVerifyLink_(token));
+        return null;
     }
 
     /**
