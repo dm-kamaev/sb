@@ -106,13 +106,16 @@ class AuthController extends Controller {
                     sberUser = sessionUser || userService.createSberUser(authUser.id);
                     userService.setAuthId(sberUser.id, authUser.id);
                 } else if (!sberUser.userFund.enabled && sessionUser &&
-                    userFundService.getEntities(sessionUser.id).length) {
+                    userFundService.countEntities(sessionUser.userFund.id)) {
                     userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
                 }
 
+                var status = sberUser.userFund.enabled ? 'ACTIVE' :
+                            userFundService.countEntities(sberUser.userFund.id) ? 'DRAFT' : 'EMPTY'
+
                 ctx.request.login(sberUser, (err) => {
                     if (err) reject(new errors.HttpError(err.message, 400));
-                    resolve(ctx.request.sessionID);
+                    resolve({status, sid: ctx.request.sessionID});
                 });
             }));
         }))
