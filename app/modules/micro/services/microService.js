@@ -152,7 +152,8 @@ function handlerForError_ (err) {
     var textError = (err.data) ? prettyJSON_(err.data) : prettyJSON_(err);
     loggerAuth.critical(textError);
     if (err.data) { // Validations error from microservice
-        throw new errors.ValidationError(err.data[0].message);
+        var validationError = err.data[0].message || err.data[0].validationErrors;
+        throw new errors.ValidationError(validationError);
     } else { // another error
         throw new errors.MicroServiceError(textError);
     }

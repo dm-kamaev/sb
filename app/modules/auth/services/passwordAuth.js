@@ -4,7 +4,10 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const util   = require('util');
 
-
+/**
+ * Wrapper for passport.js
+ * @type {[type]}
+ */
 module.exports = class PasswordAuth {
     /**
      * [constructor description]
