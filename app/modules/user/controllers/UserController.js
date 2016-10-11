@@ -151,7 +151,7 @@ class UserController extends Controller {
         return sberUsers.map(sberUser => {
             var authUser = authUsers.find(authUser => authUser.id == sberUser.authId);
             var renderedUser = userView.renderUser(authUser, sberUser);
-            renderUser.loggedIn = undefined;
+            renderedUser.loggedIn = undefined;
             renderedUser.userFund = undefined;
             return renderedUser;
         });
