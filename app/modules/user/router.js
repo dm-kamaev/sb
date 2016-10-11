@@ -15,6 +15,10 @@ var VersionedController = require('nodules/controller').VersionedController;
 var versionedController = new VersionedController(controllersArray);
 
 const checkRules = (req, res, next) => {
+    //temporary solution
+    if (req.header('Token-Header') == SECRET) {
+        req.isAdmin = true
+    }
     if (req.header('Token-Header') == SECRET || req.user && req.user.id == req.params.id) {
         return next();
     }

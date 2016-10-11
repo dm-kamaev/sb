@@ -9,6 +9,7 @@ const logger = require('../../../components/logger').getLogger('main');
 const userService = require('../services/userService');
 const userFundService = require('../../userFund/services/userFundService');
 const userView = require('../views/userView');
+const orderStatus = require('../../orders/enums/orderStatus');
 
 class UserController extends Controller {
     /**
@@ -167,7 +168,14 @@ class UserController extends Controller {
      *    }
      */
     actionGetOrders(ctx, id) {
-        return userService.getOrders(id);
+        var currentStatus;
+        if (ctx.request.isAdmin) {
+            currentStatus = Object.keys(orderStatus)
+                                  .map(status => orderStatus[status])
+        } else {
+            currentStatus = [orderStatus.PAID, orderStatus.WAITING_FOR_PAY]
+        }
+        return userService.getOrders(id, currentStatus);
     }
 
     /**
