@@ -45,7 +45,7 @@ class UserController extends Controller {
         var authId = sberUser.authId;
         var authUser = await(userService.findAuthUserByAuthId(authId));
         var renderedUser = userView.renderUser(authUser, sberUser);
-        renderUser.loggedIn = undefined;
+        renderedUser.loggedIn = undefined;
         return renderedUser;
     };
     /**
