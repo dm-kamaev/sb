@@ -16,6 +16,7 @@ const _ = require('lodash');
 const mailService = require('../services/mailService');
 const os = require('os');
 const config = require('../../../../config/config');
+const userFundStatus = require('../../userFund/enum/userFundStatus');
 
 const HOSTNAME = `http://${os.hostname()}:${config.port}`;
 const VERIFY_LINK = `${HOSTNAME}/auth/verify?token=`;
@@ -116,8 +117,9 @@ class AuthController extends Controller {
         var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
         if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
 
-        var status = sberUser.userFund.enabled ? 'ACTIVE' :
-                    userFundService.countEntities(sberUser.userFund.id) ? 'DRAFT' : 'EMPTY'
+        var status = sberUser.userFund.enabled ? userFundStatus.ACTIVE :
+                    userFundService.countEntities(sberUser.userFund.id)
+                    ? userFundStatus.DRAFT : userFundStatus.EMPTY
 
         return {status, sid: tryLogin.data };
     }
