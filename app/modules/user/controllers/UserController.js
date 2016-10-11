@@ -45,7 +45,7 @@ class UserController extends Controller {
         var authId = sberUser.authId;
         var authUser = await(userService.findAuthUserByAuthId(authId));
         var renderedUser = userView.renderUser(authUser, sberUser);
-        delete renderedUser.loggedIn;
+        renderUser.loggedIn = undefined;
         return renderedUser;
     };
     /**
@@ -151,8 +151,8 @@ class UserController extends Controller {
         return sberUsers.map(sberUser => {
             var authUser = authUsers.find(authUser => authUser.id == sberUser.authId);
             var renderedUser = userView.renderUser(authUser, sberUser);
-            delete renderedUser.loggedIn;
-            delete renderedUser.userFund;
+            renderUser.loggedIn = undefined;
+            renderedUser.userFund = undefined;
             return renderedUser;
         });
     }
