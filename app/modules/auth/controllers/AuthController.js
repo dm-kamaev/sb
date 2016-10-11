@@ -110,15 +110,17 @@ class AuthController extends Controller {
             sessionUser = request.user;
 
         new UserApi().login({ email, password });
-        var tryLogin = new PasswordAuth({ ctx }).login(
-            checkSberUserOrSetUserFund_({ email, sessionUser })
-        );
+
+        var sberUser = checkSberUserOrSetUserFund_({ email, sessionUser })
+
+        var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
         if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
 
-        return tryLogin.data;
+        var status = sberUser.userFund.enabled ? 'ACTIVE' :
+                    userFundService.countEntities(sberUser.userFund.id) ? 'DRAFT' : 'EMPTY'
+
+        return {status, sid: tryLogin.data };
     }
-
-
     /**
      * @api {get} /auth/verify verify email
      * @apiName Verify email
@@ -263,7 +265,7 @@ function checkSberUserOrSetUserFund_(params) {
         userService.setAuthId(sberUser.id, authUser.id);
     } else if (!sberUser.userFund.enabled &&
         sessionUser &&
-        userFundService.getEntities(sessionUser.id).length
+        userFundService.countEntities(sessionUser.userFund.id)
     ) {
         userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
     }

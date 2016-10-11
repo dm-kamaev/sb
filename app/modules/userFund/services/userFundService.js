@@ -173,12 +173,22 @@ UserFundService.addEntity = function(id, entityId) {
 };
 
 UserFundService.removeEntity = function(id, entityId) {
-    return await(sequelize.models.UserFundEntity.destroy({
-        where: {
-            entityId,
-            userFundId: id
-        }
-    }));
+    return await(sequelize.sequelize.query(`DELETE FROM "UserFundEntity"
+    WHERE "userFundId" = :userFundId
+      AND "entityId" = :entityId
+      AND "userFundId" NOT IN (SELECT "userFundId"
+    FROM "UserFundEntity"
+      JOIN "UserFund" ON "UserFund".id = "UserFundEntity"."userFundId"
+    GROUP BY "userFundId", "UserFund".enabled
+    HAVING count(*) = 1
+       AND "UserFund".enabled = true)
+    RETURNING *`, {
+      type: sequelize.sequelize.QueryTypes.SELECT,
+      replacements: {
+          userFundId: id,
+          entityId
+      }
+    }))
 };
 
 UserFundService.getEntities = function(id) {
@@ -601,5 +611,13 @@ UserFundService.getUserFundSubscriptionByOrder = function(sberAcquOrderNumber) {
 
     return order.userFundSubscription;
 };
+
+UserFundService.countEntities = function(id) {
+    return await(sequelize.models.UserFundEntity.count({
+        where: {
+            userFundId: id
+        }
+    }))
+}
 
 module.exports = UserFundService;

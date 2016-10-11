@@ -52,7 +52,7 @@ UserService.findSberUserById = function(id, include) {
  * @param  {[int]}  sberUserId
  * @return {[type]}
  */
-UserService.getOrders = function(sberUserId) {
+UserService.getOrders = function(sberUserId, orderStatus) {
     var query =
     `SELECT
         "scheduledPayDate",
@@ -75,14 +75,14 @@ UserService.getOrders = function(sberUserId) {
         AND su.id = :id
     JOIN "UserFund" AS uf
         ON ufs."userFundId" = uf.id
-    WHERE status= :status
+    WHERE status IN (:status)
     ORDER BY "createdAt" DESC`;
 
     return await(sequelize.sequelize.query(query, {
         type: sequelize.sequelize.QueryTypes.SELECT,
         replacements: {
             id: sberUserId,
-            status: orderStatus.PAID
+            status: orderStatus
         }
     }));
 };

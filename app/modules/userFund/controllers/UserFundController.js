@@ -33,8 +33,8 @@ class UserFundController extends Controller {
      */
     actionUpdateUserFund(actionContext, id) {
         var data = actionContext.request.body;
-        delete data.id;
-        delete data.enabled;
+        data.id = undefined;
+        data.enabled = undefined;
         var updatedCount = await(userFundService.updateUserFund(id, data));
         if (!updatedCount[0]) { throw new errors.NotFoundError(i18n.__('UserFund'), id); }
         return null;
@@ -107,7 +107,9 @@ class UserFundController extends Controller {
     actionRemoveEntity(actionContext, entityId) {
         var id = actionContext.request.user.userFund.id;
         var res = await(userFundService.removeEntity(id, entityId));
-        if (!res) { throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400); }
+        if (!res[0]) {
+          throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400);
+        }
         return null;
     }
 
