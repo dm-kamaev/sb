@@ -40,8 +40,8 @@ class AuthController extends Controller {
      * @apiName logout
      * @apiGroup Auth
      */
-    actionLogout(actionContext) {
-        return actionContext.request.logout();
+    actionLogout(ctx) {
+        return new PasswordAuth({ ctx }).logout();
     }
     /**
      * @api {post} /auth/register register
@@ -112,7 +112,7 @@ class AuthController extends Controller {
 
         new UserApi().login({ email, password });
 
-        var sberUser = checkSberUserOrSetUserFund_({ email, sessionUser })
+        var sberUser = authService.checkSberUserOrSetUserFund({ email, sessionUser });
 
         var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
         if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
@@ -122,29 +122,6 @@ class AuthController extends Controller {
                     ? userFundStatus.DRAFT : userFundStatus.EMPTY
 
         return {status, sid: tryLogin.data };
-    }
-    /**
-     * @api {get} /auth/verify verify email
-     * @apiName Verify email
-     * @apiGroup Auth
-     *
-     * @apiParam {String} token jwt token
-     */
-    actionVerifyEmail(ctx) {
-        var token = ctx.request.query.token;
-
-        return await(new Promise((resolve, reject) => {
-            authService.verifyToken(token, async((err, decoded) => {
-                if (err) { return ctx.response.redirect(FAILURE_MAIL_REDIRECT); }
-                if (err && err.name !== 'JsonWebTokenError') { logger.critical(err); }
-
-                var authUser = userService.findAuthUserByEmail(decoded.email);
-                var sberUser = userService.findSberUserByAuthId(authUser.id);
-                var verified = authService.verifyUser(sberUser.id);
-
-                ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
-            }));
-        }))
     }
 
 
@@ -169,6 +146,30 @@ class AuthController extends Controller {
         return null;
     }
 
+
+    /**
+     * @api {get} /auth/verify verify email
+     * @apiName Verify email
+     * @apiGroup Auth
+     *
+     * @apiParam {String} token jwt token
+     */
+    // before this function, call actionSendVerification
+    // example url: /auth/verify?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRrYW1hZXZAY2hhbmdlcnMudGVhbSIsImlhdCI6MTQ3NjI2NjI3Mn0.Bke4DvHu_MeR-lFiF9uEBJgCdCiUEyOsnAiKwmZ_jz8
+    actionVerifyEmail(ctx) {
+        var request = ctx.request || {},
+            token   = (request.query) ? request.query.token : null;
+
+        var tryVerify = new Jwt().verifyToken(token);
+        if (!tryVerify.resolve) { throw new errors.HttpError(tryVerify.message, 400); }
+
+        var decoded = tryVerify.data, email = decoded.email;
+        var authUser = userService.findAuthUserByEmail(email),
+            sberUser = userService.findSberUserByAuthId(authUser.id),
+            verified = authService.verifyUser(sberUser.id);
+
+        new PasswordAuth({ ctx }).redirect(SUCCESS_MAIL_REDIRECT);
+    }
 
     /**
      * @api {post} /auth/reset change password
@@ -249,29 +250,3 @@ class AuthController extends Controller {
 }
 
 module.exports = AuthController;
-
-
-
-/**
- * if not exist sberUser then create id for him
- * if user authorized on another device (example phone) and create draft userFund
- * then set the user current draft userFund (example web-page)
- * @param  {[obj]} params { email, sessionUser }
- * @return {[int]}        sberUser
- */
-function checkSberUserOrSetUserFund_(params) {
-    var email = params.email, sessionUser = params.sessionUser;
-    var authUser = userService.findAuthUserByEmail(email),
-        sberUser = userService.findSberUserByAuthId(authUser.id);
-
-    if (!sberUser) {
-        sberUser = sessionUser || userService.createSberUser(authUser.id);
-        userService.setAuthId(sberUser.id, authUser.id);
-    } else if (!sberUser.userFund.enabled &&
-        sessionUser &&
-        userFundService.countEntities(sessionUser.userFund.id)
-    ) {
-        userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
-    }
-    return sberUser;
-}
