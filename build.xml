@@ -180,8 +180,8 @@
                 <socket server="localhost" port="3005"/>
             </and>
         </waitfor>
-        <exec executable="${npm}" dir="${basedir}/integration-tests" failonerror="on">
-            <arg line="run tests"/>
+	<exec executable="/bin/bash" dir="${basedir}/integration-tests" failonerror="on">
+            <arg line="runTests"/>
         </exec>
     </target>
 
