@@ -14,7 +14,10 @@ module.exports = class Jwt {
     /**
      * [constructor description]
      * @param  {[obj]} params {
-     *   options: {}, // optional param
+     *   // optional param
+     *   options: {
+     *       expiresIn: '2 days'
+     *   },
      * }
      * @return {[type]}        [description]
      */
