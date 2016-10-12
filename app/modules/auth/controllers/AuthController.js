@@ -179,7 +179,7 @@ class AuthController extends Controller {
      *    "password": "123qwe"
      * }
      */
-    actionRecoverPassword(ctx) {
+    actionChangePassword(ctx) {
         var data     = ctx.data || {},
             token    = data.token,
             password = data.password;
@@ -213,7 +213,7 @@ class AuthController extends Controller {
      *    "email": "msrylkin@gmail.com"
      * }
      */
-    actionSendRecoverEmail(ctx) {
+    actionSendEmailForChangePassword(ctx) {
         var request     = ctx.request || {},
             data        = ctx.data    || {},
             sessionUser = request.user;
