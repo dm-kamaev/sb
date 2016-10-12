@@ -108,7 +108,7 @@ AuthService.verifyUser = function(sberUserId) {
     }));
 };
 
-
+// TODO: !!! REFACTORING !!!
 AuthService.validateUserData = function (userData) {
     var firstName = userData.firstName,
         lastName = userData.lastName,
@@ -202,10 +202,11 @@ function validateUser_(userData, cb) {
     cb(null)
 }
 
+
 function validatePassword_(password, cb) {
     var valErrors = []
     password ? password.length > 6 ? null : valErrors.push({
-        password: 'Минимальная длина пароя 6 символов'
+        password: 'Минимальная длина пароля 6 символов'
     }) : valErrors.push({
         password: 'Поле пароль не может быть пустым'
     });
@@ -213,6 +214,21 @@ function validatePassword_(password, cb) {
     if (valErrors.length) { return cb(new ValidationError(valErrors)); }
 
     cb(null)
+}
+
+
+// TODO: !!! Refactoring !!!
+AuthService.validatePassword = function (password) {
+    var valErrors = []
+    password ? password.length > 6 ? null : valErrors.push({
+        password: 'Минимальная длина пароя 6 символов'
+    }) : valErrors.push({
+        password: 'Поле пароль не может быть пустым'
+    });
+
+    if (valErrors.length) { return { resolve:false, message:valErrors }; }
+
+    return { resolve:true };
 }
 
 module.exports = AuthService;

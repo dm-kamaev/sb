@@ -147,39 +147,32 @@ class AuthController extends Controller {
         }))
     }
 
+
     /**
      * @api {post} /auth/send send verification mail
      * @apiName send verification mail
      * @apiGroup Auth
      */
     actionSendVerification(ctx) {
-        var sberUser = ctx.request.user;
-        if (!sberUser || !sberUser.authId) {
-            throw new errors.HttpError('Unathorized', 403);
-        }
-        if (sberUser.verified) {
-            throw new errors.HttpError('Already verified', 403);
-        }
+        var request  = ctx.request  || {},
+            sberUser = request.user || {};
+        if (!sberUser.authId) { throw new errors.HttpError('Unathorized', 403); }
+        if (sberUser.verified){ throw new errors.HttpError('Already verified', 403); }
 
         var authUser = userService.findAuthUserByAuthId(sberUser.authId),
-            email = authUser.email;
+            email    = authUser.email;
+        var tryToken = new Jwt().generateToken({ email });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
 
-        return await(new Promise((resolve, reject) => {
-            authService.generateToken({
-                email
-            }, async((err, token) => {
-                if (err) { reject(err); }
-
-                var letterText = mailService.sendMail(email, getVerifyLink_(token));
-                // TODO: remove
-                resolve(letterText);
-            }));
-        }))
+        var token = tryToken.data;
+        mailService.sendMail(email, getVerifyLink_(token));
+        return null;
     }
 
+
     /**
-     * @api {post} /auth/reset reset password
-     * @apiName reset password
+     * @api {post} /auth/reset change password
+     * @apiName change password
      * @apiGroup Auth
      *
      * @apiParam {String} password
@@ -191,26 +184,32 @@ class AuthController extends Controller {
      *    "password": "123qwe"
      * }
      */
-    actionRecoverPassword(ctx) {
-        var token = ctx.data.token,
-            password = ctx.data.password;
+    actionChangePassword(ctx) {
+        var data     = ctx.data || {},
+            token    = data.token,
+            password = data.password;
 
-        return await(new Promise((resolve, reject) => {
-            authService.verifyToken(token, async((err, decoded) => {
-                if (err) { reject(new errors.HttpError(err.message, 400)); }
+        var tryVerify = new Jwt().verifyToken(token);
+        if (!tryVerify.resolve) { throw new errors.HttpError(tryVerify.message, 400); }
+        var decoded    = tryVerify.data,
+            sberUserId = decoded.sberUserId;
 
-                var sberUser = userService.findSberUserById(decoded.sberUserId);
-                var authUser = userService.findAuthUserByAuthId(sberUser.authId);
-                authService.changePassword(authUser.id, password, (err) => {
-                    if (err) { reject(err); }
-                    resolve()
-                });
-            }));
-        }))
+        var sberUser = userService.findSberUserById(sberUserId);
+        var authUser = userService.findAuthUserByAuthId(sberUser.authId),
+            authId   = authUser.id;
+
+        var tryValid = authService.validatePassword(password);
+        if (!tryValid.resolve) { throw new errors.ValidationError(tryValid.message); }
+
+        new UserApi().changePassword({ authId, password });
+
+        return null;
     }
+
+
     /**
-     * @api {post} /auth/send-reset recover password
-     * @apiName send reset password mail
+     * @api {post} /auth/send-reset send email for change password
+     * @apiName send email for change password
      * @apiGroup Auth
      *
      * @apiParam {String} email email of account owner
@@ -219,30 +218,33 @@ class AuthController extends Controller {
      *    "email": "msrylkin@gmail.com"
      * }
      */
-    actionSendRecoverEmail(ctx) {
-        var sessionUser = ctx.request.user;
+    actionSendEmailForChangePassword(ctx) {
+        var request     = ctx.request || {},
+            data        = ctx.data    || {},
+            sessionUser = request.user;
 
-        var email = ctx.data.email && ctx.data.email.toLowerCase(),
+        var email    = data.email && data.email.toLowerCase(),
             authUser = userService.findAuthUserByEmail(email);
 
         if (!authUser) { throw new errors.NotFoundError('User', email); }
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
-        return await(new Promise((resolve, reject) => {
-            authService.generateToken({
-                sberUserId: sberUser.id
-            }, {
-                expiresIn: '2 days'
-            }, async((err, token) => {
-                if (err) { reject(err); }
-                var letterText = mailService.sendMail(email,
-                    getRecoverLink_(token),
-                    'Восстановление пароля');
-                // TODO: remove
-                resolve(letterText);
-            }));
-        }))
+        var tryToken = new Jwt({
+            expiresIn: '2 days'
+        }).generateToken({
+            sberUserId: sberUser.id
+        });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
+
+        var token = tryToken.data;
+        // for debug call return mailService
+        mailService.sendMail(
+            email,
+            getRecoverLink_(token),
+            'Восстановление пароля'
+        );
+        return null;
     }
 }
 

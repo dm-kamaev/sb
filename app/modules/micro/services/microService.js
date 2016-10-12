@@ -42,7 +42,7 @@ MicroServices.UserApi = class {
         try {
             return await(axiosAuth.post('/user', params)).data || {};
         } catch (err) {
-            handlerForError_(err);
+            handlerForError_(err, loggerAuth);
         }
     }
 
@@ -64,7 +64,7 @@ MicroServices.UserApi = class {
                 password
             }));
         } catch (err) {
-            handlerForError_(err);
+            handlerForError_(err, loggerAuth);
         }
     }
 
@@ -78,17 +78,15 @@ MicroServices.UserApi = class {
      * @param  {Function} cb       [description]
      * @return {[type]}            [description]
      */
-    changePassword (userData, cb) {
+    changePassword (userData) {
         var authId = userData.authId, password = userData.password;
-        axiosAuth.put(`/user/${authId}`, {
-                password
-            }).then(res =>
-                cb(null, res)
-            ).catch(err => {
-                err = prettyJSON_(err);
-                loggerAuth.critical(err);
-                cb(err);
-            });
+        try {
+            return await(
+                axiosAuth.put(`/user/${authId}`, { password })
+            ).data || {};
+        } catch (err) {
+            handlerForError_(err, loggerAuth);
+        }
     }
 
 
@@ -101,7 +99,7 @@ MicroServices.UserApi = class {
         try {
             return await (axiosUser.get(`/user/${authId}`)).data || {};
         } catch (err) {
-            handlerForError_(err);
+            handlerForError_(err, loggerUser);
         }
     }
 
@@ -117,7 +115,7 @@ MicroServices.UserApi = class {
                 params
             })).data || [];
         } catch (err) {
-            handlerForError_(err);
+            handlerForError_(err, loggerUser);
         }
     }
 
@@ -135,7 +133,7 @@ MicroServices.UserApi = class {
                 email:    userData.email || ''
             })).data || {};
         } catch (err) {
-           handlerForError_(err);
+           handlerForError_(err, loggerUser);
         }
     }
 };
@@ -146,11 +144,12 @@ module.exports = MicroServices;
 /**
  * handler for Error
  * @param  {[obj]} err
+ * @param  {[function]} logger
  * @return {[type]}
  */
-function handlerForError_ (err) {
+function handlerForError_ (err, logger) {
     var textError = (err.data) ? prettyJSON_(err.data) : prettyJSON_(err);
-    loggerAuth.critical(textError);
+    logger.critical(textError);
     if (err.data) { // Validations error from microservice
         var validationError = err.data[0].message || err.data[0].validationErrors;
         throw new errors.ValidationError(validationError);
