@@ -40,8 +40,8 @@ class AuthController extends Controller {
      * @apiName logout
      * @apiGroup Auth
      */
-    actionLogout(actionContext) {
-        return actionContext.request.logout();
+    actionLogout(ctx) {
+        return new PasswordAuth({ ctx }).logout();
     }
     /**
      * @api {post} /auth/register register
@@ -112,7 +112,7 @@ class AuthController extends Controller {
 
         new UserApi().login({ email, password });
 
-        var sberUser = checkSberUserOrSetUserFund_({ email, sessionUser })
+        var sberUser = authService.checkSberUserOrSetUserFund({ email, sessionUser });
 
         var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
         if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
@@ -123,29 +123,7 @@ class AuthController extends Controller {
 
         return {status, sid: tryLogin.data };
     }
-    /**
-     * @api {get} /auth/verify verify email
-     * @apiName Verify email
-     * @apiGroup Auth
-     *
-     * @apiParam {String} token jwt token
-     */
-    actionVerifyEmail(ctx) {
-        var token = ctx.request.query.token;
 
-        return await(new Promise((resolve, reject) => {
-            authService.verifyToken(token, async((err, decoded) => {
-                if (err) { return ctx.response.redirect(FAILURE_MAIL_REDIRECT); }
-                if (err && err.name !== 'JsonWebTokenError') { logger.critical(err); }
-
-                var authUser = userService.findAuthUserByEmail(decoded.email);
-                var sberUser = userService.findSberUserByAuthId(authUser.id);
-                var verified = authService.verifyUser(sberUser.id);
-
-                ctx.response.redirect(SUCCESS_MAIL_REDIRECT);
-            }));
-        }))
-    }
 
     /**
      * @api {post} /auth/send send verification mail
@@ -153,33 +131,49 @@ class AuthController extends Controller {
      * @apiGroup Auth
      */
     actionSendVerification(ctx) {
-        var sberUser = ctx.request.user;
-        if (!sberUser || !sberUser.authId) {
-            throw new errors.HttpError('Unathorized', 403);
-        }
-        if (sberUser.verified) {
-            throw new errors.HttpError('Already verified', 403);
-        }
+        var request  = ctx.request  || {},
+            sberUser = request.user || {};
+        if (!sberUser.authId) { throw new errors.HttpError('Unathorized', 403); }
+        if (sberUser.verified){ throw new errors.HttpError('Already verified', 403); }
 
         var authUser = userService.findAuthUserByAuthId(sberUser.authId),
-            email = authUser.email;
+            email    = authUser.email;
+        var tryToken = new Jwt().generateToken({ email });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
 
-        return await(new Promise((resolve, reject) => {
-            authService.generateToken({
-                email
-            }, async((err, token) => {
-                if (err) { reject(err); }
+        var token = tryToken.data;
+        mailService.sendMail(email, getVerifyLink_(token));
+        return null;
+    }
 
-                var letterText = mailService.sendMail(email, getVerifyLink_(token));
-                // TODO: remove
-                resolve(letterText);
-            }));
-        }))
+
+    /**
+     * @api {get} /auth/verify verify email
+     * @apiName Verify email
+     * @apiGroup Auth
+     *
+     * @apiParam {String} token jwt token
+     */
+    // before this function, call actionSendVerification
+    // example url: /auth/verify?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRrYW1hZXZAY2hhbmdlcnMudGVhbSIsImlhdCI6MTQ3NjI2NjI3Mn0.Bke4DvHu_MeR-lFiF9uEBJgCdCiUEyOsnAiKwmZ_jz8
+    actionVerifyEmail(ctx) {
+        var request = ctx.request || {},
+            token   = (request.query) ? request.query.token : null;
+
+        var tryVerify = new Jwt().verifyToken(token);
+        if (!tryVerify.resolve) { throw new errors.HttpError(tryVerify.message, 400); }
+
+        var decoded = tryVerify.data, email = decoded.email;
+        var authUser = userService.findAuthUserByEmail(email),
+            sberUser = userService.findSberUserByAuthId(authUser.id),
+            verified = authService.verifyUser(sberUser.id);
+
+        new PasswordAuth({ ctx }).redirect(SUCCESS_MAIL_REDIRECT);
     }
 
     /**
-     * @api {post} /auth/reset reset password
-     * @apiName reset password
+     * @api {post} /auth/reset change password
+     * @apiName change password
      * @apiGroup Auth
      *
      * @apiParam {String} password
@@ -191,26 +185,32 @@ class AuthController extends Controller {
      *    "password": "123qwe"
      * }
      */
-    actionRecoverPassword(ctx) {
-        var token = ctx.data.token,
-            password = ctx.data.password;
+    actionChangePassword(ctx) {
+        var data     = ctx.data || {},
+            token    = data.token,
+            password = data.password;
 
-        return await(new Promise((resolve, reject) => {
-            authService.verifyToken(token, async((err, decoded) => {
-                if (err) { reject(new errors.HttpError(err.message, 400)); }
+        var tryVerify = new Jwt().verifyToken(token);
+        if (!tryVerify.resolve) { throw new errors.HttpError(tryVerify.message, 400); }
+        var decoded    = tryVerify.data,
+            sberUserId = decoded.sberUserId;
 
-                var sberUser = userService.findSberUserById(decoded.sberUserId);
-                var authUser = userService.findAuthUserByAuthId(sberUser.authId);
-                authService.changePassword(authUser.id, password, (err) => {
-                    if (err) { reject(err); }
-                    resolve()
-                });
-            }));
-        }))
+        var sberUser = userService.findSberUserById(sberUserId);
+        var authUser = userService.findAuthUserByAuthId(sberUser.authId),
+            authId   = authUser.id;
+
+        var tryValid = authService.validatePassword(password);
+        if (!tryValid.resolve) { throw new errors.ValidationError(tryValid.message); }
+
+        new UserApi().changePassword({ authId, password });
+
+        return null;
     }
+
+
     /**
-     * @api {post} /auth/send-reset recover password
-     * @apiName send reset password mail
+     * @api {post} /auth/send-reset send email for change password
+     * @apiName send email for change password
      * @apiGroup Auth
      *
      * @apiParam {String} email email of account owner
@@ -219,57 +219,34 @@ class AuthController extends Controller {
      *    "email": "msrylkin@gmail.com"
      * }
      */
-    actionSendRecoverEmail(ctx) {
-        var sessionUser = ctx.request.user;
+    actionSendEmailForChangePassword(ctx) {
+        var request     = ctx.request || {},
+            data        = ctx.data    || {},
+            sessionUser = request.user;
 
-        var email = ctx.data.email && ctx.data.email.toLowerCase(),
+        var email    = data.email && data.email.toLowerCase(),
             authUser = userService.findAuthUserByEmail(email);
 
         if (!authUser) { throw new errors.NotFoundError('User', email); }
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
-        return await(new Promise((resolve, reject) => {
-            authService.generateToken({
-                sberUserId: sberUser.id
-            }, {
-                expiresIn: '2 days'
-            }, async((err, token) => {
-                if (err) { reject(err); }
-                var letterText = mailService.sendMail(email,
-                    getRecoverLink_(token),
-                    'Восстановление пароля');
-                // TODO: remove
-                resolve(letterText);
-            }));
-        }))
+        var tryToken = new Jwt({
+            expiresIn: '2 days'
+        }).generateToken({
+            sberUserId: sberUser.id
+        });
+        if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
+
+        var token = tryToken.data;
+        // for debug call return mailService
+        mailService.sendMail(
+            email,
+            getRecoverLink_(token),
+            'Восстановление пароля'
+        );
+        return null;
     }
 }
 
 module.exports = AuthController;
-
-
-
-/**
- * if not exist sberUser then create id for him
- * if user authorized on another device (example phone) and create draft userFund
- * then set the user current draft userFund (example web-page)
- * @param  {[obj]} params { email, sessionUser }
- * @return {[int]}        sberUser
- */
-function checkSberUserOrSetUserFund_(params) {
-    var email = params.email, sessionUser = params.sessionUser;
-    var authUser = userService.findAuthUserByEmail(email),
-        sberUser = userService.findSberUserByAuthId(authUser.id);
-
-    if (!sberUser) {
-        sberUser = sessionUser || userService.createSberUser(authUser.id);
-        userService.setAuthId(sberUser.id, authUser.id);
-    } else if (!sberUser.userFund.enabled &&
-        sessionUser &&
-        userFundService.countEntities(sessionUser.userFund.id)
-    ) {
-        userService.setUserFund(sessionUser.userFund.id, sberUser.userFund.id);
-    }
-    return sberUser;
-}
