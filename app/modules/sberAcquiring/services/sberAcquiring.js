@@ -2,6 +2,7 @@
 
 const await = require('asyncawait/await');
 const configSberAcquiring = require('../../../../config/config-sberAcquiring.json');
+const ENV = require('../../../../config/config.json').environment;
 const axios = require('axios').create({
     baseURL: configSberAcquiring.hostname,
     validateStatus: (status) => { return status >= 200 && status < 500; },
@@ -40,22 +41,27 @@ sberAcquiring.firstPay = function(params) {
         params.jsonParams = JSON.stringify({
             recurringFrequency: configSberAcquiring.recurringFrequency,
             recurringExpiry: configSberAcquiring.recurringExpiry,
+            environment: ENV
         });
     }
 
-    return await(axios.get(configSberAcquiring.registerOrder, {
-        params: {
-            userName: params.userName || configSberAcquiring.userName,
-            password: params.password || configSberAcquiring.password,
-            amount: params.amount,
-            orderNumber: params.orderNumber,
-            returnUrl: params.returnUrl,
-            failUrl: params.failUrl,
-            language: 'ru',
-            clientId: params.clientId,
-            jsonParams: params.jsonParams,
-        }
-    })).data;
+    try {
+        return await(axios.get(configSberAcquiring.registerOrder, {
+            params: {
+                userName: params.userName || configSberAcquiring.userName,
+                password: params.password || configSberAcquiring.password,
+                amount: params.amount,
+                orderNumber: params.orderNumber,
+                returnUrl: params.returnUrl,
+                failUrl: params.failUrl,
+                language: 'ru',
+                clientId: params.clientId,
+                jsonParams: params.jsonParams,
+            }
+        })).data;
+    } catch (err) {
+        throw new errors.AcquiringError(err.message)
+    }
 };
 
     /* params –– {
@@ -114,16 +120,20 @@ sberAcquiring.firstPay = function(params) {
       }
     }*/
 sberAcquiring.getStatusAndGetBind = function(params) {
-    return await(axios.get(configSberAcquiring.getStatusOrder, {
-        params: {
-            userName: params.userName || configSberAcquiring.userName,
-            password: params.password || configSberAcquiring.password,
-            language: 'ru',
-            orderNumber: params.orderNumber,
-            orderId: params.orderId,
-            clientId: params.clientId,
-        }
-    })).data;
+    try {
+      return await(axios.get(configSberAcquiring.getStatusOrder, {
+          params: {
+              userName: params.userName || configSberAcquiring.userName,
+              password: params.password || configSberAcquiring.password,
+              language: 'ru',
+              orderNumber: params.orderNumber,
+              orderId: params.orderId,
+              clientId: params.clientId,
+          }
+      })).data;
+    } catch (err) {
+        throw new errors.AcquiringError(err.message)
+    }
 };
 
 
@@ -146,18 +156,25 @@ sberAcquiring.getStatusAndGetBind = function(params) {
     }*/
 // orderId is mdOrder for payByBind
 sberAcquiring.createPayByBind = function(params) {
-    return await(axios.get(configSberAcquiring.registerOrder, {
-        params: {
-            userName: params.userName || configSberAcquiring.userNameSsl,
-            password: params.password || configSberAcquiring.passwordSsl,
-            amount: params.amount,
-            orderNumber: params.sberAcquOrderNumber,
-            returnUrl: params.returnUrl || 'http://google.com',
-            failUrl: params.failUrl || 'http://google.com',
-            language: 'ru',
-            clientId: params.clientId,
-        }
-    })).data;
+    try {
+      return await(axios.get(configSberAcquiring.registerOrder, {
+          params: {
+              userName: params.userName || configSberAcquiring.userNameSsl,
+              password: params.password || configSberAcquiring.passwordSsl,
+              amount: params.amount,
+              orderNumber: params.sberAcquOrderNumber,
+              returnUrl: params.returnUrl || 'http://google.com',
+              failUrl: params.failUrl || 'http://google.com',
+              language: 'ru',
+              clientId: params.clientId,
+              jsonParams: {
+                  environment: ENV
+              }
+          }
+      })).data;
+    } catch (err) {
+        throw new errors.AcquiringError(err.message)
+    }
 };
 
 
@@ -183,10 +200,15 @@ sberAcquiring.payByBind = function(params) {
         bindingId: params.bindingId,
         language: 'ru',
     };
-    return requestPromise.post(
-      configSberAcquiring.hostname + configSberAcquiring.payByBind,
-      data
-    ).body;
+
+    try {
+      return requestPromise.post(
+        configSberAcquiring.hostname + configSberAcquiring.payByBind,
+        data
+      ).body;
+    } catch(err) {
+        throw new errors.AcquiringError(err.message)
+    }
 };
 
 
