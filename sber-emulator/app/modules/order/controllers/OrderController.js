@@ -131,17 +131,17 @@ class OrderController extends Controller {
      *
      */
     actionPayByBind(actionContext) {
+        var body = actionContext.request.body;
         var res = {};
-
         if(failBindings == false) {
-            res.errorCode = 0;
-            res.errorMessage = 'Success';
+            return await(OrderService.payByBind(
+                body.mdOrder,
+                body.bindingId));
         } else {
             res.errorCode = 7;
-            res.errorCode = 'Ошибка';
+            res.errorMessage = 'Ошибка';
             actionContext.response.status = 500;
         }
-
         return res;
     }
 

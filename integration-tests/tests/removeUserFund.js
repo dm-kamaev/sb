@@ -24,7 +24,8 @@ describe('Remove userFund =>', function() {
     var context = {
         chakram,
         expect,
-        listEntities: []
+        listEntities: [],
+        userFundId: 0
     };
 
     before('Logout',   logout(context));
@@ -50,7 +51,9 @@ describe('Remove userFund =>', function() {
             )
             return chakram.wait();
         });
-        var query = 'SELECT "deletedAt" FROM "UserFund" WHERE id='+context.userFundId;
+        var query = 'SELECT "UserFund"."deletedAt" FROM "UserFund" WHERE id = '
+            + context.userFundId;
         return db.one(query).then(data => expect(data.deletedAt).checkDeletedUserFund());
     });
+    after('Logout', logout(context));
 });

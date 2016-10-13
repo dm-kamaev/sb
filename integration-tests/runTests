@@ -1,0 +1,18 @@
+#!/bin/bash
+#cd /home/gorod/proj/sber-together-api/integration-tests/
+
+file_list=()
+errCode=0
+while IFS= read -d $'\0' -r file ; do
+    file_list=("${file_list[@]}" "$file")
+done < <(find "tests/" -type f -print0)
+
+for testfile in "${file_list[@]}"
+    do
+        ../node_modules/.bin/mocha --timeout 0 $testfile
+	if [ $(echo $?) = 1 ]; then
+		errCode=1
+	fi
+done
+
+exit $errCode

@@ -558,7 +558,7 @@ describe('Sber acquiring fails test', function() {
         var url = services.url.concatUrl('user-fund/amount');
         var amount = services.userFund.generateAmount(userFundId);
         var response = chakram.post(url, amount);
-        expect(response).to.have.status(500);
+        expect(response).to.have.status(503);
         return chakram.wait();
     });
 
@@ -584,5 +584,3 @@ describe('Sber acquiring fails test', function() {
         return chakram.wait();
     });
 });
-
-

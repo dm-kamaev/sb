@@ -94,7 +94,7 @@ describe('Today recurrent payment test', function() {
             })
     })
 
-    it('Should pay for current day', function () {
+    it('Should pay fo current day', function () {
         return chakram.get(formUrl)
             .then(() => {
                 //waitin for cb...
@@ -103,35 +103,39 @@ describe('Today recurrent payment test', function() {
                 })
             })
             .then(() => {
-                var nextMonth = new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10);
-                return execSync(`node ../app/scripts/monthlyPayments.js --now "${nextMonth}"`,
-                    (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`exec error: ${error}`);
-                            return;
-                        }
-                        console.log(`stdout: ${stdout}`);
-                        console.log(`stderr: ${stderr}`);
-                    });
+                return new Promise(function (resolve, reject) {
+                    var nextDate = new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10);
+    		        execSync(`node ../app/scripts/monthlyPayments.js --now ${nextDate}`,
+                        (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`exec error: ${error}`);
+                                //return;
+                            }
+                            console.log(`stdout: ${stdout}`);
+                            console.log(`stderr: ${stderr}`);
+                        });
+                    resolve();
+                });
+
+		        //return new Promise().resolve();
             })
             .then(() => {
                 return chakram.get(services.url('user'))
             })
             .then(res => {
+                var sberUserId = res.body.id,
+                    userId = res.body.userFund.id;
                 //db.one waits for only one result from database
-                return db.one('SELECT "UserFundSubscription"."id",' +
-                    '"UserFundSubscription"."userFundId",' +
-                    '"UserFundSubscription"."sberUserId"  ' +
-                    'FROM "UserFundSubscription" ' +
-                    'INNER JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId" ' +
-                    'AND "UserFund"."enabled" = true ' +
-                    'INNER JOIN "Order" ON "Order"."userFundSubscriptionId" = "UserFundSubscription"."id" '+
-                    'AND "Order"."type" = \'recurrent\' AND "Order"."status" = \'paid\' ' +
-                    'WHERE "UserFundSubscription"."sberUserId" = ${sberUserId}' +
-                    'AND "userFundId" = ${userFundId} AND "UserFundSubscription".enabled = true', {
-                    sberUserId: res.body.id,
-                    userFundId: res.body.userFund.id
-                });
+                return db.one(`SELECT "UserFundSubscription"."id",
+                    "UserFundSubscription"."userFundId",
+                    "UserFundSubscription"."sberUserId"
+                    FROM "UserFundSubscription"
+                    INNER JOIN "UserFund" ON "UserFund".id = "UserFundSubscription"."userFundId"
+                    AND "UserFund"."enabled" = true
+                    INNER JOIN "Order" ON "Order"."userFundSubscriptionId" = "UserFundSubscription"."id"
+                    AND "Order"."type" = \'recurrent\' AND "Order"."status" = \'paid\'
+                    WHERE "UserFundSubscription"."sberUserId" = ${sberUserId}
+                    AND "userFundId" = ${userId} AND "UserFundSubscription"."enabled" = true`);
             });
     });
 
@@ -289,7 +293,7 @@ describe('Yesterday recurrent test', function () {
         });
     });
 
-    it('Should change scheduledPayDate', function() {
+    /*it('Should change scheduledPayDate', function() {
         var dateString = '2016-08-20';
         var date = new Date(dateString).toUTCString();
         return chakram.waitFor([
@@ -319,19 +323,23 @@ describe('Yesterday recurrent test', function () {
                 WHERE "subscriptionId" = ${subscriptionId}
                 RETURNING *`)
         ])
-    });
+    });*/
 
     it('Should run monthly payment script', function() {
-        execSync('node ../app/scripts/monthlyPayments.js --now \'2016-09-21\'',
-            (error, stdout,  stderr) => {
-                if (error) {
-                    console.error(`execSync error: ${error}`);
-                    return;
-                }
-                console.log(`stdout: ${stdout}`);
-                console.log(`stderr: ${stderr}`);
+        return new Promise(function (resolve, reject) {
+            var nextDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+            nextDate = new Date(nextDate.setDate(nextDate.getDate() + 1)).toISOString().substring(0, 10);
+            execSync('node ../app/scripts/monthlyPayments.js --now ' + nextDate,
+                (error, stdout,  stderr) => {
+                    if (error) {
+                        console.error(`execSync error: ${error}`);
+                        return;
+                    }
+                    console.log(`stdout: ${stdout}`);
+                    console.log(`stderr: ${stderr}`);
+            });
+            resolve();
         });
-        return chakram.wait();
     });
 
     it('Should get order from this subscription', function() {
@@ -352,7 +360,7 @@ describe('Yesterday recurrent test', function () {
     });
 });
 
-describe('End of  recurrent test', function () {
+describe('End of month recurrent test', function () {
     before('Should register', function() {
         var url = services.url.concatUrl('auth/register');
         var user = services.user.genRandomUser();
@@ -499,8 +507,8 @@ describe('End of  recurrent test', function () {
     });
 
     it('Should change scheduledPayDate', function() {
-        var dateString = '2016-09-29';
-        var date = new Date(dateString).toUTCString();
+        this.dateString = new Date(new Date().setDate(29)).toISOString().substring(0, 10);
+        var date = new Date(this.dateString).toUTCString();
         return chakram.waitFor([
             db.none(`UPDATE "Order"
                 SET "scheduledPayDate" = '${date}'
@@ -509,8 +517,8 @@ describe('End of  recurrent test', function () {
     });
 
     it('Should change paydate', function() {
-        var dateString = '2016-09-29';
-        var date = new Date(dateString).toUTCString();
+        //var dateString = '2016-09-29';
+        var date = new Date(this.dateString).toUTCString();
         return chakram.waitFor([
             db.one(`UPDATE "PayDayHistory"
                 SET "payDate" = '${date}'
@@ -520,7 +528,9 @@ describe('End of  recurrent test', function () {
     });
 
     it('Should run monthly payment script', function() {
-        execSync('node ../app/scripts/monthlyPayments.js --now \'2016-10-31\'',
+        var nextDate = new Date(new Date(this.dateString).setMonth(new Date().getMonth() + 1));
+        nextDate = new Date(nextDate.setDate(31)).toISOString().substring(0, 10);
+        execSync('node ../app/scripts/monthlyPayments.js --now ' + nextDate,
             (error, stdout,  stderr) => {
                 if (error) {
                     console.error(`execSync error: ${error}`);
@@ -550,7 +560,7 @@ describe('End of  recurrent test', function () {
     });
 });
 
-describe('Stopping payments for two error months', function () {
+/*describe('Stopping payments for two error months', function () {
     before('Should register', function() {
         var url = services.url.concatUrl('auth/register');
         var user = services.user.genRandomUser();
@@ -710,27 +720,6 @@ describe('Stopping payments for two error months', function () {
         });
     });
 
-    it('Should change scheduledPayDate', function() {
-        var dateString = '2016-08-10';
-        var date = new Date(dateString).toUTCString();
-        return chakram.waitFor([
-            db.none(`UPDATE "Order"
-                SET "scheduledPayDate" = '${date}'
-                WHERE "sberAcquOrderNumber" = ${orderNumber}`)
-        ])
-    });
-
-    it('Should change paydate', function() {
-        var dateString = '2016-08-10';
-        var date = new Date(dateString).toUTCString();
-        return chakram.waitFor([
-            db.one(`UPDATE "PayDayHistory"
-                SET "payDate" = '${date}'
-                WHERE "subscriptionId" = ${subscriptionId}
-                RETURNING *`)
-        ])
-    });
-
     it('Should set failingBindings', function() {
         var url = services.url.concatEmulUrl('failBindings/1')
         var response = chakram.post(url);
@@ -739,7 +728,11 @@ describe('Stopping payments for two error months', function () {
     });
 
     it('Should run monthly payment script', function() {
-        execSync('node ../app/scripts/monthlyPayments.js --now \'2016-09-10\'',
+        this.nextDate = new Date(new Date().
+            setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10);
+        //nextDate = new Date(nextDate.setDate(nextDate.getDate() + 1)).toISOString().substring(0, 10);
+        console.log(this.nextDate);
+        execSync('node ../app/scripts/monthlyPayments.js --now ' + this.nextDate,
             (error, stdout,  stderr) => {
                 if (error) {
                     console.error(`execSync error: ${error}`);
@@ -752,7 +745,13 @@ describe('Stopping payments for two error months', function () {
     });
 
     it('Should run monthly payment script', function() {
-        execSync('node ../app/scripts/monthlyPayments.js --now \'2016-10-10\'',
+        this.nextDate = new Date(new Date().
+            setMonth(new Date().getMonth() + 2)).toISOString().substring(0, 10);
+        /*this.nextDate = new Date(new Date()
+            .setMonth(new Date(this.nextDate).getMonth() + 1))
+                .toISOString().substring(0, 10);*/
+        /*console.log(this.nextDate);
+        execSync('node ../app/scripts/monthlyPayments.js --now ' + this.nextDate,
             (error, stdout,  stderr) => {
                 if (error) {
                     console.error(`execSync error: ${error}`);
@@ -765,7 +764,13 @@ describe('Stopping payments for two error months', function () {
     });
 
     it('Should run monthly payment script', function() {
-        execSync('node ../app/scripts/monthlyPayments.js --now \'2016-11-10\'',
+        this.nextDate = new Date(new Date().
+            setMonth(new Date().getMonth() + 3)).toISOString().substring(0, 10);
+        /*this.nextDate = new Date(new Date()
+            .setMonth(new Date(this.nextDate).getMonth() + 1))
+                .toISOString().substring(0, 10);*/
+        /*console.log(this.nextDate);
+        execSync('node ../app/scripts/monthlyPayments.js --now ' + this.nextDate,
             (error, stdout,  stderr) => {
                 if (error) {
                     console.error(`execSync error: ${error}`);
@@ -779,6 +784,7 @@ describe('Stopping payments for two error months', function () {
 
 
     it('Should get order from this subscription', function() {
+        console.log(subscriptionId);
         return chakram.waitFor([
             db.one(`SELECT * FROM "UserFundSubscription"
                 WHERE "id" = ${subscriptionId}
@@ -799,4 +805,4 @@ describe('Stopping payments for two error months', function () {
         expect(response).to.have.status(200);
         return chakram.wait();
     });
-});
+});*/

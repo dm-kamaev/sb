@@ -50,4 +50,5 @@ describe('Switch subscription =>', function() {
         log('userFundId = ', context.userFundId);
         done();
     });*/
+    after('Logout', logout(context));
 });

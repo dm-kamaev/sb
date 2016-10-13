@@ -18,6 +18,7 @@ module.exports = function(context) {
             statusCode === 200,
             'Error status ' + statusCode + '; body:' + body
         );
+        //console.log('------------================-------------------');
         return chakram.wait();
     });
 
