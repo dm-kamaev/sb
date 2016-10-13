@@ -34,7 +34,7 @@ describe('Admin operations', function() {
         this.email = user.email;
         this.firstName = user.firstName
         this.lastName = user.lastName
-        expect(resp).to.have.status(201)
+        expect(resp).to.have.status(200)
         return resp.then(() => {
             return chakram.get(services.url('user'))
         })
@@ -108,7 +108,7 @@ describe('Admin operations', function() {
     it('Should get order', function() {
         return chakram.get(services.url(`user/${this.sberUserId}/order`), adminOptions)
             .then(res => {
-                var order = res.body[0]
+                var order = res.body[0];
                 expect(order.amount).to.be.equal(this.amount)
                 expect(order.userFundId).to.be.equal(this.userFundId)
                 this.sberAcquOrderNumber = order.sberAcquOrderNumber
@@ -151,7 +151,8 @@ describe('Admin operations', function() {
         var changedName = 'NEW_NAME'
         return chakram.put(services.url(`user/${this.sberUserId}`), {
             firstName: changedName,
-            lastName: this.lastName
+            lastName: this.lastName,
+	    email: this.email
         }, adminOptions)
         .then(res => {
             var user = res.body;

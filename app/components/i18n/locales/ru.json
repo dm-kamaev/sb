@@ -1,4 +1,12 @@
 {
+	"Field \"email\" cannot be empty": "Поле \"email\" не может быть пустым",
+	"Incorrect email": "Некорректный email",
+	"Field \"password\" cannot be empty": "Поле \"пароль\" не может быть пустым",
+	"A minimum password length of 6 characters and a maximum of 36": "Минимальная длина пароля 6 символов, а максимальная 36",
+	"Field \"Name\" is empty": "Поле \"Имя\" пустое",
+	"Field \"Name\" contains more than 20 characters": "Поле \"Имя\" содержит больше 20 символов",
+	"Field \"Surname\" is empty": "Поле \"Фамилия\" пустое",
+	"Field \"Surname\" contains more than 20 characters": "Поле \"Фамилия\" содержит больше 20 символов",
 	"Your payments to User fund \"{{userFundName}}\" stopped, he was removed": "Ваши платежи в Юзер фонд \"{{userFundName}}\" остановлены, он был удален",
 	"Your User Fund \"{{userFundName}}\" removed.": "Ваш Юзер фонд \"{{userFundName}}\" был удален",
 	"Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}": "Не найдена подписка для пользователя с id: {{sberUserId}} и userFundId: {{userFundId}}",
@@ -26,5 +34,13 @@
 	"You changed the monthly payment amount.": "Вы изменили сумму ежемесячного платежа.",
 	"Failed connection with sberbank acquiring (first pay). {{error}}": "Ошибка соединения со сбербанк эквайринг (первый платеж). {{error}}",
 	"Failed connection with sberbank acquiring (get order status). {{error}}": "Ошибка соединения со сбербанк эквайринг (получение статуса платежа). {{error}}",
-	"SberUser": "SberUser"
+	"SberUser": "SberUser",
+	"Поле \"email\" не может быть пустым": "Поле \"email\" не может быть пустым",
+	"Некорректный email": "Некорректный email",
+	"Поле \"пароль\" не может быть пустым": "Поле \"пароль\" не может быть пустым",
+	"Минимальная длина пароля 6 символов, а максимальная 36": "Минимальная длина пароля 6 символов, а максимальная 36",
+	"Поле \"Имя\" пустое": "Поле \"Имя\" пустое",
+	"Поле \"Имя\" содержит больше 20 символов": "Поле \"Имя\" содержит больше 20 символов",
+	"Поле \"Фамилия\" пустое": "Поле \"Фамилия\" пустое",
+	"Поле \"Фамилия\" содержит больше 20 символов": "Поле \"Фамилия\" содержит больше 20 символов"
 }

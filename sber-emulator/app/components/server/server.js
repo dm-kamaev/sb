@@ -10,14 +10,18 @@ const initRoutes = require('./routes');
 const ControllerError = require('nodules/controller/ControllerError');
 const i18n = require('../i18n');
 
-
 const app = express();
+
+
 
 initLogging(app);
 initHeaders(app);
 
+
+
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
+
 
 // initSession(app);
 // initPassport(app);

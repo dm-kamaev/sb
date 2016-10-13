@@ -29,9 +29,11 @@ OrderService.createOrder = async(function(paymentData) {
  * @return {Order}
  */
 OrderService.setPaid = async(function(orderId, binding) {
+    console.log('===================');
+    console.log(orderId);
     var order = await(models.Order.findOne({
         where: {
-            orderId: orderId,
+            orderId: orderId
         }
     }));
 
@@ -87,24 +89,24 @@ OrderService.sendCallback = async(function(orderId, delay) {
  * @return {Object}
  */
 OrderService.payByBind = async(function(orderId, binding) {
-    var bindingCount = await(models.Order.count({
+    /*var bindingCount = await(models.Order.count({
         where: {
             binding: binding
         }
     }));
-    if (bindingCount > 0) {
+    if (bindingCount > 0) {*/
         var order =  await(OrderService.setPaid(orderId, binding));
         return {
             redirect: config.backendUrl+'/#success?orderId='+orderId,
             info: 'Ваш платёж обработан, происходит переадресация...',
             errorCode: 0
         }
-    } else {
+    /*} else {
         return {
             errorCode: 2,
             errorMessage: 'Связка не найдена'
         }
-    }
+    }*/
 });
 
 OrderService.lastOrderFromClient = async(function(clientId) {
