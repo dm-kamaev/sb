@@ -7,6 +7,7 @@
 public/*
 !public/uploads
 !public/meta_templates
+!public/mail_templates
 /app/public/*
 !app/public/admin/
 /doc
@@ -36,4 +37,3 @@ clean_log.sh
 # test
 test.js
 test.sql
-
