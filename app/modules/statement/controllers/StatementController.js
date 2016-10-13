@@ -2,7 +2,9 @@
 
 const Controller = require('nodules/controller').Controller;
 const statementService = require('../services/statementService');
+const util  = require('util');
 const await = require('asyncawait/await');
+const async = require('asyncawait/async');
 
 module.exports = class StatementController extends Controller {
     actionUploadStatement(ctx) {
@@ -44,4 +46,12 @@ module.exports = class StatementController extends Controller {
             };
         }
     }
+
+    /**
+     * @api {get} /statement/get-all get all files statements
+     * @apiName get all files statements
+     * @apiGroup Statement
+     *
+     */
+    actionGetAllStatement(ctx) { return statementService.getAll(); }
 };

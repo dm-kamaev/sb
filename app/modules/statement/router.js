@@ -11,13 +11,17 @@ const StatementController = require('./controllers/StatementController');
 const statementController = new StatementController();
 
 var controllersArray = {};
-controllersArray['v1'] = statementController;
+controllersArray.v1 = statementController;
 
 var VersionedController = require('nodules/controller').VersionedController;
 var versionedController = new VersionedController(controllersArray);
 
-statementRouter.post('/upload',
+statementRouter.post(
+    '/upload',
     upload.single('statement'),
-    versionedController.actionUploadStatement);
+    versionedController.actionUploadStatement
+);
+
+statementRouter.get('/get-all', versionedController.actionGetAllStatement);
 
 module.exports = statementRouter;

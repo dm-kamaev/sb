@@ -46,7 +46,7 @@ class AuthController extends Controller {
     }
     /**
      * @api {post} /auth/register register
-     * @apiName Register
+     * @apiName register
      * @apiGroup Auth
      *
      * @apiParamExample {json} example:
@@ -56,7 +56,8 @@ class AuthController extends Controller {
      *    "password": "123456",
      *    "email": "msrylkin@gmail.com"
      * }
-     *
+     * @apiError (Error 422) Validation error for user's data
+     * @apiError (Error 400) HttpError generate for token or login via passport
     */
    // {
    //          "email":     "dkamaev@changers.team",
@@ -89,9 +90,11 @@ class AuthController extends Controller {
         if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
         return tryLogin.data;
     }
+
+
     /**
      * @api {post} /auth/login login
-     * @apiName Login
+     * @apiName login
      * @apiGroup Auth
      *
      * @apiParamExample {json} example:
@@ -99,6 +102,7 @@ class AuthController extends Controller {
      *   "email": "msrylkin@gmail.com",
      *   "password": "123456"
      * }
+     * @apiError (Error 400) HttpError login via passport
      */
     /*{
       "email": "dkamaev@changers.team",
@@ -122,7 +126,7 @@ class AuthController extends Controller {
                     userFundService.countEntities(sberUser.userFund.id)
                     ? userFundStatus.DRAFT : userFundStatus.EMPTY
 
-        return {status, sid: tryLogin.data };
+        return { status, sid: tryLogin.data };
     }
 
 
@@ -130,6 +134,8 @@ class AuthController extends Controller {
      * @api {post} /auth/send send verification mail
      * @apiName send verification mail
      * @apiGroup Auth
+     *
+     * @apiError (Error 400) HttpError generateToken via passport
      */
     actionSendVerification(ctx) {
         var request  = ctx.request  || {},
@@ -153,10 +159,11 @@ class AuthController extends Controller {
      * @apiName Verify email
      * @apiGroup Auth
      *
-     * @apiParam {String} token jwt token
+     * @apiParam {String} token jwt example: ?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRrYW1hZXZAY2hhbmdlcnMudGVhbSIsImlhdCI6MTQ3NjI2NjI3Mn0.Bke4DvHu_MeR-lFiF9uEBJgCdCiUEyOsnAiKwmZ_jz8
+     *
+     * @apiError (Error 400) HttpError verifyToken via passport
      */
     // before this function, call actionSendVerification
-    // example url: /auth/verify?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRrYW1hZXZAY2hhbmdlcnMudGVhbSIsImlhdCI6MTQ3NjI2NjI3Mn0.Bke4DvHu_MeR-lFiF9uEBJgCdCiUEyOsnAiKwmZ_jz8
     actionVerifyEmail(ctx) {
         var request = ctx.request || {},
             token   = (request.query) ? request.query.token : null;
@@ -185,6 +192,8 @@ class AuthController extends Controller {
      *    "token": "TOKEN",
      *    "password": "123qwe"
      * }
+     *
+     * @apiError (Error 400) HttpError verifyToken via passport
      */
     actionChangePassword(ctx) {
         var data     = ctx.data || {},
@@ -219,6 +228,8 @@ class AuthController extends Controller {
      * {
      *    "email": "msrylkin@gmail.com"
      * }
+     *
+     * @apiError (Error 400) HttpError generateToken via passport
      */
     actionSendEmailForChangePassword(ctx) {
         var request     = ctx.request || {},
