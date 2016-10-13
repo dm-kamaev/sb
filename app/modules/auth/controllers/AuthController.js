@@ -12,6 +12,7 @@ const userFundService = require('../../userFund/services/userFundService');
 const UserApi     = require('../../micro/services/microService.js').UserApi;
 const PasswordAuth = require('../services/passwordAuth.js');
 const Jwt = require('../services/jwt.js');
+const UserValidation = require('../services/userValidation.js');
 const _ = require('lodash');
 const mailService = require('../services/mailService');
 const os = require('os');
@@ -71,8 +72,8 @@ class AuthController extends Controller {
             email     = userData.email && userData.email.toLowerCase(),
             password  = userData.password;
         var data = { firstName, lastName, email, password };
-        var tryValid = authService.validateUserData(data);
-        if (!tryValid.resolve) { throw new errors.ValidationError(tryValid.message); }
+        var resValid = new UserValidation().getValidationFor('all').check(data);
+        if (resValid) { throw new errors.ValidationError(resValid); }
 
         var authUser = new UserApi().register(data);
         var tryToken = new Jwt().generateToken({ email });
@@ -199,8 +200,8 @@ class AuthController extends Controller {
         var authUser = userService.findAuthUserByAuthId(sberUser.authId),
             authId   = authUser.id;
 
-        var tryValid = authService.validatePassword(password);
-        if (!tryValid.resolve) { throw new errors.ValidationError(tryValid.message); }
+        var resValid = new UserValidation().getValidationFor('password').check({ password });
+        if (resValid) { throw new errors.ValidationError(resValid); }
 
         new UserApi().changePassword({ authId, password });
 
