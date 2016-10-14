@@ -1,7 +1,9 @@
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
-const statementService = require('../services/statementService');
+const statementService = require('../services/statementService.js');
+const statementView    = require('../views/statementView.js');
+const errors = require('../../../components/errors');
 const util  = require('util');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
@@ -48,10 +50,14 @@ module.exports = class StatementController extends Controller {
     }
 
     /**
-     * @api {get} /statement/get-all get all files statements
+     * @api {get} /statement/ get all files statements
      * @apiName get all files statements
      * @apiGroup Statement
      *
      */
-    actionGetAllStatement(ctx) { return statementService.getAll(); }
+    actionGetAllStatement(ctx) {
+        return statementView.renderStatements(
+            statementService.getAll()
+        );
+    }
 };

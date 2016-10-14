@@ -22,6 +22,6 @@ statementRouter.post(
     versionedController.actionUploadStatement
 );
 
-statementRouter.get('/get-all', versionedController.actionGetAllStatement);
+statementRouter.get('/', versionedController.actionGetAllStatement);
 
 module.exports = statementRouter;
