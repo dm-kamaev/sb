@@ -8,6 +8,17 @@ const moment = require('moment');
 
 var StatementService = {};
 
+
+/**
+ * get all statement (files)
+ * @param  {[obj]} where
+ * @return {[type]}
+ */
+StatementService.getAll = function (where) {
+    return await(sequelize.models.Statement.findAll({ where }));
+};
+
+
 StatementService.parseStatement = function(file) {
     var arr = file.toString().split('\r\n'),
         orders = [];
