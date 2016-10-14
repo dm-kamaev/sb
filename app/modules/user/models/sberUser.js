@@ -26,6 +26,19 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             // defaultValue:
         },
+        notified: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        categories: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                isIn: ['all', 'urgent']
+            },
+            defaultValue: 'all'
+        },
         currentCardId: {
             type: DataTypes.INTEGER,
             references: {

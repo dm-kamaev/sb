@@ -9,6 +9,7 @@ const acquiringService = require('../services/sberAcquiring');
 const orderService = require('../../orders/services/orderService');
 const userService = require('../../user/services/userService');
 const userFundService = require('../../userFund/services/userFundService');
+const mail = require('../../mail')
 const sberConfig = require('../../../../config/config-sberAcquiring.json');
 const moment = require('moment');
 
@@ -32,7 +33,8 @@ module.exports = class CallbackController extends Controller {
             var userFundSubscription = order.userFundSubscription,
                 sberUser = userFundSubscription.sberUser,
                 userFund = userFundSubscription.userFund,
-                ownUserFund = sberUser.userFund;
+                ownUserFund = sberUser.userFund,
+                authUser = userService.findAuthUserByAuthId(sberUser.authId);
 
             console.log(sberAcquiringOrderStatus);
             var cardAuthInfo = sberAcquiringOrderStatus.cardAuthInfo,
@@ -55,6 +57,12 @@ module.exports = class CallbackController extends Controller {
             }));
             if (userFund.id == ownUserFund.id) {
                 await(userFundService.toggleEnabled(userFund.id, true));
+            }
+
+            if (sberUser.categories == 'all') {
+                mail.sendFirstPayment(authUser.email, {
+                    userName: sberUser.firstName
+                })
             }
         } else {
             // handle somehow

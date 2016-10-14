@@ -478,6 +478,8 @@ UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
     "payDayHistory"."payDate"                                      AS "payDate",
     "DesiredAmountHistory"."amount"                                AS "amount",
     "SberUser"."id"                                                AS "sberUserId",
+    "SberUser"."authId"                                            AS "sberUserAuthId",
+    "SberUser"."categories"                                        AS "categories",
     "userFund"."id"                                                AS "userFundId",
     "Card"."bindingId"                                             AS "bindingId",
     "payDayHistory"."processedMonth"                               AS "processedMonth",

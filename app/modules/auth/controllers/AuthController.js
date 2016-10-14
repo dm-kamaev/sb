@@ -14,10 +14,10 @@ const PasswordAuth = require('../services/passwordAuth.js');
 const Jwt = require('../services/jwt.js');
 const UserValidation = require('../services/userValidation.js');
 const _ = require('lodash');
-const mailService = require('../services/mailService');
 const os = require('os');
 const config = require('../../../../config/config');
 const userFundStatus = require('../../userFund/enum/userFundStatus');
+const mail = require('../../mail');
 
 const HOSTNAME = `http://${os.hostname()}:${config.port}`;
 const VERIFY_LINK = `${HOSTNAME}/auth/verify?token=`;
@@ -80,7 +80,10 @@ class AuthController extends Controller {
         var tryToken = new Jwt().generateToken({ email });
         if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
         var token = tryToken.data;
-        mailService.sendMail(userData.email, getVerifyLink_(token));
+        mail.sendConfirmation(userData.email, {
+            userName: firstName,
+            link: getVerifyLink_(token)
+        })
 
         var draftUser = request.user || null,
             sberUser  = draftUser || userService.createSberUser(authUser.id);
@@ -149,7 +152,10 @@ class AuthController extends Controller {
         if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
 
         var token = tryToken.data;
-        mailService.sendMail(email, getVerifyLink_(token));
+        mail.sendConfirmation(userData.email, {
+            userName: authUser.firstName,
+            link: getVerifyLink_(token)
+        })
         return null;
     }
 
@@ -252,11 +258,10 @@ class AuthController extends Controller {
 
         var token = tryToken.data;
         // for debug call return mailService
-        mailService.sendMail(
-            email,
-            getRecoverLink_(token),
-            'Восстановление пароля'
-        );
+        mail.sendResetPassword(email, {
+            userName: authUser.email,
+            link: getRecoverLink_(token)
+        })
         return null;
     }
 }
