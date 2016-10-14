@@ -111,7 +111,7 @@ MicroServices.UserApi = class {
      */
     getUserByParams(params) {
         try {
-            return await (axiosUser.get('/users', {
+            return await(axiosUser.get('/users', {
                 params
             })).data || [];
         } catch (err) {

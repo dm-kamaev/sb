@@ -1,8 +1,19 @@
 'use strict';
 
+const MailSender = require('nodules/mail').MailSender;
+const Letter = require('nodules/mail').Letter;
+const transporterGenerator = require('nodules/mail').TransporterGenerator;
+const transporter = transporterGenerator.createSMTPTransporter({
+    debug: true,
+    name: 'cochanges.com'
+});
+const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbank.com>');
+const logger = require('../../../components/logger').getLogger('main');
+const await = require('asyncawait/await');
+const async = require('asyncawait/async');
 const MailService = {}
 
-MailService.sendMessage = function(email, emailData) {
+MailService.sendMail = function(email, emailData) {
     var title = emailData.title,
         body = emailData.body,
         markup = emailData.markup || 'html',
