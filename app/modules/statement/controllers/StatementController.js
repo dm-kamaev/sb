@@ -9,6 +9,15 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 
 module.exports = class StatementController extends Controller {
+    /**
+     * @api {post} /statement/upload upload statement
+     * @apiName upload statement
+     * @apiGroup Statement
+     *
+     * @apiParam {Object} dateStart start of statement
+     * @apiParam {Object} dateEnd end of statement
+     * @apiParam {Object} statement statement file
+     */
     actionUploadStatement(ctx) {
         var file = ctx.request.file && ctx.request.file.buffer.toString(),
             dateStart = ctx.data.dateStart,

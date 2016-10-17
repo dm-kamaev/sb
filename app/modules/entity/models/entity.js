@@ -12,13 +12,7 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING
         },
         description: {
-            type: DataTypes.TEXT,
-            validate: {
-                len: {
-                    args: [0, 701],
-                    msg: 'Длина описания должна быть до 700 символов.'
-                }
-            }
+            type: DataTypes.TEXT
         },
         imgUrl: {
             type: DataTypes.STRING

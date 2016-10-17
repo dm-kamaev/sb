@@ -21,11 +21,11 @@ const mail = require('../../mail');
 
 const HOSTNAME = `http://${os.hostname()}:${config.port}`;
 const VERIFY_LINK = `${HOSTNAME}/auth/verify?token=`;
-const RECOVER_LINK = `${HOSTNAME}#recover?token=`;
+const RECOVER_LINK = `${HOSTNAME}#registration?token=`;
 const SUCCESS_MAIL_REDIRECT = `${HOSTNAME}#success?type=mail`;
 const FAILURE_MAIL_REDIRECT = `${HOSTNAME}#failure?type=mail`;
 const getVerifyLink_ = token => VERIFY_LINK + token;
-const getRecoverLink_ = token => RECOVER_LINK + token;
+const getRecoverLink_ = (token, email) => `${RECOVER_LINK}${token}&email=${email}`;
 
 class AuthController extends Controller {
     /**
@@ -220,6 +220,9 @@ class AuthController extends Controller {
 
         new UserApi().changePassword({ authId, password });
 
+        var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
+        if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
+        
         return null;
     }
 
@@ -259,8 +262,8 @@ class AuthController extends Controller {
         var token = tryToken.data;
         // for debug call return mailService
         mail.sendResetPassword(email, {
-            userName: authUser.email,
-            link: getRecoverLink_(token)
+            userName: authUser.firstName,
+            link: getRecoverLink_(token, encodeURIComponent(email))
         })
         return null;
     }
