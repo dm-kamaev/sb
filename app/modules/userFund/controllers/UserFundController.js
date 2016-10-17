@@ -14,11 +14,12 @@ const userFundService = require('../services/userFundService');
 const sendMail = require('../services/sendMail.js');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
+const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 
 
 class UserFundController extends Controller {
     /**
-     * @api {put} /user-fund/:id update userFund
+     * @api {put} /user-fund/ update userFund
      * @apiName update userfund
      * @apiGroup UserFund
      *
@@ -28,15 +29,20 @@ class UserFundController extends Controller {
      *     "description": "sample description"
      * }
      *
-     *
      * @apiError (Error 404) NotFoundError user fund not found
      */
-    actionUpdateUserFund(actionContext, id) {
-        var data = actionContext.request.body;
-        data.id = undefined;
-        data.enabled = undefined;
-        var updatedCount = await(userFundService.updateUserFund(id, data));
-        if (!updatedCount[0]) { throw new errors.NotFoundError(i18n.__('UserFund'), id); }
+    actionUpdateUserFund(ctx) {
+        var request = ctx.request  || {},
+            user    = request.user || {},
+            data    = request.body || {};
+        var userFund   = user.userFund || {},
+            userFundId = userFund.id || null;
+        if (!userFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundId); }
+        var updatedCount = await(userFundService.updateUserFund(userFundId, {
+            title: data.title || '',
+            description: data.description || '',
+        }));
+        if (!updatedCount[0]) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundId); }
         return null;
     }
 
@@ -265,12 +271,23 @@ class UserFundController extends Controller {
      * @api {post} /user-fund/remove-userFund remove userFund
      * @apiName remove userFund
      * @apiGroup UserFund
+     * @apiParamExample {json} example:
+     * {
+     *     "message": "Не хочу больше платить"
+     * }
+     * @apiSuccessExample {json} Example response:
+     * {
+     *     "message": "Юзер фонд был удален"
+     * }
      */
-    actionRemoveUserFund(actionContext) {
-        var user = actionContext.request.user || {},
+    actionRemoveUserFund(ctx) {
+        var request    = ctx.request  || {},
+            user       = request.user || {},
+            message    = (ctx.data) ? ctx.data.message : '',
             sberUserId = user.id || null,
             userFundId = (user.userFund) ? user.userFund.id : null;
 
+        await(new ReasonOffUserFund({ sberUserId, userFundId }).create({ message }));
         var userFund = await(userFundService.getUserFund(userFundId)) || {};
         var sberUser = userService.findSberUserById(sberUserId) || {};
 
@@ -316,6 +333,11 @@ class UserFundController extends Controller {
      * @api {get} /user-fund/get-status-subscription-userFund/:id get status of subscription to userFund
      * @apiName get status of subscription to userFund
      * @apiGroup UserFund
+     *
+     * @apiSuccessExample {json} Example response:
+     * {
+     *     enabled: true || false
+     * }
      */
     actionGetStatusSubscriptionUserFund(actionContext, id) {
         var request = actionContext.request,
