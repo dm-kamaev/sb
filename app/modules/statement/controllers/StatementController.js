@@ -62,7 +62,13 @@ module.exports = class StatementController extends Controller {
      * @api {get} /statement/ get all files statements
      * @apiName get all files statements
      * @apiGroup Statement
-     *
+     * @apiSuccessExample {json} Example response:
+     * [ {
+     *      "id": 1,
+     *      "link": "http://sbervm.ru:80/recommendation/statement_1.xlsx",
+     *      "dateStart": "2016-03-31T21:00:00.000Z",
+     *      "dateEnd": "2016-04-30T21:00:00.000Z",
+     * } ]
      */
     actionGetAllStatement(ctx) {
         return statementView.renderStatements(
