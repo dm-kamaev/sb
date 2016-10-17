@@ -19,6 +19,7 @@ const logger = require('../../../components/logger').getLogger('main');
 const moment = require('moment');
 const _ = require('lodash');
 const mail = require('../../mail')
+const mailingCategory = require('../../mail/enum/mailingCategory')
 
 
 var OrderService = {};
@@ -517,7 +518,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
     var data = '';
     // this is the first time the payment failed
     if (!problemOrderInPreviousMonth.length) {
-        if (sberUser.categories == 'all') {
+        if (sberUser.categories == mailingCategory.ALL) {
             mail.sendFirstFailure(userEmail, {
                 userName: authUser.firstName,
                 amount
@@ -525,7 +526,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         }
         // this is the second time the payment failed
     } else {
-        if (sberUser.categories == 'all') {
+        if (sberUser.categories == mailingCategory.ALL) {
             mail.sendSecondFailire(userEmail, {
                 userName: authUser.firstName,
                 amount

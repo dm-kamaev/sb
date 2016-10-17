@@ -201,12 +201,12 @@ EntityService.removeAssociation = function(id, otherId) {
 };
 
 EntityService.associateEntities = function(id, otherIds) {
-    var creating = otherIds.map(e => {
+    var creating = otherIds.map(otherId => {
         return [{
             entityId: id,
-            otherEntityId: e
+            otherEntityId: otherId
         }, {
-            entityId: e,
+            entityId: otherId,
             otherEntityId: id
         }];
     });

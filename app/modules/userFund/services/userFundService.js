@@ -7,7 +7,7 @@ const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const mailService = require('../../auth/services/mailService.js');
-
+const _ = require('lodash')
 const userConfig = require('../../../../config/user-config/config');
 const axios = require('axios').create({
     baseURL: `http://${userConfig.host}:${userConfig.port}`
@@ -664,5 +664,31 @@ UserFundService.countEntities = function(id) {
         }
     }))
 }
+
+UserFundService.getSubscribers = function(entities) {
+    return await(sequelize.sequelize.query(`
+      SELECT "UserFund".id
+      FROM "UserFund"
+      JOIN "UserFundEntity" ON "UserFund".id = "UserFundEntity"."userFundId"
+      WHERE "entityId" IN :entities`))
+}
+
+UserFundService.subscribeMissing = function(userFundsIds, entities) {
+    var relations = userFundsIds.map(userFundId => {
+        return entities.map(entitiyId => ({
+            entitiyId,
+            userFundId
+        }))
+    })
+
+    relations = _.flatten(relations)
+
+    console.log(relations);
+
+
+    // return await(sequelize.models.UserFund.bulkCreate())
+}
+
+UserFundService.subscribeMissing([1, 2, 3], [11, 12, 13])
 
 module.exports = UserFundService;

@@ -326,4 +326,14 @@ WHERE "sberUserId" = :id`, {
 }));
 };
 
+UserService.changeMailSubscription = function(id, categories) {
+    return await(sequelize.models.SberUser.update({
+        categories
+    },{
+        where: {
+            id
+        }
+    }))
+}
+
 module.exports = UserService;

@@ -12,6 +12,7 @@ const userFundService = require('../../userFund/services/userFundService');
 const mail = require('../../mail')
 const sberConfig = require('../../../../config/config-sberAcquiring.json');
 const moment = require('moment');
+const mailingCategory = require('../../mail/enum/mailingCategory')
 
 module.exports = class CallbackController extends Controller {
     actionCallback(ctx) {
@@ -59,7 +60,7 @@ module.exports = class CallbackController extends Controller {
                 await(userFundService.toggleEnabled(userFund.id, true));
             }
 
-            if (sberUser.categories == 'all') {
+            if (sberUser.categories == mailingCategory.ALL) {
                 mail.sendFirstPayment(authUser.email, {
                     userName: sberUser.firstName
                 })

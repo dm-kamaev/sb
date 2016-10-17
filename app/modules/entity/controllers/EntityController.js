@@ -49,8 +49,8 @@ class EntityController extends Controller {
             var data = actionContext.request.body,
                 entities = data.entities;
             entities = _.castArray(entities)
-                .map(e => parseInt(e))
-                .filter(Number.isInteger);
+                        .map(e => parseInt(e))
+                        .filter(Number.isInteger);
             var entity = await(entityService.createEntity(data));
             await(entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
@@ -186,7 +186,7 @@ class EntityController extends Controller {
             entities = _.castArray(entities)
                 .map(e => parseInt(e))
                 .filter(Number.isInteger);
-            delete data.id;
+            data.id = undefined;
             var entity = await(entityService.updateEntity(id, data));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
             if (entities.length) {
@@ -379,6 +379,15 @@ class EntityController extends Controller {
             throw new errors.HttpError('Wrong "include" or "type" query param!', 400);
         }
         return entityView.renderEntities(entities);
+    }
+}
+
+function handleCreation_(entity, entities) {
+    if (entity.type == 'direction') {
+
+    } else if (entity.type == 'fund') {
+        var userFunds = userFundService.getSubscribers(entities)
+        userFundService.subscribeMissing(userFunds.map(user => user.id), entities)
     }
 }
 

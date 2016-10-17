@@ -1,5 +1,7 @@
 'use strict';
 
+const mailingCategory = require('../../mail/enum/mailingCategory')
+
 module.exports = function(sequelize, DataTypes) {
     var SberUser = sequelize.define('SberUser', {
         authId: {
@@ -35,9 +37,10 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
-                isIn: ['all', 'urgent']
+                isIn: [Object.keys(mailingCategory)
+                             .map(category => mailingCategory[category])]
             },
-            defaultValue: 'all'
+            defaultValue: mailingCategory.ALL
         },
         currentCardId: {
             type: DataTypes.INTEGER,
