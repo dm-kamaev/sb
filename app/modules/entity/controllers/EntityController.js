@@ -4,10 +4,13 @@
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const entityService = require('../services/entityService');
+const userService = require('../../user/services/userService');
+const userFundService = require('../../userFund/services/userFundService')
 const entityView = require('../views/entityView');
 const userFundView = require('../../userFund/views/userFundView');
 const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
+const mail = require('../../mail')
 const _ = require('lodash');
 
 class EntityController extends Controller {
@@ -52,6 +55,7 @@ class EntityController extends Controller {
                         .map(e => parseInt(e))
                         .filter(Number.isInteger);
             var entity = await(entityService.createEntity(data));
+            handleCreation_(entity, entities);
             await(entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
             actionContext.response.set('Location', `/entity/${entity.id}`);
@@ -186,10 +190,17 @@ class EntityController extends Controller {
             entities = _.castArray(entities)
                 .map(e => parseInt(e))
                 .filter(Number.isInteger);
-            data.id = undefined;
+            delete data.id;
             var entity = await(entityService.updateEntity(id, data));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
             if (entities.length) {
+                var toDelete = entityService.getToDelete(id)
+                                            .map(e => e.otherEntityId)
+                console.log(toDelete);
+                console.log(entities);
+                console.log(toDelete.filter(del => !~entities.indexOf(del)));
+                handleDeletion_(entity, toDelete.filter(del => !~entities.indexOf(del)))
+                // handleCreation_(entity, toDelete.filter(del => ~entities.indexOf(del)))
                 await(entityService.removeAssociations(id));
                 await(entityService.associateEntities(id, entities));
             }
@@ -384,10 +395,24 @@ class EntityController extends Controller {
 
 function handleCreation_(entity, entities) {
     if (entity.type == 'direction') {
-
+        var sberUsers = userFundService.getFullSubscribers(entities[0])
+        sberUsers.forEach(sberUser => {
+            var authUser = userService.findAuthUserByAuthId(sberUser.authId)
+            mail.sendPendingDraft(authUser.email, {
+                userName: authUser.userName
+            })
+        })
     } else if (entity.type == 'fund') {
         var userFunds = userFundService.getSubscribers(entities)
-        userFundService.subscribeMissing(userFunds.map(user => user.id), entities)
+        userFundService.subscribeMissing(userFunds.map(user => user.id), entity.id)
+    }
+}
+
+function handleDeletion_(entity, entities) {
+    console.log(entity.id);
+    console.log(entities);
+    if (entity.type =='fund') {
+
     }
 }
 

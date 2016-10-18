@@ -670,25 +670,55 @@ UserFundService.getSubscribers = function(entities) {
       SELECT "UserFund".id
       FROM "UserFund"
       JOIN "UserFundEntity" ON "UserFund".id = "UserFundEntity"."userFundId"
-      WHERE "entityId" IN :entities`))
+      WHERE "entityId" IN (:entities)`,{
+        replacements: {
+            entities
+        },
+        type: sequelize.sequelize.QueryTypes.SELECT
+      }))
 }
 
-UserFundService.subscribeMissing = function(userFundsIds, entities) {
-    var relations = userFundsIds.map(userFundId => {
-        return entities.map(entitiyId => ({
-            entitiyId,
-            userFundId
-        }))
-    })
+UserFundService.subscribeMissing = function(userFundsIds, fundId) {
+    var relations = userFundsIds.map(userFundId => ({
+        userFundId,
+        entityId: fundId
+    }))
 
-    relations = _.flatten(relations)
-
-    console.log(relations);
-
-
-    // return await(sequelize.models.UserFund.bulkCreate())
+    return await(sequelize.models.UserFundEntity.bulkCreate(relations))
 }
 
-UserFundService.subscribeMissing([1, 2, 3], [11, 12, 13])
+//TODO: refactor
+UserFundService.getFullSubscribers = function(topicId) {
+    return await(sequelize.sequelize.query(`SELECT
+  "SberUser".id,
+  "SberUser"."authId"
+FROM "SberUser"
+  JOIN "UserFund" ON "UserFund"."creatorId" = "SberUser".id
+                     AND "UserFund"."deletedAt" IS NULL
+                     AND "UserFund".id IN (SELECT "userFundId"
+                                           FROM "UserFundEntity"
+                                             INNER JOIN (SELECT "otherEntityId"
+                                                         FROM "EntityOtherEntity"
+                                                           JOIN "Entity"
+                                                             ON "EntityOtherEntity"."otherEntityId" = "Entity".id AND
+                                                                "Entity".type = 'direction'
+                                                         WHERE "entityId" = :topicId AND "Entity".published = TRUE AND
+                                                               "Entity"."deletedAt" IS NULL) AS q
+                                               ON "UserFundEntity"."entityId" = q."otherEntityId"
+                                           GROUP BY "userFundId"
+                                           HAVING count(*) = (SELECT count(*)
+                                                              FROM "EntityOtherEntity"
+                                                                JOIN "Entity"
+                                                                  ON "EntityOtherEntity"."otherEntityId" = "Entity".id
+                                                                     AND "Entity".type = 'direction'
+                                                              WHERE
+                                                                "entityId" = :topicId AND "Entity".published = TRUE))
+WHERE "SberUser"."authId" IS NOT NULL`, {
+                     replacements: {
+                        topicId
+                     },
+                     type: sequelize.sequelize.QueryTypes.SELECT
+                   }))
+}
 
 module.exports = UserFundService;

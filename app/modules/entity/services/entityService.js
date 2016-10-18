@@ -301,4 +301,12 @@ EntityService.getEntitiesByTypeWithNested = function(type, includes) {
     }));
 };
 
+EntityService.getToDelete = function(id) {
+    return await(sequelize.models.EntityOtherEntity.findAll({
+        where: {
+            entityId: id
+        }
+    }))
+}
+
 module.exports = EntityService;
