@@ -14,6 +14,9 @@ var VersionedController = require('nodules/controller').VersionedController;
 var versionedController = new VersionedController(controllersArray);
 
 
+userFundRouter.post('/subscribed-user-funds',
+    versionedController.actionTestGetSubscribedUsers);
+
 userFundRouter.get('/', versionedController.actionGetUserFunds);
 userFundRouter.get('/:id(\\d+)', versionedController.actionGetUserFund);
 userFundRouter.get('/count', versionedController.actionCountUserFunds);

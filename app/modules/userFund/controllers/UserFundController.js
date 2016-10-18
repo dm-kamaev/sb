@@ -15,6 +15,8 @@ const sendMail = require('../services/sendMail.js');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
+const subscriptionExtractionService =
+    require('../services/subscriptionExtractionService');
 
 
 class UserFundController extends Controller {
@@ -356,6 +358,12 @@ class UserFundController extends Controller {
             return { message };
         }
         return { enabled: res.enabled };
+    }
+
+    actionTestGetSubscribedUsers(actionContext) {
+        var body = actionContext.request.body;
+        return subscriptionExtractionService.getSubscribedUserFunds(
+            body.entityIds);
     }
 }
 
