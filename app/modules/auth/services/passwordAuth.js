@@ -5,6 +5,8 @@
 
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
+const errors = require('../../../components/errors');
+const i18n = require('../../../components/i18n');
 const util   = require('util');
 
 
@@ -65,5 +67,43 @@ module.exports = class PasswordAuth {
     redirect(url) {
         var response = this.response;
         response.redirect(url);
+    }
+
+
+     /**
+     * get user
+     * @param  {[str]} key example: id, email
+     * if key not exist return user
+     * @return {[obj || any]}
+     */
+    getUser (key) {
+        var user = this.request.user || {};
+        if (!key) {
+            return user;
+        } else {
+            var userEl = user[key] || null;
+            // TODO: added test for error
+            if (!userEl) { throw new errors.NotFoundError(i18n.__('UserFund'), userEl); }
+        }
+    }
+
+
+    /**
+     * get UserFund
+     * @param  {[str]} key example: id, title, description
+     * if key not exist return userFund
+     * @return {[obj || any]}
+     */
+    getUserFund (key) {
+        var user     = this.getUser();
+        var userFund = user.userFund || {};
+        if (!key) {
+            return userFund;
+        } else {
+            var userFundEl = userFund[key] || null;
+            // TODO: added test for error
+            if (!userFundEl) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundEl); }
+            return userFundEl;
+        }
     }
 };

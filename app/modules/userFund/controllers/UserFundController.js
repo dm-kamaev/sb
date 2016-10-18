@@ -11,6 +11,7 @@ const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
 const entityTypes = require('../../entity/enums/entityTypes.js');
 const ExtractEntity = require('../../entity/services/extractEntity.js');
+const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
 const sendMail = require('../services/sendMail.js');
@@ -92,11 +93,7 @@ class UserFundController extends Controller {
      * @apiError (Error 400) HttpError relation exists
      */
     actionAddEntity(ctx, entityId) {
-        var request = ctx.request  || {},
-            user    = request.user || {};
-        var userFund   = user.userFund || {},
-            userFundId = userFund.id   || null;
-        if (!userFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundId); }
+        var userFundId = new PasswordAuth({ ctx }).getUserFund('id');
 
         var entity = entityService.getEntity({ id:entityId, published:true });
         if (!entity) { throw new errors.NotFoundError(i18n.__('Entity'), entityId); }
