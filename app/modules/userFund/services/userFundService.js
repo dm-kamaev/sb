@@ -188,7 +188,6 @@ UserFundService.addEntities = function(data) {
         return { userFundId, entityId };
     });
     await(sequelize.models.UserFundEntity.bulkCreate(multiRows));
-    return err;
 };
 
 
