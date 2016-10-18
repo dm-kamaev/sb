@@ -5,7 +5,6 @@ const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
-const userFundService = require('../services/userFundService');
 const logger = require('../../../components/logger').getLogger('main');
 const mailService = require('../../auth/services/mailService.js');
 
@@ -145,6 +144,51 @@ UserFundService.removeUserFund = function(userFundId) {
             id: userFundId,
         },
     }));
+};
+
+
+/**
+ * filter exist relations in database, return id's array only not exist relation fro entity
+ * @param  {[obj]} data {
+ *      userFundId, // int 1
+ *      entityIds, // array [1,2,3]
+ * }
+ * @return {[array]}      [1,2,3]
+ */
+UserFundService.filterExistRelations = function(data) {
+    var userFundId = data.userFundId, entityIds = data.entityIds;
+    var relations = await(sequelize.models.UserFundEntity.findAll({
+        where: {
+            userFundId,
+            entityId: {
+                $in: entityIds
+            }
+        }
+    }));
+    var existInTable = {};
+    relations.forEach(entity => existInTable[entity.entityId] = true);
+
+    return entityIds.filter(entityId => {
+        if (existInTable[entityId]) { return false; }
+        return true;
+    });
+};
+
+
+/**
+ * addEntities in userFund
+ * @param {[obj]} data {
+ *   userFundId, // int
+ *   entityIds,  // array [ 1, 2, 3 ]
+ * }
+ */
+UserFundService.addEntities = function(data) {
+    var userFundId = data.userFundId, entityIds = data.entityIds;
+    var multiRows = entityIds.map(entityId => {
+        return { userFundId, entityId };
+    });
+    await(sequelize.models.UserFundEntity.bulkCreate(multiRows));
+    return err;
 };
 
 

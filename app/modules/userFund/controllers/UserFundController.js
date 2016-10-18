@@ -9,6 +9,8 @@ const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService');
+const entityTypes = require('../../entity/enums/entityTypes.js');
+const ExtractEntity = require('../../entity/services/extractEntity.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
 const sendMail = require('../services/sendMail.js');
@@ -79,28 +81,42 @@ class UserFundController extends Controller {
         return userFundView.renderUserFunds(userFunds);
     }
 
+
     /**
      * @api {post} /user-fund/:entityId add entity
      * @apiName add entity
      * @apiGroup UserFund
      *
      *
-     * @apiError (Error 404) NotFoundError entity or userfund not found
+     * @apiError (Error 404) NotFoundError "entity", "userfund", "type of organization" not found
      * @apiError (Error 400) HttpError relation exists
      */
-    actionAddEntity(actionContext, entityId) {
-        var request = actionContext.request;
-        var userFundId = (request.user.userFund) ? request.user.userFund.id : null;
-        try {
-            await(userFundService.addEntity(userFundId, entityId));
-            return null;
-        } catch (err) {
-            if (err.message === 'Not found') {
-                var ids = [ userFundId, entityId ].join(' OR ');
-                throw new errors.NotFoundError(i18n.__('UserFund OR Entity'), ids);
-            }
-            throw new errors.HttpError(i18n.__('Relation exists'), 400);
+    actionAddEntity(ctx, entityId) {
+        var request = ctx.request  || {},
+            user    = request.user || {};
+        var userFund   = user.userFund || {},
+            userFundId = userFund.id   || null;
+        if (!userFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundId); }
+
+        var entity = entityService.getEntity({ id:entityId, published:true });
+        if (!entity) { throw new errors.NotFoundError(i18n.__('Entity'), entityId); }
+        var type = entity.type;
+        if (!entityTypes[type]){
+            throw new errors.NotFoundError(i18n.__('type of organization "{{type}}"', {
+                type
+            }), entityId);
         }
+
+        var entityIds = [ entityId ];
+        if (type === entityTypes.DIRECTION) {
+            var fundIds = new ExtractEntity({
+                type: entityTypes.DIRECTION,
+                entityIds
+            }).extract();
+            entityIds = entityIds.concat(fundIds);
+        }
+        entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
+        userFundService.addEntities({ userFundId, entityIds });
     }
 
     /**
