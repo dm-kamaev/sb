@@ -109,6 +109,19 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
  * @return {[obj]}
  */
 OrderService.firstPayOrSendMessage = function(params) {
+    var lastDateOfFirstPayment =
+        getDateOfLastNonPaidFirstPayment_(params.userFundSubscriptionId);
+
+    if(lastDateOfFirstPayment) {
+        var dateDiff = countDateDifferenceFromNow_(
+            lastDateOfFirstPayment.dataValues.updatedAt);
+        // prevent order spamming, one order per 60 seconds
+        if (dateDiff < 60) {
+            throw new errors.HttpError(
+                i18n.__('One order per 60 seconds'), 429);
+        }
+    }
+
     // if user with unconfirmed payment, then do first pay
     var userFund = userFundService.getUserFundWithIncludes(params.userFundId);
     if (isEmptyUserFund_(userFund)) {
@@ -167,6 +180,35 @@ OrderService.firstPayOrSendMessage = function(params) {
     }
 };
 
+/**
+ * @private
+ * get updation date of last updated first payment
+ * @param {number} subscriptionId
+ * @return {date} orderDate
+ */
+function getDateOfLastNonPaidFirstPayment_(subscriptionId) {
+    var orderDate = await(sequelize.models.Order.findOne({
+        where: {
+            userFundSubscriptionId: subscriptionId
+            //type: orderTypes.FIRST
+        },
+        order: [['updatedAt', 'DESC']]
+    }));
+    return orderDate;
+}
+
+/**
+ * @private
+ * get date difference from now to date in param
+ * @param {date} date
+ * @return {number} differenceInSeconds
+ */
+function countDateDifferenceFromNow_(date) {
+    var timeDifference = Math.abs(new Date().getTime() - date.getTime());
+    //difference in seconds
+    var differenceInSeconds = Math.ceil(timeDifference / 1000);
+    return differenceInSeconds;
+}
 
 OrderService.isAvalibleForPayment = function(order) {
     if (!order) {
