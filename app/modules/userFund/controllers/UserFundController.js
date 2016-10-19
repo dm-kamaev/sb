@@ -95,7 +95,7 @@ class UserFundController extends Controller {
     actionAddEntity(ctx, entityId) {
         var userFundId = new PasswordAuth({ ctx }).getUserFund('id');
 
-        var entity = entityService.getEntity({ id:entityId, published:true });
+        var entity = entityService.getEntityOnlyOne({ id:entityId, published:true });
         if (!entity) { throw new errors.NotFoundError(i18n.__('Entity'), entityId); }
         var type = entity.type;
         if (!entityTypes[type]){
