@@ -665,14 +665,24 @@ UserFundService.countEntities = function(id) {
     }))
 }
 
-UserFundService.getSubscribers = function(entities) {
+UserFundService.getSubscribers = function(params) {
+    var include = params.include,
+        exclude = params.exclude || null;
+
+    console.log(params);
+
     return await(sequelize.sequelize.query(`
-      SELECT "UserFund".id
-      FROM "UserFund"
-      JOIN "UserFundEntity" ON "UserFund".id = "UserFundEntity"."userFundId"
-      WHERE "entityId" IN (:entities)`,{
+      SELECT q."userFundId" AS id
+FROM (SELECT *
+      FROM "UserFundEntity"
+      WHERE "entityId" IN (:include)
+      ORDER BY "userFundId") AS q
+WHERE q."userFundId" NOT IN (SELECT "userFundId"
+                             FROM "UserFundEntity"
+                             WHERE "UserFundEntity"."entityId" IN (:exclude))`,{
         replacements: {
-            entities
+            include,
+            exclude
         },
         type: sequelize.sequelize.QueryTypes.SELECT
       }))
@@ -719,6 +729,19 @@ WHERE "SberUser"."authId" IS NOT NULL`, {
                      },
                      type: sequelize.sequelize.QueryTypes.SELECT
                    }))
+}
+
+UserFundService.unsubscribeUsers = function(userFunds, entities) {
+    return await(sequelize.models.UserFundEntity.destroy({
+        where: {
+            userFundId: {
+               $in: userFunds
+            },
+            entityId: {
+                $in: entities
+            }
+        }
+    }))
 }
 
 module.exports = UserFundService;
