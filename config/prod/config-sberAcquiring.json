@@ -2,6 +2,9 @@
   "userName": "Aventica-api",
   "password": "tL4ilYyweW5DmEe",
 
+  "userNameSsl":  "Aventica_ssl-api",
+  "passwordSsl": "tL4ilYyweW5DmEe",
+
   "hostname":   "https://securepayments.sberbank.ru",
 
   "registerOrder":  "/payment/rest/register.do?",

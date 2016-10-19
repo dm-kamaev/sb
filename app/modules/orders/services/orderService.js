@@ -109,17 +109,10 @@ OrderService.updateInfo = function(sberAcquOrderNumber, data) {
  * @return {[obj]}
  */
 OrderService.firstPayOrSendMessage = function(params) {
-    var lastDateOfFirstPayment =
-        getDateOfLastNonPaidFirstPayment_(params.userFundSubscriptionId);
-
-    if(lastDateOfFirstPayment) {
-        var dateDiff = countDateDifferenceFromNow_(
-            lastDateOfFirstPayment.dataValues.updatedAt);
-        // prevent order spamming, one order per 60 seconds
-        if (dateDiff < 60) {
-            throw new errors.HttpError(
-                i18n.__('One order per 60 seconds'), 429);
-        }
+    // prevent order spamming, one order per 60 seconds
+    if (!isOrderValid_(params.userFundSubscriptionId, 60)) {
+        throw new errors.HttpError(
+            i18n.__('One order per 60 seconds'), 429);
     }
 
     // if user with unconfirmed payment, then do first pay
@@ -182,6 +175,32 @@ OrderService.firstPayOrSendMessage = function(params) {
 
 /**
  * @private
+ * check validity of new order
+ * @param {number} subscriptionId
+ * @param {number} intervalInSeconds
+ * @return {boolean} isPaymentValid
+ */
+function isOrderValid_(subscriptionId, intervalInSeconds) {
+    if(config.preventOrderSpamming) {
+        var lastDateOfFirstPayment =
+            getDateOfLastNonPaidFirstPayment_(subscriptionId);
+
+        if(lastDateOfFirstPayment) {
+            var dateDiff = countDateDifferenceFromNow_(
+                lastDateOfFirstPayment.dataValues.updatedAt);
+            return (dateDiff > intervalInSeconds);
+        } else {
+            return true;
+        }
+    } else {
+        return true;
+    }
+}
+
+
+
+/**
+ * @private
  * get updation date of last updated first payment
  * @param {number} subscriptionId
  * @return {date} orderDate
@@ -189,8 +208,8 @@ OrderService.firstPayOrSendMessage = function(params) {
 function getDateOfLastNonPaidFirstPayment_(subscriptionId) {
     var orderDate = await(sequelize.models.Order.findOne({
         where: {
-            userFundSubscriptionId: subscriptionId
-            //type: orderTypes.FIRST
+            userFundSubscriptionId: subscriptionId,
+            type: orderTypes.FIRST
         },
         order: [['updatedAt', 'DESC']]
     }));

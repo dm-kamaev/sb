@@ -1,5 +1,6 @@
 {
   "hostname": "http://sber-vmeste.demo.changers.team",
   "port": 80,
-  "environment": "demo"
+  "environment": "demo",
+  "preventOrderSpamming": true
 }
