@@ -10,33 +10,56 @@ const entityTypes = require('../../entity/enums/entityTypes.js');
 
 
 module.exports = class ExtractEntity {
+    /**
+     * [constructor description]
+     * @param  {[obj]} params {
+     *   type: 'FUND' || 'DIRECTION' || 'TOPIC'
+     *   entityIds, // array [ 1,2,3 ]
+     * }
+     * @return {[type]}        [description]
+     */
     constructor(params) {
-        this.EntityOtherEntity = sequelize.models.EntityOtherEntity;
-        var rightType = false;
-        Object.keys(entityTypes).forEach(key => {
-            if (entityTypes[key] === params.type) { rightType = true; }
-        });
-        if (!rightType) {
+        if (!params.entityIds) {
+            throw new Error('ExtractEntity => not exist entityIds: "'+params.entityIds+'"');
+        }
+        if (!entityTypes[params.type]) {
             throw new Error('ExtractEntity => there is no such type: "'+params.type+'"');
         }
         this.type      = params.type;
         this.entityIds = params.entityIds;
+        this.EntityOtherEntity = sequelize.models.EntityOtherEntity;
     }
+    /**
+     * extract from directions to funds and extract from funds to directions (uniq)
+     * @return {[type]} [description]
+     */
     extract () {
         var EntityOtherEntity = this.EntityOtherEntity,
-           type      = this.type,
-           entityIds = this.entityIds;
-        if (type === entityTypes.DIRECTION) {
-            var query = {
-                where: {
-                    entityId: {
-                        $in: entityIds
-                    }
+            type              = this.type,
+            entityIds         = this.entityIds;
+        var query = {
+            where: {
+                entityId: {
+                    $in: entityIds
                 }
-            };
-            var funds = await(EntityOtherEntity.findAll(query)) || [];
-            // console.log(funds);
-            return funds.map(fund => fund.otherEntityId);
+            }
+        };
+        if (type === entityTypes.DIRECTION || type === entityTypes.FUND) {
+            var entity     = await(EntityOtherEntity.findAll(query)) || [],
+                uniqEntityIds = {};
+            entity.map(direction =>
+                direction.otherEntityId
+            ).forEach(directionId =>
+                uniqEntityIds[directionId] = true
+            );
+            return Object.keys(uniqEntityIds);
         }
     }
 };
+// async(() => {
+//     var res = new module.exports({
+//         type: entityTypes.FUND,
+//         entityIds: [ 2, 3]
+//     }).extract();
+//     console.log(res);
+// })();
