@@ -9,7 +9,7 @@ const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
-const Entity = require('../../entity/services/entity.js');
+const EntityApi = require('../../entity/services/entityApi.js');
 const entityTypes = require('../../entity/enums/entityTypes.js');
 const ExtractEntity = require('../../entity/services/extractEntity.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
@@ -94,46 +94,37 @@ class UserFundController extends Controller {
      * @apiError (Error 400) HttpError relation exists
      */
     actionAddEntity(ctx, entityId) {
-        var userFundId = new PasswordAuth({ ctx }).getUserFund('id');
+        var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
+            entityApi  = new EntityApi({ entityId });
 
-        var entity = entityService.getEntityOnlyOne({ id:entityId, published:true });
-        if (!entity) { throw new errors.NotFoundError(i18n.__('Entity'), entityId); }
-        var type = entity.type;
-        if (!entityTypes[type]){
-            throw new errors.NotFoundError(i18n.__('type of organization "{{type}}"', {
-                type
-            }), entityId);
-        }
+        var entity = entityApi.checkExist();
+        entityApi.checkType();
+        var entityIds = entityApi.getNestedEntityIds();
 
-        var entityIds = [ entityId ];
-        if (type === entityTypes.DIRECTION) {
-            var fundIds = new ExtractEntity({
-                type: entityTypes.DIRECTION,
-                entityIds
-            }).extract();
-            entityIds = entityIds.concat(fundIds);
-        }
         entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
         userFundService.addEntities({ userFundId, entityIds });
     }
 
+
     /**
      * @api {delete} /user-fund/:entityId
-     * @apiName remove Entity
+     * @apiName remove entity
      * @apiGroup UserFund
-     *
      *
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
-    actionRemoveEntity(actionContext, entityId) {
-        var id = actionContext.request.user.userFund.id;
-        var res = await(userFundService.removeEntity(id, entityId));
-        if (!res[0]) {
-          throw new errors.HttpError(i18n.__('Relation don\'t exists'), 400);
-        }
-        return null;
+    actionRemoveEntity(ctx, entityId) {
+        var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
+            entityApi  = new EntityApi({ entityId });
+
+        var entity = entityApi.checkExist();
+        entityApi.checkType();
+        var entityIds = entityApi.getNestedEntityIds();
+
+        userFundService.removeEntities({ userFundId, entityIds });
     }
+
 
     /**
      * @api {get} /user-fund/entity get entities

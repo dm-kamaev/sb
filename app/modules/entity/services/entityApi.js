@@ -9,28 +9,37 @@ const async = require('asyncawait/async');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const entityTypes = require('../../entity/enums/entityTypes.js');
+const ExtractEntity = require('../../entity/services/extractEntity.js');
 
 
 
-module.exports = class Entity {
+module.exports = class EntityApi {
     /**
      * [constructor description]
+     * @param  {[obj]} params {
+     *   entityId, // int or array [1,2,3]
+     *  }
      * @return {[type]}        [description]
      */
     constructor(params) {
         this.entityId = params.entityId || null;
-        var option = params.option || {};
         this.Entity = sequelize.models.Entity;
     }
-
+    /**
+     * set entity
+     * @param {[obj]} entity { id: 1, title: 'ПОДАРИ ЖИЗНЬ', ... }
+     */
     setEntity(entity) {
         this.entity = entity;
     }
 
+    /**
+     * get Entity: read database
+     * @param  {[obj]} where
+     * @return {[type]}       [description]
+     */
     getEntity(where) {
-        return await (this.Entity.findOne({
-            where
-        }));
+        return await (this.Entity.findOne({ where }));
     }
 
     /**
@@ -49,7 +58,7 @@ module.exports = class Entity {
     }
 
     /**
-     * check type entity
+     * check type entity, before call "setEntity" or "getEntity"
      * @return {[boolen]}
      */
     checkType() {
@@ -61,5 +70,25 @@ module.exports = class Entity {
             }), entity.id);
         }
         return true;
+    }
+
+    /**
+     * get nested entityIds
+     * if entity is direction, push array id funds
+     * @param  {[int or array]} entityId
+     * @return {[array]}        [ 1,2,3 ]
+     */
+    getNestedEntityIds (entityId) {
+        entityId = entityId || this.entityId;
+        var entityIds = (entityId instanceof Array) ? entityId : [ entityId ];
+        var type = this.entity.type;
+        if (type === entityTypes.DIRECTION) {
+            var fundIds = new ExtractEntity({
+                type: entityTypes.DIRECTION,
+                entityIds
+            }).extract();
+            entityIds = entityIds.concat(fundIds);
+        }
+        return entityIds;
     }
 };

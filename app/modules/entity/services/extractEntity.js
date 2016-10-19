@@ -56,10 +56,3 @@ module.exports = class ExtractEntity {
         }
     }
 };
-// async(() => {
-//     var res = new module.exports({
-//         type: entityTypes.FUND,
-//         entityIds: [ 2, 3]
-//     }).extract();
-//     console.log(res);
-// })();
