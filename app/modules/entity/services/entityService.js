@@ -162,7 +162,7 @@ function getEntityByEntityId_(id, type, published) {
     }));
 }
 
-EntityService.getEntity = function (where) {
+EntityService.getEntityOnlyOne = function (where) {
     return await(sequelize.models.Entity.findOne({ where }));
 }
 
