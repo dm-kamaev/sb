@@ -623,7 +623,8 @@ OrderService.generateReportTest = async(function(sberOrderId) {
         }
     }));
     // TODO: move to private method
-    return countPayments_(orders);
+    //return countPayments_(orders);
+    return orders;
 });
 
 

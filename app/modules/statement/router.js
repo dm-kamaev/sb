@@ -23,5 +23,7 @@ statementRouter.post(
 );
 
 statementRouter.get('/', versionedController.actionGetAllStatement);
+statementRouter.get('/count-payments-test/:orderId',
+    versionedController.actionCountPaymentsTest);
 
 module.exports = statementRouter;

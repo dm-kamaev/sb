@@ -115,4 +115,66 @@ StatementService.writeInExcel = function(countPayments) {
         sheet
     );
 };
+
+/**
+ * count payments to all funds
+ * @param {[array]} paidOrders
+ * @return {[object]} {
+ *      payments: [{"id": 1, "payment": 123456, "title": "qwerty"}, ...],
+ *      sumModulo: 2345
+ *  }
+ */
+StatementService.countPayments = function(approvedOrders) {
+    var fundsArray = [];
+    var sumModulo = 0;
+
+    paidOrders.forEach(order => {
+        var funds = approvedOrders.userFundSnapshot.fund;
+        var fundsCount = funds.length;
+        var fundPayment = Math.trunc(order.amount / fundsCount);
+        var modulo = order.amount - (fundPayment * orderFunds.count);
+
+        funds = funds.map(fund => {
+            fund.payment = fundPayment;
+            return fund;
+        });
+
+        funds.forEach(fund => {
+            fund.payment = fundPayment;
+            var fundIndex = fundsArray.findIndex((elem, index) =>
+                elem.id === fund.id);
+
+            if (fundIndex != -1) {
+                fundsArray[fundIndex].payment += fund.payment;
+            } else {
+                fundsArray.push(fund);
+            }
+        });
+        sumModulo += modulo;
+    });
+
+    var result = {
+        payments: fundsArray,
+        sumModulo: sumModulo
+    };
+
+    return result;
+}
+
+StatementService.generateReportTest = async(function(sberOrderId) {
+    var orders = await (sequelize.models.Order.findAll({
+        attributes: ['amount', 'userFundSnapshot'],
+        where: {
+            status: orderStatus.PAID,
+            sberAcquOrderId: sberOrderId,
+            userFundSnapshot: {
+                $ne: null
+            }
+        }
+    }));
+    return StatementService.countPayments(orders);
+});
+
+
+
 module.exports = StatementService;
