@@ -92,28 +92,19 @@ class UserFundController extends Controller {
      * @apiError (Error 404) NotFoundError "entity", "userfund", "type of organization" not found
      * @apiError (Error 400) HttpError relation exists
      */
-    actionAddEntity(ctx, entityId) {
-        var userFundId = new PasswordAuth({ ctx }).getUserFund('id');
-
-        var entity = entityService.getEntityOnlyOne({ id:entityId, published:true });
-        if (!entity) { throw new errors.NotFoundError(i18n.__('Entity'), entityId); }
-        var type = entity.type;
-        if (!entityTypes[type]){
-            throw new errors.NotFoundError(i18n.__('type of organization "{{type}}"', {
-                type
-            }), entityId);
+    actionAddEntity(actionContext, entityId) {
+        var request = actionContext.request;
+        var userFundId = (request.user.userFund) ? request.user.userFund.id : null;
+        try {
+            await (userFundService.addEntity(userFundId, entityId));
+            return null;
+        } catch (err) {
+            if (err.message === 'Not found') {
+                var ids = [userFundId, entityId].join(' OR ');
+                throw new errors.NotFoundError(i18n.__('UserFund OR Entity'), ids);
+            }
+            throw new errors.HttpError(i18n.__('Relation exists'), 400);
         }
-
-        var entityIds = [ entityId ];
-        if (type === entityTypes.DIRECTION) {
-            var fundIds = new ExtractEntity({
-                type: entityTypes.DIRECTION,
-                entityIds
-            }).extract();
-            entityIds = entityIds.concat(fundIds);
-        }
-        entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
-        userFundService.addEntities({ userFundId, entityIds });
     }
 
     /**
