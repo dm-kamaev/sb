@@ -23,6 +23,8 @@ EntityService.getAllEntities = function(userFundId, published) {
 };
 
 EntityService.getEntity = function(id, userFundId, published, includes) {
+    if (published === undefined) published = true;
+    includes = includes || [];
     var include = includes.map(e => {
         return {
             model: sequelize.models.Entity,
@@ -111,7 +113,8 @@ EntityService.updateEntity = function(id, data) {
         where: {
             id: id,
             deletedAt: null
-        }
+        },
+        returning: true
     }));
 };
 

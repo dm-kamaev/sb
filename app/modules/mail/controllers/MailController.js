@@ -20,7 +20,7 @@ module.exports = class MailController extends Controller {
             sberUserId = ctx.request.user && ctx.request.user.id;
 
         if (!sberUserId) throw new errors.HttpError('Unathorized', 403)
-        userService.changeMailSubscription(sberUserId, categories)
+        userService.changeMailSubscription({sberUserId}, categories)
     }
 
     /**
@@ -37,9 +37,13 @@ module.exports = class MailController extends Controller {
         if (!verifyResult.resolve) {
             throw new errors.HttpError(verifyResult.message, 400)
         }
+        var token = verifyResult.data;
 
-        var sberUserId = verifyResult.data.sberUserId;
+        if (token.action != 'verification') {
+            //TODO: todo
+        }
+        var email = verifyResult.data.email;
 
-        userService.changeMailSubscription(sberUserId, mailingCategory.ESSENTIAL)
+        userService.changeMailSubscription({email}, mailingCategory.ESSENTIAL)
     }
 }

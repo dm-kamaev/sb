@@ -7,7 +7,7 @@ const mailService = require('./services/mailService'),
 module.exports = Object.keys(templateService).reduce((obj, templateName) => {
     var functionName = `send${capitalizeFirstLetter_(templateName)}`
     obj[functionName] = function(email, locals) {
-        var emailData = templateService[templateName](locals);
+        var emailData = templateService[templateName](locals, email);
         return mailService.sendMail.call(this, email, emailData)
     }
     return obj;

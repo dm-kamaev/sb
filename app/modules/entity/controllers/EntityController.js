@@ -194,14 +194,19 @@ class EntityController extends Controller {
             delete data.id;
             var entity = await (entityService.updateEntity(id, data));
             if (!entity[0]) throw new errors.NotFoundError('Entity', id);
+            entity = entity[1];
             if (entities.length) {
                 var toDelete = entityService.getToDelete(id)
                     .map(e => e.otherEntityId);
-                // console.log(toDelete);
-                // console.log(entities);
-                // console.log(toDelete.filter(del => !~entities.indexOf(del)));
-                handleDeletion_(id, toDelete.filter(del => !~entities.indexOf(del)))
-                handleCreation_(id, toDelete.filter(del => ~entities.indexOf(del)))
+                var remove = toDelete.filter(del => !~entities.indexOf(del))
+                var create = toDelete.filter(del => ~entities.indexOf(del))
+
+                console.log('entities', entities);
+                console.log('todelete', toDelete);
+                console.log('remove', remove);
+                console.log('create', create);
+                // handleDeletion_(id, remove)
+                // handleCreation_(id, create)
                 await (entityService.removeAssociations(id));
                 await (entityService.associateEntities(id, entities));
             }
@@ -245,27 +250,6 @@ class EntityController extends Controller {
     };
 
     /**
-     * @api {post} /entity/:id/:otherId associate entities
-     * @apiName associate Entity
-     * @apiGroup Admin
-     *
-     * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
-     *
-     *
-     */
-    actionAssociate(actionContext, id, otherId) {
-        try {
-            await (entityService.associateEntity(id, otherId));
-        } catch (err) {
-            if (err.message === 'Relation exists') {
-                throw new errors.HttpError('Relation exists', 400);
-            }
-            var ids = [id, otherId].join(' OR ');
-            throw new errors.NotFoundError('Entity', ids);
-        }
-        return null;
-    };
-    /**
      * @api {get} /entity get all entities
      * @apiName All Entities
      * @apiGroup Entity
@@ -280,25 +264,6 @@ class EntityController extends Controller {
             published = request.published;
         var entities = await (entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
-    };
-    /**
-     * @api {delete} /entity/:id/:otherId remove entities association
-     * @apiName remove association
-     * @apiGroup Admin
-     *
-     * @apiParam {Number} id identifier of entity which OWNS relation
-     * @apiParam {Number} otherId identifier of entity which OWNED by
-     *
-     *
-     * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
-     *
-     */
-    actionRemoveAssociation(actionContext, id, otherId) {
-        var deletedCount = await (entityService.removeAssociation(id, otherId));
-        if (!deletedCount) {
-            throw new errors.HttpError('Relation don\'t exists', 400);
-        }
-        return null;
     };
     /**
      * @api {get} /entity/fund/today get today created Funds
@@ -395,9 +360,8 @@ class EntityController extends Controller {
 }
 
 function handleCreation_(entity, entities) {
-    if (!entity.id) entity = entityService.getEntity(entity, undefined, {
-        $or: [true, false]
-    }, [])
+    console.log('creating  ',entities);
+    if (!entity.id) entity = entityService.getEntity(entity)
     if (entity.type == 'direction') {
         var sberUsers = userFundService.getFullSubscribers(entities[0])
         sberUsers.forEach(sberUser => {
@@ -417,9 +381,8 @@ function handleCreation_(entity, entities) {
 }
 
 function handleDeletion_(entity, entities) {
-    if (!entity.id) entity = entityService.getEntity(entity, undefined, {
-        $or: [true, false]
-    }, [])
+    console.log('deleting  ',entities);
+    if (!entity.id) entity = entityService.getEntity(entity)
     if (entity.type == 'fund') {
         var userFunds = userFundService.getSubscribers({
             include: [entity.id]
