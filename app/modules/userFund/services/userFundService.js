@@ -667,15 +667,17 @@ UserFundService.countEntities = function(id) {
 
 UserFundService.getSubscribers = function(params) {
     var include = params.include,
-        exclude = params.exclude || null;
+        exclude = params.exclude;
 
-    console.log(params);
+    if (typeof exclude == 'undefined' || !exclude.length) {
+        exclude = null;
+    }
 
     return await(sequelize.sequelize.query(`
       SELECT q."userFundId" AS id
-FROM (SELECT *
+FROM (SELECT DISTINCT "userFundId"
       FROM "UserFundEntity"
-      WHERE "entityId" IN (:include)
+      ${include && include.length ? `WHERE "entityId" IN (:include)` : ``}
       ORDER BY "userFundId") AS q
 WHERE q."userFundId" NOT IN (SELECT "userFundId"
                              FROM "UserFundEntity"
@@ -688,7 +690,7 @@ WHERE q."userFundId" NOT IN (SELECT "userFundId"
       }))
 }
 
-UserFundService.subscribeMissing = function(userFundsIds, fundId) {
+UserFundService.subscribeUserFunds = function(userFundsIds, fundId) {
     var relations = userFundsIds.map(userFundId => ({
         userFundId,
         entityId: fundId
@@ -698,7 +700,7 @@ UserFundService.subscribeMissing = function(userFundsIds, fundId) {
 }
 
 //TODO: refactor
-UserFundService.getFullSubscribers = function(topicId) {
+UserFundService.getFullSubscribers = function(entityIds) {
     return await(sequelize.sequelize.query(`SELECT
   "SberUser".id,
   "SberUser"."authId"
@@ -707,12 +709,12 @@ FROM "SberUser"
                      AND "UserFund"."deletedAt" IS NULL
                      AND "UserFund".id IN (SELECT "userFundId"
                                            FROM "UserFundEntity"
-                                             INNER JOIN (SELECT "otherEntityId"
+                                             INNER JOIN (SELECT DISTINCT "otherEntityId"
                                                          FROM "EntityOtherEntity"
                                                            JOIN "Entity"
                                                              ON "EntityOtherEntity"."otherEntityId" = "Entity".id AND
                                                                 "Entity".type = 'direction'
-                                                         WHERE "entityId" = :topicId AND "Entity".published = TRUE AND
+                                                         WHERE "entityId" IN (:entityIds) AND "Entity".published = TRUE AND
                                                                "Entity"."deletedAt" IS NULL) AS q
                                                ON "UserFundEntity"."entityId" = q."otherEntityId"
                                            GROUP BY "userFundId"
@@ -722,16 +724,16 @@ FROM "SberUser"
                                                                   ON "EntityOtherEntity"."otherEntityId" = "Entity".id
                                                                      AND "Entity".type = 'direction'
                                                               WHERE
-                                                                "entityId" = :topicId AND "Entity".published = TRUE))
+                                                                "entityId" IN (:entityIds) AND "Entity".published = TRUE))
 WHERE "SberUser"."authId" IS NOT NULL`, {
                      replacements: {
-                        topicId
+                        entityIds
                      },
                      type: sequelize.sequelize.QueryTypes.SELECT
                    }))
 }
 
-UserFundService.unsubscribeUsers = function(userFunds, entities) {
+UserFundService.unsubscribeUserFunds = function(userFunds, entities) {
     return await(sequelize.models.UserFundEntity.destroy({
         where: {
             userFundId: {

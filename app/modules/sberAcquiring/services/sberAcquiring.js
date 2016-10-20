@@ -39,8 +39,8 @@ const sberAcquiring = {};
 sberAcquiring.firstPay = function(params) {
     if (!params.jsonParams) {
         params.jsonParams = JSON.stringify({
-            recurringFrequency: configSberAcquiring.recurringFrequency,
-            recurringExpiry: configSberAcquiring.recurringExpiry,
+            // recurringFrequency: configSberAcquiring.recurringFrequency,
+            // recurringExpiry: configSberAcquiring.recurringExpiry,
             environment: ENV
         });
     }

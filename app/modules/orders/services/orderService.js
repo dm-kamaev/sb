@@ -9,7 +9,7 @@ const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
 const sendMail = require('../../userFund/services/sendMail.js');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
-const microService = require('../../micro/services/microService.js');
+const UserApi = require('../../micro/services/microService.js').UserApi;
 const errors = require('../../../components/errors');
 const orderStatus = require('../enums/orderStatus');
 const orderTypes = require('../enums/orderTypes');
@@ -19,6 +19,7 @@ const logger = require('../../../components/logger').getLogger('main');
 const moment = require('moment');
 const _ = require('lodash');
 const mail = require('../../mail')
+const aqconfig = require('../../../../config/config-sberAcquiring')
 const mailingCategory = require('../../mail/enum/mailingCategory')
 
 
@@ -452,10 +453,13 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     // return
     console.log(paymentResult);
     var orderStatusExtended = sberAcquiring.getStatusAndGetBind({
+        userName: aqconfig.userNameSsl,
+        password: aqconfig.passwordSsl,
         orderNumber: sberAcquOrderNumber,
         orderId: sberAcquPayment.orderId,
         clientId: userFundSubscription.sberUserId
     });
+
     if (orderStatusExtended.actionCode !== 0) {
         OrderService.failedReccurentPayment(sberAcquOrderNumber,
             userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate, userFundSubscription.amount);
@@ -467,7 +471,7 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
         sberAcquOrderId: sberAcquPayment.orderId,
         sberAcquActionCodeDescription: orderStatusExtended.actionCodeDescription,
         amount: orderStatusExtended.amount,
-        status: orderStatusExtended.actionCode === 0 ? orderStatus.PAID : orderStatus.FAILED
+        status: orderStatusExtended.actionCode === 0 ? orderStatus.PAID : orderStatus.PROBLEM_WITH_CARD
     });
 };
 
@@ -498,9 +502,9 @@ OrderService.getMissingDays = function(allDates, date) {
  * @return {[type]}
  */
 OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubscriptionId, error, nowDate, amount) {
-    await (OrderService.updateInfo(sberAcquOrderNumber, {
-        status: orderStatus.PROBLEM_WITH_CARD
-    }));
+    // await (OrderService.updateInfo(sberAcquOrderNumber, {
+    //     status: orderStatus.PROBLEM_WITH_CARD
+    // }));
     var problemOrderInPreviousMonth = await (
         findOrderWithProblemCard_(userFundSubscriptionId, nowDate)
     );
@@ -509,7 +513,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         sberUserId = sberUser.id,
         authId = sberUser.authId;
 
-    var authUser = microService.getUserData(authId);
+    var authUser = new UserApi().getUserData(authId);
     var userEmail = authUser.email;
     if (!userEmail) {
         throw new errors.NotFoundError('email', authId);
@@ -527,7 +531,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         // this is the second time the payment failed
     } else {
         if (sberUser.categories == mailingCategory.ALL) {
-            mail.sendSecondFailire(userEmail, {
+            mail.sendSecondFailure(userEmail, {
                 userName: authUser.firstName,
                 amount
             })

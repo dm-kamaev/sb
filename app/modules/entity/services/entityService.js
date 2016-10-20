@@ -115,7 +115,7 @@ EntityService.updateEntity = function(id, data) {
             deletedAt: null
         },
         returning: true
-    }));
+    }))[1][0];
 };
 
 EntityService.deleteEntity = function(id) {
@@ -219,13 +219,19 @@ EntityService.associateEntities = function(id, otherIds) {
     return await(sequelize.models.EntityOtherEntity.bulkCreate(associations));
 };
 
-EntityService.removeAssociations = function(id) {
+EntityService.removeAssociations = function(id, otherEntityIds) {
     return await(sequelize.models.EntityOtherEntity.destroy({
         where: {
             $or: [{
-                entityId: id
+                entityId: id,
+                otherEntityId: {
+                    $in: otherEntityIds
+                }
             }, {
-                otherEntityId: id
+                otherEntityId: id,
+                entityId: {
+                    $in: otherEntityIds
+                }
             }]
         }
     }));
@@ -304,12 +310,12 @@ EntityService.getEntitiesByTypeWithNested = function(type, includes) {
     }));
 };
 
-EntityService.getToDelete = function(id) {
+EntityService.getAssociated = function(id) {
     return await(sequelize.models.EntityOtherEntity.findAll({
         where: {
             entityId: id
         }
-    }))
+    })).map(e => e.otherEntityId);
 }
 
 module.exports = EntityService;

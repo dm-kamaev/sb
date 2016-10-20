@@ -12,6 +12,7 @@ const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
 const mail = require('../../mail')
 const _ = require('lodash');
+const entityTypes = require('../enums/entityTypes')
 const EntityExtractor = require('../services/extractEntity');
 
 class EntityController extends Controller {
@@ -193,22 +194,24 @@ class EntityController extends Controller {
                 .filter(Number.isInteger);
             delete data.id;
             var entity = await (entityService.updateEntity(id, data));
-            if (!entity[0]) throw new errors.NotFoundError('Entity', id);
-            entity = entity[1];
+            if (!entity) throw new errors.NotFoundError('Entity', id);
             if (entities.length) {
-                var toDelete = entityService.getToDelete(id)
-                    .map(e => e.otherEntityId);
-                var remove = toDelete.filter(del => !~entities.indexOf(del))
-                var create = toDelete.filter(del => ~entities.indexOf(del))
+                var current = entityService.getAssociated(id),
+                    remove  = [],
+                    create  = entities.slice()
 
-                console.log('entities', entities);
-                console.log('todelete', toDelete);
-                console.log('remove', remove);
-                console.log('create', create);
-                // handleDeletion_(id, remove)
-                // handleCreation_(id, create)
-                await (entityService.removeAssociations(id));
-                await (entityService.associateEntities(id, entities));
+                current.forEach(id => {
+                    var i = create.indexOf(id);
+                    if (!~i) remove.push(id)
+                    else     create.splice(i, 1)
+                });
+
+                if (!remove.length && !create.length) return;
+
+                handleDeletion_(entity, remove)
+                handleCreation_(entity, entities)
+                await(entityService.removeAssociations(id, remove));
+                await(entityService.associateEntities(id, create));
             }
             return null;
         } catch (err) {
@@ -360,43 +363,39 @@ class EntityController extends Controller {
 }
 
 function handleCreation_(entity, entities) {
-    console.log('creating  ',entities);
-    if (!entity.id) entity = entityService.getEntity(entity)
-    if (entity.type == 'direction') {
-        var sberUsers = userFundService.getFullSubscribers(entities[0])
+    if (entity.type == entityTypes.DIRECTION) {
+        var sberUsers = userFundService.getFullSubscribers(entities)
         sberUsers.forEach(sberUser => {
             var authUser = userService.findAuthUserByAuthId(sberUser.authId)
             mail.sendPendingDraft(authUser.email, {
                 userName: authUser.userName
             })
         })
-    } else if (entity.type == 'fund') {
-        var userFunds = userFundService.getSubscribers({
+    } else if (entity.type == entityTypes.FUND) {
+        var userFundIds = userFundService.getSubscribers({
             include: entities,
             exclude: [entity.id]
-        })
+        }).map(userFund => userFund.id)
 
-        userFundService.subscribeMissing(userFunds.map(user => user.id), entity.id)
+        userFundService.subscribeUserFunds(userFundIds, entity.id)
     }
 }
 
 function handleDeletion_(entity, entities) {
-    console.log('deleting  ',entities);
-    if (!entity.id) entity = entityService.getEntity(entity)
-    if (entity.type == 'fund') {
-        var userFunds = userFundService.getSubscribers({
-            include: [entity.id]
-        })
+    if (entity.type == entityTypes.FUND) {
         var directions = new EntityExtractor({
-            type: 'direction',
+            type: entityTypes.DIRECTION,
             entityIds: [entity.id]
-        }).extract();
+        }).extract()
+          .map(dir => parseInt(dir))
+          .filter(dir => !~entities.indexOf(dir))
 
-        var directionSubscribersUF = userFundService.getSubscribers({
-            include: directions.filter(dir => !~entities.indexOf(dir))
-        })
-        userFunds = userFunds.filter(uf => !directionSubscribersUF.find(e => e.id == uf.id))
-        userFundService.unsubscribeUsers(userFunds.map(e => e.id), [entity.id])
+        var userFundIds = userFundService.getSubscribers({
+            include: [entity.id],
+            exclude: directions
+        }).map(userFund => userFund.id)
+
+        userFundService.unsubscribeUserFunds(userFundIds, [entity.id])
     }
 }
 
