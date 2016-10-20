@@ -11,12 +11,12 @@ module.exports = function(context) {
         listEntities = context.listEntities;
 
     function createEntities () {
-        var funds = services.entity.generateEntities(3, 'fund');
-        var directions = services.entity.generateEntities(2, 'direction');
-        var topics = services.entity.generateEntities(1, 'topic');
-        var entities = funds.concat(directions, topics);
+        var funds = services.entity.generateEntities(5, 'fund');
+        //var directions = services.entity.generateEntities(2, 'direction');
+        //var topics = services.entity.generateEntities(1, 'topic');
+        //var entities = funds.concat(directions, topics);
         var url = services.url.concatUrl('entity');
-        return Promise.all(entities.map(entity => {
+        return Promise.all(funds.map(entity => {
             return chakram.post(url, entity);
         }));
     }

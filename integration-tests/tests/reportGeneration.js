@@ -51,7 +51,7 @@ describe('Count payments to funds', function() {
 
     before('Register', register(context));
     before('Create entities', createEntities(context));
-    before('Associate entities', associate(context));
+    //before('Associate entities', associate(context));
 
     it('Should add entities', addEntities(context));
     it('Should make first payment', firstPay.withOutCheck(context));
