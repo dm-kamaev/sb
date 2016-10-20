@@ -62,10 +62,10 @@ entityRouter.put('/:id(\\d+)', upload.single('picture'),
     versionedController.actionUpdateEntity);
 entityRouter.delete('/:id(\\d+)',
     versionedController.actionDeleteEntity);
-entityRouter.post('/:id(\\d+)/:otherId(\\d+)',
-    versionedController.actionAssociate);
-entityRouter.delete('/:id(\\d+)/:otherId(\\d+)',
-    versionedController.actionRemoveAssociation);
+// entityRouter.post('/:id(\\d+)/:otherId(\\d+)',
+//     versionedController.actionAssociate);
+// entityRouter.delete('/:id(\\d+)/:otherId(\\d+)',
+//     versionedController.actionRemoveAssociation);
 
 
 module.exports = entityRouter;

@@ -326,4 +326,25 @@ WHERE "sberUserId" = :id`, {
 }));
 };
 
+UserService.changeMailSubscription = function(userData, categories) {
+    var sberUserId = userData.sberUserId,
+        email      = userData.email;
+
+    if (!sberUserId) {
+        var authUser = UserService.findAuthUserByEmail(email)
+
+        if (!authUser) throw new Error('User not Found')
+
+        sberUserId = UserService.findSberUserByAuthId(authUser.id)
+    }
+    
+    return await(sequelize.models.SberUser.update({
+        categories
+    },{
+        where: {
+            id: sberUserId
+        }
+    }))
+}
+
 module.exports = UserService;

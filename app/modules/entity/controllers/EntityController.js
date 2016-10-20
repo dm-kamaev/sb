@@ -4,11 +4,16 @@
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const entityService = require('../services/entityService');
+const userService = require('../../user/services/userService');
+const userFundService = require('../../userFund/services/userFundService')
 const entityView = require('../views/entityView');
 const userFundView = require('../../userFund/views/userFundView');
 const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
+const mail = require('../../mail')
 const _ = require('lodash');
+const entityTypes = require('../enums/entityTypes')
+const EntityExtractor = require('../services/extractEntity');
 
 class EntityController extends Controller {
     /**
@@ -51,8 +56,9 @@ class EntityController extends Controller {
             entities = _.castArray(entities)
                 .map(e => parseInt(e))
                 .filter(Number.isInteger);
-            var entity = await(entityService.createEntity(data));
-            await(entityService.associateEntities(entity.id, entities));
+            var entity = await (entityService.createEntity(data));
+            handleCreation_(entity, entities);
+            await (entityService.associateEntities(entity.id, entities));
             actionContext.response.statusCode = 201;
             actionContext.response.set('Location', `/entity/${entity.id}`);
             return entityView.renderEntity(entity);
@@ -63,7 +69,7 @@ class EntityController extends Controller {
                 throw err;
             }
         }
-    }
+    };
     /**
      * @api {get} /entity/:type get entities by type
      * @apiName get entities by type
@@ -112,9 +118,9 @@ class EntityController extends Controller {
     actionGetEntitiesByType(actionContext, type) {
         var userFundId = actionContext.request.user && actionContext.request.user.userFund.id;
         var published = actionContext.request.published;
-        var entities = await(entityService.getEntitiesByType(type, userFundId, published));
+        var entities = await (entityService.getEntitiesByType(type, userFundId, published));
         return entityView.renderEntities(entities);
-    }
+    };
     /**
      * @api {get} /entity/:id get Entity by id
      * @apiName get Entity
@@ -143,10 +149,10 @@ class EntityController extends Controller {
             published = request.published,
             include = request.query.include;
 
-        var entity = await(entityService.getEntity(id, userFundId, published, include));
+        var entity = await (entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return entityView.renderEntity(entity);
-    }
+    };
     /**
      * @api {delete} /entity/:id delete entity by id
      * @apiName delete Entity
@@ -156,10 +162,10 @@ class EntityController extends Controller {
      *
      */
     actionDeleteEntity(actionContext, id) {
-        var deleted = await(entityService.deleteEntity(id));
+        var deleted = await (entityService.deleteEntity(id));
         if (!deleted) throw new errors.NotFoundError('Entity', id);
         return null;
-    }
+    };
     /**
      * @api {put} /entity/:id update entity by id
      * @apiName update Entity
@@ -187,11 +193,25 @@ class EntityController extends Controller {
                 .map(e => parseInt(e))
                 .filter(Number.isInteger);
             delete data.id;
-            var entity = await(entityService.updateEntity(id, data));
-            if (!entity[0]) throw new errors.NotFoundError('Entity', id);
+            var entity = await (entityService.updateEntity(id, data));
+            if (!entity) throw new errors.NotFoundError('Entity', id);
             if (entities.length) {
-                await(entityService.removeAssociations(id));
-                await(entityService.associateEntities(id, entities));
+                var current = entityService.getAssociated(id),
+                    remove  = [],
+                    create  = entities.slice()
+
+                current.forEach(id => {
+                    var i = create.indexOf(id);
+                    if (!~i) remove.push(id)
+                    else     create.splice(i, 1)
+                });
+
+                if (!remove.length && !create.length) return;
+
+                handleDeletion_(entity, remove)
+                handleCreation_(entity, entities)
+                await(entityService.removeAssociations(id, remove));
+                await(entityService.associateEntities(id, create));
             }
             return null;
         } catch (err) {
@@ -201,7 +221,7 @@ class EntityController extends Controller {
                 throw err;
             }
         }
-    }
+    };
     /**
      * @api {get} /entity/:id/:type get associated entities by id
      * @apiName get Entity By Associated Id
@@ -222,7 +242,7 @@ class EntityController extends Controller {
             var userFundId = request.user && request.user.userFund.id || null,
                 published = request.published;
             var entities =
-                await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
+                await (entityService.getEntitiesByOwnerId(id, type, userFundId, published));
             return entityView.renderEntities(entities);
         } catch (err) {
             if (err.message === 'Not found') {
@@ -230,29 +250,8 @@ class EntityController extends Controller {
             }
             throw err;
         }
-    }
+    };
 
-    /**
-     * @api {post} /entity/:id/:otherId associate entities
-     * @apiName associate Entity
-     * @apiGroup Admin
-     *
-     * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
-     *
-     *
-     */
-    actionAssociate(actionContext, id, otherId) {
-        try {
-            await(entityService.associateEntity(id, otherId));
-        } catch (err) {
-            if (err.message === 'Relation exists') {
-                throw new errors.HttpError('Relation exists', 400);
-            }
-            var ids = [id, otherId].join(' OR ');
-            throw new errors.NotFoundError('Entity', ids);
-        }
-        return null;
-    }
     /**
      * @api {get} /entity get all entities
      * @apiName All Entities
@@ -266,28 +265,9 @@ class EntityController extends Controller {
             user = request.user || {};
         var userFundId = (user.userFund) ? user.userFund.id : null,
             published = request.published;
-        var entities = await(entityService.getAllEntities(userFundId, published));
+        var entities = await (entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
-    }
-    /**
-     * @api {delete} /entity/:id/:otherId remove entities association
-     * @apiName remove association
-     * @apiGroup Admin
-     *
-     * @apiParam {Number} id identifier of entity which OWNS relation
-     * @apiParam {Number} otherId identifier of entity which OWNED by
-     *
-     *
-     * @apiError (Error 404) NotFoundError entity with :id or :otherId not found
-     *
-     */
-    actionRemoveAssociation(actionContext, id, otherId) {
-        var deletedCount = await(entityService.removeAssociation(id, otherId));
-        if (!deletedCount) {
-            throw new errors.HttpError('Relation don\'t exists', 400);
-        }
-        return null;
-    }
+    };
     /**
      * @api {get} /entity/fund/today get today created Funds
      * @apiName get today created funds
@@ -297,11 +277,11 @@ class EntityController extends Controller {
      *
      */
     actionGetTodayFundsCount(actionContext) {
-        var count = await(entityService.getTodayFundsCount());
+        var count = await (entityService.getTodayFundsCount());
         return {
             count: count
         };
-    }
+    };
     /**
      * @api {get} /entity/:id/user-fund get user funds
      * @apiName get user funds associated with this entity
@@ -313,18 +293,18 @@ class EntityController extends Controller {
      */
     actionGetUserFunds(actionContext, id) {
         var published = actionContext.request.published,
-            entity = await(entityService.getUserFunds(id, published));
+            entity = await (entityService.getUserFunds(id, published));
         if (!entity) throw new errors.NotFoundError('Entity', id);
         return userFundView.renderUserFunds(entity.userFund);
-    }
+    };
     /**
      * @api {post} /entity/publishall publish all (test)
      * @apiName publish all
      * @apiGroup Admin
      */
     actionPublishAll(actionContext) {
-        return await(entityService.publishAll());
-    }
+        return await (entityService.publishAll());
+    };
     /**
      * @api {get} /entity/all get entities with include
      * @apiNane get entities with include
@@ -374,11 +354,48 @@ class EntityController extends Controller {
         var type = actionContext.request.query.type;
         var entities;
         try {
-            entities = await(entityService.getEntitiesByTypeWithNested(type, includes));
+            entities = await (entityService.getEntitiesByTypeWithNested(type, includes));
         } catch (err) {
             throw new errors.HttpError('Wrong "include" or "type" query param!', 400);
         }
         return entityView.renderEntities(entities);
+    };
+}
+
+function handleCreation_(entity, entities) {
+    if (entity.type == entityTypes.DIRECTION) {
+        var sberUsers = userFundService.getFullSubscribers(entities)
+        sberUsers.forEach(sberUser => {
+            var authUser = userService.findAuthUserByAuthId(sberUser.authId)
+            mail.sendPendingDraft(authUser.email, {
+                userName: authUser.userName
+            })
+        })
+    } else if (entity.type == entityTypes.FUND) {
+        var userFundIds = userFundService.getSubscribers({
+            include: entities,
+            exclude: [entity.id]
+        }).map(userFund => userFund.id)
+
+        userFundService.subscribeUserFunds(userFundIds, entity.id)
+    }
+}
+
+function handleDeletion_(entity, entities) {
+    if (entity.type == entityTypes.FUND) {
+        var directions = new EntityExtractor({
+            type: entityTypes.DIRECTION,
+            entityIds: [entity.id]
+        }).extract()
+          .map(dir => parseInt(dir))
+          .filter(dir => !~entities.indexOf(dir))
+
+        var userFundIds = userFundService.getSubscribers({
+            include: [entity.id],
+            exclude: directions
+        }).map(userFund => userFund.id)
+
+        userFundService.unsubscribeUserFunds(userFundIds, [entity.id])
     }
 }
 

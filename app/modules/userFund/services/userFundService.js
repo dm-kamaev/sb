@@ -7,7 +7,7 @@ const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const mailService = require('../../auth/services/mailService.js');
-
+const _ = require('lodash')
 const userConfig = require('../../../../config/user-config/config');
 const axios = require('axios').create({
     baseURL: `http://${userConfig.host}:${userConfig.port}`
@@ -661,6 +661,87 @@ UserFundService.countEntities = function(id) {
     return await(sequelize.models.UserFundEntity.count({
         where: {
             userFundId: id
+        }
+    }))
+}
+
+UserFundService.getSubscribers = function(params) {
+    var include = params.include,
+        exclude = params.exclude;
+
+    if (typeof exclude == 'undefined' || !exclude.length) {
+        exclude = null;
+    }
+
+    return await(sequelize.sequelize.query(`
+      SELECT q."userFundId" AS id
+FROM (SELECT DISTINCT "userFundId"
+      FROM "UserFundEntity"
+      ${include && include.length ? `WHERE "entityId" IN (:include)` : ``}
+      ORDER BY "userFundId") AS q
+WHERE q."userFundId" NOT IN (SELECT "userFundId"
+                             FROM "UserFundEntity"
+                             WHERE "UserFundEntity"."entityId" IN (:exclude))`,{
+        replacements: {
+            include,
+            exclude
+        },
+        type: sequelize.sequelize.QueryTypes.SELECT
+      }))
+}
+
+UserFundService.subscribeUserFunds = function(userFundsIds, fundId) {
+    var relations = userFundsIds.map(userFundId => ({
+        userFundId,
+        entityId: fundId
+    }))
+
+    return await(sequelize.models.UserFundEntity.bulkCreate(relations))
+}
+
+//TODO: refactor
+UserFundService.getFullSubscribers = function(entityIds) {
+    return await(sequelize.sequelize.query(`SELECT
+  "SberUser".id,
+  "SberUser"."authId"
+FROM "SberUser"
+  JOIN "UserFund" ON "UserFund"."creatorId" = "SberUser".id
+                     AND "UserFund"."deletedAt" IS NULL
+                     AND "UserFund".id IN (SELECT "userFundId"
+                                           FROM "UserFundEntity"
+                                             INNER JOIN (SELECT DISTINCT "otherEntityId"
+                                                         FROM "EntityOtherEntity"
+                                                           JOIN "Entity"
+                                                             ON "EntityOtherEntity"."otherEntityId" = "Entity".id AND
+                                                                "Entity".type = 'direction'
+                                                         WHERE "entityId" IN (:entityIds) AND "Entity".published = TRUE AND
+                                                               "Entity"."deletedAt" IS NULL) AS q
+                                               ON "UserFundEntity"."entityId" = q."otherEntityId"
+                                           GROUP BY "userFundId"
+                                           HAVING count(*) = (SELECT count(*)
+                                                              FROM "EntityOtherEntity"
+                                                                JOIN "Entity"
+                                                                  ON "EntityOtherEntity"."otherEntityId" = "Entity".id
+                                                                     AND "Entity".type = 'direction'
+                                                              WHERE
+                                                                "entityId" IN (:entityIds) AND "Entity".published = TRUE))
+WHERE "SberUser"."authId" IS NOT NULL`, {
+                     replacements: {
+                        entityIds
+                     },
+                     type: sequelize.sequelize.QueryTypes.SELECT
+                   }))
+}
+
+UserFundService.unsubscribeUserFunds = function(userFunds, entities) {
+    return await(sequelize.models.UserFundEntity.destroy({
+        where: {
+            userFundId: {
+               $in: userFunds
+            },
+            entityId: {
+                $in: entities
+            }
         }
     }))
 }

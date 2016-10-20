@@ -18,8 +18,11 @@ extractionService.getSubscribedUserFunds = function(entityIds) {
     var userFundIds = await(sequelize.sequelize.query(`
         SELECT DISTINCT "UserFundEntity"."userFundId"
         FROM "UserFundEntity"
-        WHERE "UserFundEntity"."entityId" IN (${entityIds})`, {
-            type: sequelize.sequelize.QueryTypes.SELECT
+        WHERE "UserFundEntity"."entityId" IN (:entityIds)`, {
+            type: sequelize.sequelize.QueryTypes.SELECT,
+            replacements: {
+                entityIds
+            }
         }));
     return userFundIds.map(id => id.userFundId);
 }

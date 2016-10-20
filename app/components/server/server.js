@@ -19,6 +19,7 @@ const callbackRouter = require('../../modules/sberAcquiring/router');
 const orderRouter = require('../../modules/orders/router');
 const statementRouter = require('../../modules/statement/router');
 const techRouter = require('../../modules/tech/router');
+const mailRouter = require('../../modules/mail/router');
 
 const headers = require('./middleware/headers');
 const session = require('./middleware/session/session');
@@ -46,6 +47,7 @@ app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use('/entities', express.static(path.join(__dirname, '../../../public/uploads/entities')));
+app.use('/mail', express.static(path.join(__dirname, '../../../public/mail_static')))
 
 app.use('/callback', callbackRouter);
 
@@ -62,6 +64,7 @@ app.use(/\/v?\d*\.?\d*\/?auth/, authRouter);
 app.use(/\/v?\d*\.?\d*\/?order/, orderRouter);
 app.use(/\/v?\d*\.?\d*\/?statement/, statementRouter);
 app.use(/\/v?\d*\.?\d*\/?tech/, techRouter);
+app.use(/\/v?\d*\.?\d*\/?mail/, mailRouter);
 
 app.use((req, res, next) => {
     res.status(404).json([{

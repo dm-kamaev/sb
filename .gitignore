@@ -8,6 +8,7 @@ public/*
 !public/uploads
 !public/meta_templates
 !public/mail_templates
+!public/mail_static
 /app/public/*
 !app/public/admin/
 /doc

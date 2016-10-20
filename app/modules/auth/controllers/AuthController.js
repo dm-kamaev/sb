@@ -152,7 +152,7 @@ class AuthController extends Controller {
         if (!tryToken.resolve) { throw new errors.HttpError(tryToken.message, 400); }
 
         var token = tryToken.data;
-        mail.sendConfirmation(userData.email, {
+        mail.sendConfirmation(email, {
             userName: authUser.firstName,
             link: getVerifyLink_(token)
         })
@@ -222,7 +222,7 @@ class AuthController extends Controller {
 
         var tryLogin = new PasswordAuth({ ctx }).login(sberUser);
         if (!tryLogin.resolve) { throw new errors.HttpError(tryLogin.message, 400); }
-        
+
         return null;
     }
 
