@@ -100,7 +100,6 @@ class UserFundController extends Controller {
         var entity = entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
-        console.log('entityIds=', entityIds);
 
         entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
         userFundService.addEntities({ userFundId, entityIds });

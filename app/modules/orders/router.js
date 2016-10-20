@@ -17,7 +17,6 @@ var versionedController = new VersionedController(controllersArray);
 
 orderRouter.get('/:sberAcquOrderNumber(\\d+)', versionedController.actionGetOrderStatus);
 orderRouter.get('/:sberAcquOrderNumber(\\d+)/entity', versionedController.actionGetOrderComposition);
-orderRouter.get('/generate-report/:sberOrderId', versionedController.actionGenerateReportTest);
 
 
 module.exports = orderRouter;

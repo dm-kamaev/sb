@@ -75,4 +75,13 @@ module.exports = class StatementController extends Controller {
             statementService.getAll()
         );
     }
+
+    /**
+     * @api {get} /statement/count-payments-test
+     * @apiName count payments for integration tests
+     * @apiGroup Test
+     */
+    actionCountPaymentsTest(actionContext, sberOrderId) {
+        return await(statementService.generateReportTest(sberOrderId));
+    }
 };
