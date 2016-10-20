@@ -38,8 +38,4 @@ module.exports = class OrderController extends Controller {
         }
         throw new errors.HttpError('Unathorized', 403);
     }
-
-    actionGenerateReportTest(actionContext, sberOrderId) {
-        return await(orderService.generateReportTest(sberOrderId));
-    }
 };
