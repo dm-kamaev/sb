@@ -128,22 +128,17 @@ StatementService.countPayments = function(approvedOrders) {
     var fundsArray = [];
     var sumModulo = 0;
 
-    paidOrders.forEach(order => {
-        var funds = approvedOrders.userFundSnapshot.fund;
+    approvedOrders.forEach(order => {
+        var funds = order.userFundSnapshot.fund;
         var fundsCount = funds.length;
         var fundPayment = Math.trunc(order.amount / fundsCount);
-        var modulo = order.amount - (fundPayment * orderFunds.count);
-
-        funds = funds.map(fund => {
-            fund.payment = fundPayment;
-            return fund;
-        });
+        var modulo = order.amount - (fundPayment * fundsCount);
 
         funds.forEach(fund => {
             fund.payment = fundPayment;
             var fundIndex = fundsArray.findIndex((elem, index) =>
                 elem.id === fund.id);
-
+            // prevent fund duplication in result array
             if (fundIndex != -1) {
                 fundsArray[fundIndex].payment += fund.payment;
             } else {
@@ -157,15 +152,14 @@ StatementService.countPayments = function(approvedOrders) {
         payments: fundsArray,
         sumModulo: sumModulo
     };
-
     return result;
 }
 
-StatementService.generateReportTest = async(function(sberOrderId) {
+//TODO: delete it for production build!
+StatementService.generateReportTest = function(sberOrderId) {
     var orders = await (sequelize.models.Order.findAll({
         attributes: ['amount', 'userFundSnapshot'],
         where: {
-            status: orderStatus.PAID,
             sberAcquOrderId: sberOrderId,
             userFundSnapshot: {
                 $ne: null
@@ -173,7 +167,7 @@ StatementService.generateReportTest = async(function(sberOrderId) {
         }
     }));
     return StatementService.countPayments(orders);
-});
+};
 
 
 

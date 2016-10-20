@@ -38,6 +38,4 @@ module.exports = class OrderController extends Controller {
         }
         throw new errors.HttpError('Unathorized', 403);
     }
-
-    
 };
