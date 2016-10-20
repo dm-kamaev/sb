@@ -95,11 +95,12 @@ class UserFundController extends Controller {
      */
     actionAddEntity(ctx, entityId) {
         var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
-            entityApi  = new EntityApi({ entityId });
+            entityApi  = new EntityApi({ entityId: parseInt(entityId, 10) });
 
         var entity = entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
+        console.log('entityIds=', entityIds);
 
         entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
         userFundService.addEntities({ userFundId, entityIds });

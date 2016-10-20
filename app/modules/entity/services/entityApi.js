@@ -88,6 +88,13 @@ module.exports = class EntityApi {
                 entityIds
             }).extract();
             entityIds = entityIds.concat(fundIds);
+        } else if (type === entityTypes.TOPIC) {
+            var fundIds = new ExtractEntity({
+                type: entityTypes.TOPIC,
+                entityIds,
+                onlyType: 'all',
+            }).extract();
+            entityIds = entityIds.concat(fundIds);
         }
         return entityIds;
     }
