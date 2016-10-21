@@ -40,7 +40,6 @@ class AuthController extends Controller {
      * @api {post} /auth/logout logout
      * @apiName logout
      * @apiGroup Auth
-     * @apiSuccess {null}
      */
     actionLogout(ctx) {
         return new PasswordAuth({ ctx }).logout();
@@ -145,7 +144,6 @@ class AuthController extends Controller {
      * @apiName send verification mail
      * @apiGroup Auth
      *
-     * @apiSuccess {null}
      * @apiError (Error 400) HttpError generateToken via passport
      */
     actionSendVerification(ctx) {
@@ -175,7 +173,6 @@ class AuthController extends Controller {
      *
      * @apiParam {String} token jwt example: ?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRrYW1hZXZAY2hhbmdlcnMudGVhbSIsImlhdCI6MTQ3NjI2NjI3Mn0.Bke4DvHu_MeR-lFiF9uEBJgCdCiUEyOsnAiKwmZ_jz8
      *
-     * @apiSuccess {null}
      * @apiError (Error 400) HttpError verifyToken via passport
      */
     // before this function, call actionSendVerification
@@ -207,7 +204,6 @@ class AuthController extends Controller {
      *    "token": "TOKEN",
      *    "password": "123qwe"
      * }
-     * @apiSuccess {null}
      * @apiError (Error 400) HttpError verifyToken via passport
      */
     actionChangePassword(ctx) {
@@ -246,7 +242,6 @@ class AuthController extends Controller {
      * {
      *    "email": "msrylkin@gmail.com"
      * }
-     * @apiSuccess {null}
      * @apiError (Error 400) HttpError generateToken via passport
      */
     actionSendEmailForChangePassword(ctx) {
