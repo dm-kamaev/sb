@@ -108,7 +108,6 @@ class UserFundController extends Controller {
      * @apiName remove entity
      * @apiGroup UserFund
      *
-     * @apiSuccess {null}
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
