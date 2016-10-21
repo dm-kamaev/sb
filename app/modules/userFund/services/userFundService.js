@@ -212,49 +212,6 @@ UserFundService.removeEntities = function(data) {
 };
 
 
-UserFundService.addEntity = function(id, entityId) {
-    return await(sequelize.sequelize.query(`INSERT INTO "UserFundEntity"
-            (id,
-            "userFundId",
-            "entityId",
-            "createdAt",
-            "updatedAt") VALUES
-                                (DEFAULT,
-                                :userFundId,
-                                (SELECT id
-                                        FROM "Entity"
-                                        WHERE id = :entityId
-                                        AND "Entity"."deletedAt" IS NULL
-                                        AND "Entity"."published" = true),
-                                CURRENT_TIMESTAMP,
-                                CURRENT_TIMESTAMP)`, {
-                                    type: sequelize.sequelize.QueryTypes.INSERT,
-                                    replacements: {
-                                        userFundId: id,
-                                        entityId
-                                    }
-                                }));
-};
-
-UserFundService.removeEntity = function(id, entityId) {
-    return await(sequelize.sequelize.query(`DELETE FROM "UserFundEntity"
-    WHERE "userFundId" = :userFundId
-      AND "entityId" = :entityId
-      AND "userFundId" NOT IN (SELECT "userFundId"
-    FROM "UserFundEntity"
-      JOIN "UserFund" ON "UserFund".id = "UserFundEntity"."userFundId"
-    GROUP BY "userFundId", "UserFund".enabled
-    HAVING count(*) = 1
-       AND "UserFund".enabled = true)
-    RETURNING *`, {
-      type: sequelize.sequelize.QueryTypes.SELECT,
-      replacements: {
-          userFundId: id,
-          entityId
-      }
-    }))
-};
-
 UserFundService.getEntities = function(id) {
     var userFund = await(sequelize.models.UserFund.findOne({
         where: {
