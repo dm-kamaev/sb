@@ -107,9 +107,10 @@ class AuthController extends Controller {
      *   "email": "msrylkin@gmail.com",
      *   "password": "123456"
      * }
-     * @apiSuccess {json} {
-     *     status,
-     *     sid:,   
+     * @apiSuccessExample {Object}
+     * {
+     *     status, //userFund
+     *     sid     //token
      * }
      * @apiError (Error 400) HttpError login via passport
      */
