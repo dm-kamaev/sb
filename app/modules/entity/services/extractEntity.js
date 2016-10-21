@@ -15,7 +15,7 @@ module.exports = class ExtractEntity {
      * @param  {[obj]} params {
      *   type: 'FUND' || 'DIRECTION' || 'TOPIC' // what type entityIds
      *   entityIds, // array [ 1,2,3 ]
-     *   only_type: 'FUNDS' || 'DIRECTION' || 'TOPIC' // type
+     *   skipType: 'FUNDS' || 'DIRECTION' || 'TOPIC' // skip type entity
      * }
      * @return {[array]}  array entityId from FUNDS, TOPIC, DIRECTIONS
      */
@@ -30,7 +30,7 @@ module.exports = class ExtractEntity {
         this.type              = params.type;
         this.entityIds         = params.entityIds;
         this.EntityOtherEntity = tables.EntityOtherEntity;
-        this.onlyType          = params.onlyType || false;
+        this.skipType          = params.skipType || false;
     }
     /**
      * extract from directions to funds and extract from funds to directions (uniq)
@@ -41,7 +41,7 @@ module.exports = class ExtractEntity {
             type              = this.type,
             entityIds         = this.entityIds;
 
-        var skipType = this.onlyType;
+        var skipType = this.skipType;
         var otherEntities = getEntitiesOtherEntity_(entityIds),
             uniqEntityIds = {};
         if (type === entityTypes.DIRECTION || type === entityTypes.FUND) {

@@ -191,6 +191,27 @@ UserFundService.addEntities = function(data) {
 };
 
 
+/**
+ * remove entities in userFund
+ * @param  {[obj]} data {
+ *   userFundId, // int
+ *   entityIds,  // array [ 1, 2, 3 ]
+ * }
+ * @return {[type]}      [description]
+ */
+UserFundService.removeEntities = function(data) {
+    var userFundId = data.userFundId, entityIds = data.entityIds;
+    await (sequelize.models.UserFundEntity.destroy({
+        where: {
+            userFundId,
+            entityId: {
+                $in: entityIds
+            }
+        }
+    }));
+};
+
+
 UserFundService.addEntity = function(id, entityId) {
     return await(sequelize.sequelize.query(`INSERT INTO "UserFundEntity"
             (id,

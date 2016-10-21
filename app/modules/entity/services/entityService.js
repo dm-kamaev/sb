@@ -165,11 +165,6 @@ function getEntityByEntityId_(id, type, published) {
     }));
 }
 
-EntityService.getEntityOnlyOne = function (where) {
-    return await(sequelize.models.Entity.findOne({ where }));
-}
-
-
 
 EntityService.associateEntity = function(id, otherId) {
     var relationsCount = await(sequelize.models.EntityOtherEntity.count({
