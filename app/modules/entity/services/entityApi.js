@@ -85,14 +85,15 @@ module.exports = class EntityApi {
         if (type === entityTypes.DIRECTION) {
             var fundIds = new ExtractEntity({
                 type: entityTypes.DIRECTION,
-                entityIds
+                entityIds,
+                skipType: entityTypes.TOPIC,
             }).extract();
             entityIds = entityIds.concat(fundIds);
         } else if (type === entityTypes.TOPIC) {
             var fundIds = new ExtractEntity({
                 type: entityTypes.TOPIC,
                 entityIds,
-                onlyType: 'all',
+                skipType: 'nothing',
             }).extract();
             entityIds = entityIds.concat(fundIds);
         }

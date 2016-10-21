@@ -97,7 +97,7 @@ class UserFundController extends Controller {
         var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
             entityApi  = new EntityApi({ entityId: parseInt(entityId, 10) });
 
-        var entity = entityApi.checkExist();
+        entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
@@ -118,7 +118,7 @@ class UserFundController extends Controller {
         var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
             entityApi  = new EntityApi({ entityId });
 
-        var entity = entityApi.checkExist();
+        entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
