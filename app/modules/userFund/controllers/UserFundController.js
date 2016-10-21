@@ -35,18 +35,17 @@ class UserFundController extends Controller {
      *     "description": "sample description"
      * }
      *
+     * @apiSuccess {null}
      * @apiError (Error 404) NotFoundError user fund not found
      */
     actionUpdateUserFund(ctx) {
-        var request = ctx.request  || {},
-            user    = request.user || {},
-            data    = request.body || {};
-        var userFund   = user.userFund || {},
-            userFundId = userFund.id || null;
-        if (!userFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundId); }
+        var passwordAuth = new PasswordAuth({ ctx }),
+            userFundId   = passwordAuth.getUserFund('id'),
+            title        = passwordAuth.getPostData('title'),
+            description  = passwordAuth.getPostData('description');
         var updatedCount = await(userFundService.updateUserFund(userFundId, {
-            title: data.title || '',
-            description: data.description || '',
+            title,
+            description,
         }));
         if (!updatedCount[0]) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundId); }
         return null;
@@ -89,7 +88,7 @@ class UserFundController extends Controller {
      * @apiName add entity
      * @apiGroup UserFund
      *
-     *
+     * @apiSuccess { null }
      * @apiError (Error 404) NotFoundError "entity", "userfund", "type of organization" not found
      * @apiError (Error 400) HttpError relation exists
      */
@@ -111,6 +110,7 @@ class UserFundController extends Controller {
      * @apiName remove entity
      * @apiGroup UserFund
      *
+     * @apiSuccess {null}
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
