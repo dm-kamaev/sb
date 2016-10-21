@@ -35,7 +35,6 @@ class UserFundController extends Controller {
      *     "description": "sample description"
      * }
      *
-     * @apiSuccess {null}
      * @apiError (Error 404) NotFoundError user fund not found
      */
     actionUpdateUserFund(ctx) {
@@ -88,7 +87,6 @@ class UserFundController extends Controller {
      * @apiName add entity
      * @apiGroup UserFund
      *
-     * @apiSuccess { null }
      * @apiError (Error 404) NotFoundError "entity", "userfund", "type of organization" not found
      * @apiError (Error 400) HttpError relation exists
      */
