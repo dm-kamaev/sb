@@ -70,6 +70,25 @@ module.exports = class PasswordAuth {
     }
 
 
+    getPostData(key) {
+        var body = this.request.body || {};
+        if (!key) {
+            return body;
+        } else {
+            var postEl = body[key] || null;
+            if (!postEl && postEl !== 0 && postEl !== '') {
+                throw new errors.NotFoundError(
+                    i18n.__('Not found field "{{key}}" in POST data {{postEl}}', {
+                        key: [key],
+                        postEl,
+                    })
+                );
+            }
+            return postEl;
+        }
+    }
+
+
      /**
      * get user
      * @param  {[str]} key example: id, email
@@ -82,8 +101,15 @@ module.exports = class PasswordAuth {
             return user;
         } else {
             var userEl = user[key] || null;
-            // TODO: added test for error
-            if (!userEl) { throw new errors.NotFoundError(i18n.__('UserFund'), userEl); }
+            if (!userEl) {
+                throw new errors.NotFoundError(
+                    i18n.__('Not found field "{{key}}" in User {{userEl}}', {
+                        key: [key],
+                        userEl,
+                    })
+                );
+            }
+            return userEl;
         }
     }
 
@@ -101,8 +127,14 @@ module.exports = class PasswordAuth {
             return userFund;
         } else {
             var userFundEl = userFund[key] || null;
-            // TODO: added test for error
-            if (!userFundEl) { throw new errors.NotFoundError(i18n.__('UserFund'), userFundEl); }
+            if (!userFundEl) {
+                throw new errors.NotFoundError(
+                    i18n.__('Not found field "{{key}}" in UserFund: {{userFundEl}}', {
+                        key: [key],
+                        userFundEl,
+                    })
+                );
+            }
             return userFundEl;
         }
     }
