@@ -177,6 +177,28 @@ sberAcquiring.createPayByBind = function(params) {
     }
 };
 
+sberAcquiring.createAqOrder = function(params) {
+    try {
+      return await(axios.get(configSberAcquiring.registerOrder, {
+          params: {
+              userName: params.userName,
+              password: params.password,
+              amount: params.amount,
+              orderNumber: params.sberAcquOrderNumber,
+              returnUrl: params.returnUrl || 'http://google.com',
+              failUrl: params.failUrl || 'http://google.com',
+              language: 'ru',
+              clientId: params.clientId,
+              jsonParams: {
+                  environment: ENV
+              }
+          }
+      })).data;
+    } catch (err) {
+        throw new errors.AcquiringError(err.message)
+    }
+}
+
 
 /* params –– {
     orderId:   '6984845d-f910-4b49-9fed-9aa3159e2b9b',
