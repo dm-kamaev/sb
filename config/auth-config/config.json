@@ -6,11 +6,11 @@
         "port": 6379
       },
     "logFile":"/opt/sber-together-api/current/runtime/auth-service.log",
-    "authentification": {
+    "authentication": {
 	"twitter": {
             "clientId": "",
-            "clientSecret":"",  
-            "redirectUri": "http://myserver.lan/tw"   
+            "clientSecret":"",
+            "redirectUri": "http://myserver.lan/tw"
         }
     }
 }
