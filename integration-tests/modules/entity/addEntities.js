@@ -11,7 +11,7 @@ module.exports = function(context) {
         var statusCode = respObj.response.statusCode,
             body       = respObj.response.body;
         this.assert(
-            statusCode === 200,
+            statusCode === 201,
             'Error status ' + statusCode + '; body:' + body
         );
         return chakram.wait();
@@ -19,10 +19,9 @@ module.exports = function(context) {
 
     return function () {
         var url = services.url.concatUrl('user-fund');
-        //expect(response).checkAddEntity();
         var results = Promise.all(context.entities.map(entity => {
             return chakram.post(url + '/' + entity.id);
-        }))
+        }));
         return chakram.waitFor([
             results.then(res => {
                 return Promise.all(res.map(result => {
