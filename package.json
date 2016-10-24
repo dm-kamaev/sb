@@ -64,6 +64,7 @@
     "sequelize-cli": "1.9.1",
     "user-service": "git+ssh://git@github.com/c7s/user-service.git#dev",
     "uuid": "2.0.2",
+    "xlsx": "^0.8.0",
     "yargs": "5.0.0"
   },
   "devDependencies": {

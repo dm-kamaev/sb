@@ -47,7 +47,7 @@ app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use('/entities', express.static(path.join(__dirname, '../../../public/uploads/entities')));
-app.use('/mail', express.static(path.join(__dirname, '../../../public/mail_static')))
+app.use('/mail_static', express.static(path.join(__dirname, '../../../public/mail_static')))
 
 app.use('/callback', callbackRouter);
 

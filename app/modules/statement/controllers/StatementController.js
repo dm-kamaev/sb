@@ -19,7 +19,7 @@ module.exports = class StatementController extends Controller {
      * @apiParam {Object} statement statement file
      */
     actionUploadStatement(ctx) {
-        var file = ctx.request.file && ctx.request.file.buffer.toString(),
+        var file = ctx.request.file && ctx.request.file.buffer,
             dateStart = ctx.data.dateStart,
             dateEnd = ctx.data.dateEnd;
 
@@ -33,13 +33,7 @@ module.exports = class StatementController extends Controller {
             dateStart,
             dateEnd,
             fileName: ctx.request.file.originalname,
-            bankOrders: [
-                {
-                    sberAcquOrderNumber: 35701,
-                    chargeDate: new Date(),
-                    amount: 123123
-                }
-            ]
+            bankOrders
         };
 
         var result = statementService.handleStatement(statement);

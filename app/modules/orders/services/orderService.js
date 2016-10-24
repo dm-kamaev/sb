@@ -21,6 +21,7 @@ const _ = require('lodash');
 const mail = require('../../mail')
 const aqconfig = require('../../../../config/config-sberAcquiring')
 const mailingCategory = require('../../mail/enum/mailingCategory')
+const BASEURL = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
 
 
 var OrderService = {};
@@ -139,8 +140,8 @@ OrderService.firstPayOrSendMessage = function(params) {
             responceSberAcqu = sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: `${config.hostname}/#success?app=${params.isCordova}&type=payment`,
-                failUrl: `${config.hostname}/#failure?app=${params.isCordova}&type=payment`,
+                returnUrl: `${BASEURL}/#success?app=${params.isCordova}&type=payment`,
+                failUrl: `${BASEURL}/#failure?app=${params.isCordova}&type=payment`,
                 language: 'ru',
                 clientId: params.sberUserId,
             });

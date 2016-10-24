@@ -2,19 +2,15 @@
 
 module.exports = function(sequelize, DataTypes) {
     var StatementItem = sequelize.define('StatementItem', {
-        id: {
-            allowNull: false,
-            autoIncrement: true,
-            primaryKey: true,
-            type: DataTypes.INTEGER,
-        },
         sberAcquOrderNumber: {
             type: DataTypes.INTEGER,
             references: {
                 model: 'Order',
                 key: 'sberAcquOrderNumber'
             },
-            allowNull: false
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
         },
         chargeDate: {
             type: DataTypes.DATE,
