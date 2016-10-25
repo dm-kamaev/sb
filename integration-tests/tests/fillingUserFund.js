@@ -30,21 +30,38 @@ describe('filling userFund', function() {
     // before('Logout',   logout(context));
     // before('Register', register(context));
     it('Create 2 funds, 2 direction, 1 topic', function () {
-        var entity = services.entity;
+        var entity     = services.entity;
         var funds      = context.set('funds',      entity.generateEntities(2, 'fund'));
         var directions = context.set('directions', entity.generateEntities(2, 'fund'));
-        var topics     = context.set('topics',     entity.generateEntities(2, 'topics'));
-        var entities   = context.set('entities', funds.concat(directions).concat(topics).slice(0,1));
+        var topics     = context.set('topics',     entity.generateEntities(1, 'topics'));
+        var entities   = context.set('entities', funds.concat(directions).concat(topics));
         // context.set('test', 'test_set');
         // return chakram.wait();
     });
 
-    it('Add entities',        () => entitiesApi.create());
+    it('Add entities', () => entitiesApi.create());
+    /*                               topic 1
+                                        |
+                                        |
+                         direction 1 - - - - - direction 2
+                             |                     |
+                             |                     |
+                    fund 1 - - - fund 2 - - - - - -|
+    */
     // it('Associated entities', () => {
+    //     var funds      = context.get('funds'),
+    //         directions = context.get('directions'),
+    //         topics     = context.get('topics');
+    //     console.log(funds);
+    //     entitiesApi.associateEntity(funds[0].id, directions[0].id);
+    //     entitiesApi.associateEntity(funds[1].id, directions[0].id);
 
-    //     entitiesApi.associateEntity()
+    //     entitiesApi.associateEntity(funds[1].id, directions[1].id);
+
+    //     entitiesApi.associateEntity(directions[0].id, topics[0].id);
+    //     entitiesApi.associateEntity(directions[1].id, topics[0].id);
+    //     return chakram.wait();
     // });
-
 
     it('Debug', function () {
         console.log(context.get('entities'));
