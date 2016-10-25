@@ -21,6 +21,7 @@ const userFundView = require('../views/userFundView');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const subscriptionExtractionService =
     require('../services/subscriptionExtractionService');
+const _ = require('lodash');
 
 
 class UserFundController extends Controller {
@@ -132,8 +133,11 @@ class UserFundController extends Controller {
      *
      * @apiError (Error 404) NotFoundError userfund not found
      */
-    actionGetEntities(actionContext, id) {
-        var userFundId = actionContext.request.user.userFund.id;
+    actionGetEntities(ctx, id) {
+        var passwordAuth = new PasswordAuth({ ctx });
+        if (_.isEmpty(passwordAuth.getUser())) { return []; }
+        var userFundId = passwordAuth.getUserFund('id');
+
         var entities = await(userFundService.getEntities(userFundId));
         var renderedEntities = entityView.renderEntities(entities);
         return renderedEntities.map(entity => Object.assign(entity, {
