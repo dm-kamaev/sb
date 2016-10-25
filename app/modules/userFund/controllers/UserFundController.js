@@ -15,7 +15,6 @@ const ExtractEntity = require('../../entity/services/extractEntity.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
-const sendMail = require('../services/sendMail.js');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
@@ -302,9 +301,6 @@ class UserFundController extends Controller {
         // removed UF, card and send email owner
         await(userFundService.removeUserFund(userFundId));
         await(userService.removeCard(sberUserId));
-        new sendMail.userFund().removeUserFunds([
-            { authId: sberUser.authId, userFundName: userFund.title },
-        ]);
 
         // disable subcriptions on UF, send email to subscribers
         var subscriptions = userFundService.getSubscriptions({ userFundId }) || [];
@@ -322,7 +318,6 @@ class UserFundController extends Controller {
             { userFundId },
             { enabled: false }
         ));
-        new sendMail.userFundSubscription().disableSubscriptions(dataForMail);
 
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund

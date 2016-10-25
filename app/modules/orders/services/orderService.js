@@ -7,7 +7,6 @@ const util = require('util');
 const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
-const sendMail = require('../../userFund/services/sendMail.js');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const UserApi = require('../../micro/services/microService.js').UserApi;
 const errors = require('../../../components/errors');
@@ -589,9 +588,6 @@ function disableUserFundsAndSendMail_(hasNotSubscribers) {
         }
     });
     disableUserFunds_(hasNotSubscribers);
-    new sendMail.userFund({
-        isReccurent: true
-    }).disableUserFunds(dataForMail);
 }
 
 

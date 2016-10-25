@@ -8,7 +8,7 @@ const async = require('asyncawait/async')
 const EmailTemplate = require('email-templates').EmailTemplate
 const templatesPath = path.join(__dirname, '../../../../public/mail_templates')
 const config = require('../../../../config/config')
-const HOSTNAME = `${config.hostname.replace(/\/+$/, '')}${~config.hostname.indexOf('https://') ? '' : `:${config.port}`}`
+const HOSTNAME = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
 const STATIC_PATH = `${HOSTNAME}/mail_static`
 const getUnsubscribeLink_ = token => `${HOSTNAME}/mail/unsubscribe?token=${token}`
 const Jwt = require('../../auth/services/jwt');

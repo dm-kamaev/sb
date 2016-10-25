@@ -1,6 +1,6 @@
 {
   "hostname": "https://sberbankvmeste.ru",
-  "port": 80,
+  "port": 443,
   "environment": "prod",
   "preventOrderSpamming": true
 }
