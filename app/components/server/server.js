@@ -29,7 +29,7 @@ const metaTags = require('./middleware/metaTags');
 const accesslog = require('./middleware/access-log');
 const hideRoutes = require('./middleware/hideRoutes');
 
-app.use(hideRoutes, debugForm);
+app.use('/dev', hideRoutes, debugForm);
 
 app.set('view engine', 'pug');
 
