@@ -27,8 +27,9 @@ const passport = require('./middleware/passport');
 const anonymous = require('./middleware/anonymous');
 const metaTags = require('./middleware/metaTags');
 const accesslog = require('./middleware/access-log');
+const hideRoutes = require('./middleware/hideRoutes');
 
-app.use('/', debugForm);
+app.use(hideRoutes, debugForm);
 
 app.set('view engine', 'pug');
 
@@ -43,7 +44,7 @@ app.use(bodyparser.urlencoded({
 app.use(metaTags);
 
 app.set('views', path.join(__dirname, '../../../public/meta_templates'));
-app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
+app.use('/doc', hideRoutes, express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use('/entities', express.static(path.join(__dirname, '../../../public/uploads/entities')));
