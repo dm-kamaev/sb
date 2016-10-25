@@ -19,7 +19,7 @@ module.exports = class StatementController extends Controller {
      * @apiParam {Object} statement statement file
      */
     actionUploadStatement(ctx) {
-        var file = ctx.request.file && ctx.request.file.buffer,
+        var file = ctx.request.file && ctx.request.file.buffer.toString(),
             dateStart = ctx.data.dateStart,
             dateEnd = ctx.data.dateEnd;
 

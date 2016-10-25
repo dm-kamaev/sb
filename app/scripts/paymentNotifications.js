@@ -8,7 +8,7 @@ const userFundService = require('../modules/userFund/services/userFundService')
 const mail = require('../modules/mail')
 const argv = require('yargs').argv;
 const nowDate = argv.now ? new Date(argv.now) : new Date();
-
+const logger = require('../components/logger').getLogger('main');
 
 (async(function() {
     var sberUsers = await (models.SberUser.findAll({

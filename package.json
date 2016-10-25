@@ -34,6 +34,7 @@
     "connect-session-sequelize": "3.1.0",
     "continuation-local-storage": "3.1.7",
     "cookie-signature": "1.0.6",
+    "csv": "^1.1.0",
     "deployment": "git+ssh://git@github.com:c7s/deployment.git#dev",
     "ejs": "^2.5.2",
     "email-templates": "^2.5.2",

@@ -5,7 +5,7 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const excel = require('../../../components/excel');
 const moment = require('moment');
-const XLSX = require('xlsx');
+const parse = require('csv-parse');
 const path = require('path')
 const fs = require('fs')
 
@@ -25,44 +25,25 @@ StatementService.getAll = function(where) {
 
 
 StatementService.parseStatement = function(file) {
+    return await (new Promise((resolve, reject) => {
+        var opts = { delimiter: ';' }
+        parse(file, opts, function(err, output) {
+            if (err) reject(err);
+            output.splice(0, 1)
+            resolve(output.map(row => {
+                var dates = row[7].split('.'),
+                    year = dates[2],
+                    month = dates[1] - 1,
+                    day = dates[0]
 
-    var workbook = XLSX.read(file)
-    var sheetName = workbook.SheetNames[0]
-    var worksheet = workbook.Sheets[sheetName];
-    var headers = {};
-    var data = [];
-    for (let z in worksheet) {
-        if (z[0] === '!') continue;
-
-        var col = z.substring(0, 1);
-        var row = parseInt(z.substring(1));
-        var value = worksheet[z].v;
-
-        if (row == 1) {
-            headers[col] = value;
-            continue;
-        }
-
-        if (!data[row]) data[row] = {};
-        data[row][headers[col]] = value;
-    }
-    data.shift()
-    data.shift()
-
-    return data.map(e => {
-        var dates = e['ДАТА_РАСЧ'].split('.'),
-            year = dates[2],
-            month = dates[1],
-            day = dates[0];
-
-        return {
-            sberAcquOrderNumber: e['ID_2'],
-            chargeDate: new Date(year, month, day),
-            amount: e['СУММА_РАСЧ'] * 100
-        }
-    })
-
-    return data;
+                return {
+                    sberAcquOrderNumber: row[14],
+                    chargeDate: new Date(year, month, day),
+                    amount: row[9] * 100
+                }
+            }))
+        })
+    }))
 };
 
 StatementService.handleStatement = function(data) {
@@ -178,7 +159,5 @@ StatementService.generateReportTest = function(sberOrderId) {
     }));
     return StatementService.countPayments(orders);
 };
-
-
 
 module.exports = StatementService;
