@@ -1,19 +1,27 @@
 'use strict';
 
 module.exports = function(sequelize, DataTypes) {
-    var StatementItem = sequelize.define('StatementItem', {
+    var StatementOrder = sequelize.define('StatementOrder', {
+        id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
         sberAcquOrderNumber: {
             type: DataTypes.INTEGER,
             references: {
                 model: 'Order',
                 key: 'sberAcquOrderNumber'
             },
-            allowNull: false,
-            primaryKey: true,
-            autoIncrement: true
+            allowNull: false
         },
         chargeDate: {
             type: DataTypes.DATE,
+            allowNull: false
+        },
+        supplyDate: {
+            type: DataTypes.DATEONLY,
             allowNull: false
         },
         amount: {
@@ -40,17 +48,17 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.DATE
         }
     }, {
-        tableName: 'StatementItem',
+        tableName: 'StatementOrder',
         unserscored: true,
         paranoid: true,
         classMethods: {
             associate: function(models) {
-                StatementItem.belongsTo(models.Statement, {
+                StatementOrder.belongsTo(models.Statement, {
                     as: 'statement',
                     foreignKey: 'statementId'
                 });
             }
         }
     });
-    return StatementItem;
+    return StatementOrder;
 };
