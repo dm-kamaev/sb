@@ -39,6 +39,11 @@ OrderService.update = function(where, data) {
 };
 
 
+OrderService.getOrders = function(where) {
+    return await(sequelize.models.Order.findAll({ where }))
+}
+
+
 OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
     return await (sequelize.models.Order.findOne({
         where: {
@@ -589,25 +594,6 @@ function disableUserFundsAndSendMail_(hasNotSubscribers) {
     });
     disableUserFunds_(hasNotSubscribers);
 }
-
-
-OrderService.getOrderComposition = function(sberAcquOrderNumber) {
-    return await (sequelize.sequelize.query(`
-    SELECT
-        entities -> 'id' AS "id",
-        entities -> 'type' as "type",
-        entities -> 'title' AS "title",
-        entities -> 'description' AS "description"
-    FROM (SELECT jsonb_array_elements(("Order"."userFundSnapshot" -> 'topic') ||
-                             ("Order"."userFundSnapshot" -> 'fund') ||
-                             ("Order"."userFundSnapshot" -> 'direction')) AS entities
-    FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
-        type: sequelize.sequelize.QueryTypes.SELECT,
-        replacements: {
-            sberAcquOrderNumber
-        }
-    }));
-};
 
 
 /**

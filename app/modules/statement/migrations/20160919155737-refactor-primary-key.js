@@ -14,8 +14,8 @@ module.exports = {
     down: function(queryInterface, Sequelize) {
         return queryInterface.sequelize.query('ALTER TABLE "StatementItem" DROP CONSTRAINT IF EXISTS "StatementItem_pkey"')
           .then(() => {
-              return queryInterface.sequelize.query(`ALTER TABLE "StatementItem" 
-            ADD COLUMN id INTEGER PRIMARY KEY 
+              return queryInterface.sequelize.query(`ALTER TABLE "StatementItem"
+            ADD COLUMN id INTEGER PRIMARY KEY
             NOT NULL DEFAULT nextval('"Statement_id_seq"'::regclass)`);
           });
     }

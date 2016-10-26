@@ -25,54 +25,35 @@ StatementService.getAll = function(where) {
 
 
 StatementService.parseStatement = function(file) {
+    if (file instanceof Buffer) file = file.toString()
     return await (new Promise((resolve, reject) => {
         var opts = { delimiter: ';' }
         parse(file, opts, function(err, output) {
             if (err) reject(err);
-            output.splice(0, 1)
+            output.splice(0, 1);
             resolve(output.map(row => {
-                var dates = row[7].split('.'),
-                    year = dates[2],
-                    month = dates[1] - 1,
-                    day = dates[0]
+                var chargeDate = parseDotDate_(row[7]),
+                    supplyDate = parseDotDate_(row[6]);
 
                 return {
                     sberAcquOrderNumber: row[14],
-                    chargeDate: new Date(year, month, day),
-                    amount: row[9] * 100
+                    chargeDate,
+                    supplyDate,
+                    amount: row[9] * 100,
                 }
             }))
         })
     }))
 };
 
-StatementService.handleStatement = function(data) {
-    return await (sequelize.sequelize.transaction(async(t => {
-        var orders = await (sequelize.sequelize.query('SELECT * FROM "StatementItem" WHERE "sberAcquOrderNumber" IN (:sberAcquOrderIds)', {
-            type: sequelize.sequelize.QueryTypes.SELECT,
-            replacements: {
-                sberAcquOrderIds: data.bankOrders.map(order => order.sberAcquOrderNumber)
-            }
-        }));
+function parseDotDate_(date) {
+    var dates = date.split('.');
+    return new Date(dates[2].substring(0,4), dates[1] - 1, dates[0]);
+}
 
-        if (orders.length) return {
-            success: false,
-            orders
-        };
-
-        var statement = await (sequelize.models.Statement.create(data));
-
-        var statementItem = await (sequelize.models.StatementItem.bulkCreate(data.bankOrders.map(order => Object.assign(order, {
-            statementId: statement.id
-        }))));
-
-        return {
-            success: true,
-            statement,
-            statementItem
-        };
-    })));
-};
+StatementService.createStatement = function(data) {
+    return await(sequelize.models.Statement.create(data))
+}
 
 
 /**
@@ -100,11 +81,12 @@ StatementService.writeInExcel = function(countPayments) {
             value: dataForSheet,
         }]
     );
+    var fileName = `recommendation/Рекомендация_${Date.now()}.xlsx`
     excel.write(
-        '../../../../public/uploads/recommendation/Рекомендация_' +
-        moment().format('YYYY_DD_MM') + '.xlsx',
+        path.join(__dirname, `../../../../public/uploads/${fileName}`),
         sheet
     );
+    return fileName;
 };
 
 /**
@@ -159,5 +141,26 @@ StatementService.generateReportTest = function(sberOrderId) {
     }));
     return StatementService.countPayments(orders);
 };
+
+StatementService.updateStatement = function(id, data) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.Statement.update(data, {
+            where: {
+                id
+            }
+        })
+        .then(() => {
+            if (!data.statementOrders || !data.statementOrders.length) return;
+
+            var statementOrders = data.statementOrders.map(order => {
+                return Object.assign(order, {
+                    statementId: id
+                })
+            })
+
+            return sequelize.models.StatementOrder.bulkCreate(statementOrders)
+        })
+    }))
+}
 
 module.exports = StatementService;

@@ -44,11 +44,14 @@ app.use(bodyparser.urlencoded({
 app.use(metaTags);
 
 app.set('views', path.join(__dirname, '../../../public/meta_templates'));
+
 app.use('/doc', hideRoutes, express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use('/entities', express.static(path.join(__dirname, '../../../public/uploads/entities')));
 app.use('/mail_static', express.static(path.join(__dirname, '../../../public/mail_static')))
+app.use('/recommendation', express.static(path.join(__dirname, '../../../public/uploads/recommendation')))
+app.use('/statement', express.static(path.join(__dirname, '../../../public/uploads/statement')))
 
 app.use('/callback', callbackRouter);
 

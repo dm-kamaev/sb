@@ -126,7 +126,13 @@ class UserController extends Controller {
             if (!authUser || authUser.email != email) {
                 status = 'NOT_FOUND'
             }
-            return { status }
+            return {
+              status,
+              userData: {
+                  initials: authUser.firstName.substring(0,1) +
+                            authUser.lastName.substring(0,1)
+              }
+            }
         } else {
             if (!sberUser) return null;
             var authId = sberUser.authId;
