@@ -257,6 +257,8 @@ class AuthController extends Controller {
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
 
+        if (!sberUser) sberUser = userService.createSberUser(authUser.id);
+
         var tryToken = new Jwt({
             expiresIn: '2 days'
         }).generateToken({
