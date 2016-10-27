@@ -7,6 +7,7 @@ const chakram = require('chakram');
 const expect = chakram.expect;
 const services = require('../../services');
 const util = require('util');
+const entityTypes = require('../../../app/modules/entity/enums/entityTypes.js');
 // const config_db = require('../../config/db.json');
 // const db = require('pg-promise')()(config_db);
 
@@ -21,7 +22,6 @@ module.exports = class EntitiesApi {
         chakram.addMethod('checkAddEntity', function(respObj, entities) {
             var statusCode = respObj.response.statusCode,
                 body = respObj.response.body;
-
             this.assert(
                 statusCode === 201,
                 'Error status ' + statusCode + '; body:' + util.inspect(body, { depth:5 })
@@ -34,6 +34,7 @@ module.exports = class EntitiesApi {
                     entity.description === description
                 ) { entity.id = id; }
             });
+
             return chakram.wait();
         });
 
@@ -45,10 +46,19 @@ module.exports = class EntitiesApi {
         );
     }
 
+    filterEntitiesByType(type, entities) {
+        entities = entities || this.context.get('entities');
+        if (!entityTypes[type]) { throw new Error('filterEntitiesByType => Not valid type "'+type+'"'); }
+        return entities.filter(entity => {
+            if (entity.type === type) { return true; }
+        });
+    }
+
     associateEntity(firstEntyId, secondEntityId) {
         chakram.addMethod('checkAssociatedEntity', function(respObj) {
             var statusCode = respObj.response.statusCode,
                 body = respObj.response.body;
+            console.log('HERE', respObj.response);
             this.assert(
                 statusCode === 200,
                 'Error status ' + statusCode + '; body:' + util.inspect(body, { depth:5 })
@@ -56,7 +66,9 @@ module.exports = class EntitiesApi {
             return chakram.wait();
         });
 
-        var responce = chakram.post(this.entityUrl+'/'+firstEntyId.id+'/'+secondEntityId.id);
+        var url = this.entityUrl+'/'+firstEntyId.id+'/'+secondEntityId.id;
+        console.log(url);
+        var responce = chakram.post(url);
         expect(responce).checkAssociatedEntity();
         return chakram.wait();
     }

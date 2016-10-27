@@ -26,20 +26,10 @@ describe('filling userFund', function() {
         listEntities: []
     });
     const entitiesApi = new EntitiesApi(context);
+    const entityService = services.entity;
 
     // before('Logout',   logout(context));
     // before('Register', register(context));
-    it('Create 2 funds, 2 direction, 1 topic', function () {
-        var entity     = services.entity;
-        var funds      = context.set('funds',      entity.generateEntities(2, 'fund'));
-        var directions = context.set('directions', entity.generateEntities(2, 'fund'));
-        var topics     = context.set('topics',     entity.generateEntities(1, 'topics'));
-        var entities   = context.set('entities', funds.concat(directions).concat(topics));
-        // context.set('test', 'test_set');
-        // return chakram.wait();
-    });
-
-    it('Add entities', () => entitiesApi.create());
     /*                               topic 1
                                         |
                                         |
@@ -48,29 +38,43 @@ describe('filling userFund', function() {
                              |                     |
                     fund 1 - - - fund 2 - - - - - -|
     */
-    // it('Associated entities', () => {
-    //     var funds      = context.get('funds'),
-    //         directions = context.get('directions'),
-    //         topics     = context.get('topics');
-    //     console.log(funds);
-    //     entitiesApi.associateEntity(funds[0].id, directions[0].id);
-    //     entitiesApi.associateEntity(funds[1].id, directions[0].id);
-
-    //     entitiesApi.associateEntity(funds[1].id, directions[1].id);
-
-    //     entitiesApi.associateEntity(directions[0].id, topics[0].id);
-    //     entitiesApi.associateEntity(directions[1].id, topics[0].id);
-    //     return chakram.wait();
-    // });
-
-    it('Debug', function () {
-        console.log(context.get('entities'));
+    it('Create 2 funds', function () {
+        var funds  = context.set('funds', entityService.generateEntities(2, 'fund'));
+        return entitiesApi.create(funds);
     });
 
+    it('Create 2 direction and to associate with funds', function () {
+        var funds = context.get('funds');
+        var directions = context.set('directions', entityService.generateEntities(2, 'direction'));
+        directions[0].entities = [ funds[0].id, funds[1].id ];
+        directions[1].entities = [ funds[1].id ];
+        return entitiesApi.create(directions);
+    });
+
+    it('Create 1 topic and to associate with directions', function () {
+        var directions = context.get('directions');
+        var topics = context.set('topics', entityService.generateEntities(1, 'topic'));
+        topics[0].entities = [ directions[0].id, directions[1].id ];
+        return entitiesApi.create(topics);
+    });
+
+    // it('Add topic in userFund',function () {});
+    // it('Remove topic from userFund',function () {});
+
+    // it('Add    directions in userFund',function () {});
+    // it('Remove directions in userFund',function () {});
+
+    // it('Add funds in userFund',function () {})
+    // it('Remove funds from userFund',function () {});
+
+    it('Debug', function () {
+        console.log(
+            context.get('funds').concat(context.get('directions')).concat(context.get('topics'))
+        );
+        // console.log(context.set('entities', funds.concat(directions).concat(topics)));
+    });
+
+    // after('Clean userFund', register(context));
     after('Terminate db connection pool', () => pgp.end());
-
-
-    // before('Remove entity from db', register(context));
-    // before('Clena userFund', register(context));
 
 });

@@ -3,7 +3,7 @@
 const randomstring = require('randomstring');
 const Chance = require('chance');
 const chance = new Chance();
-const entityTypes = Object.keys(require('../../app/modules/entity/enums/entityTypes.js'));
+const entityTypes = require('../../app/modules/entity/enums/entityTypes.js');
 
 var service = {};
 
@@ -21,6 +21,7 @@ service.generateEntities = function(number, type) {
         var entity = {};
         entity.title = chance.word();
         entity.description = chance.sentence();
+        if (!entityTypes[type]) { throw new Error('generateEntities => Not valid type "'+type+'"'); }
         if(type !== undefined) {
             entity.type = type;
         } else {
@@ -47,5 +48,5 @@ service.generateEntities = function(number, type) {
 
 service.getRandomType = function() {
     var index = Math.floor(Math.random() * 2);
-    return entityTypes[index];
+    return Object.keys(entityTypes[index]);
 }
