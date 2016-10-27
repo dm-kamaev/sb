@@ -97,4 +97,13 @@ module.exports = class StatementController extends Controller {
     actionCountPaymentsTest(actionContext, sberOrderId) {
         return await (statementService.generateReportTest(sberOrderId));
     }
+    /**
+     * @api {delete} /statement/:id delete statement
+     * @apiGroup Statement
+     * @apiName delete statement
+     * @apiParam {Number} id id of statement to delete
+     */
+    actionDeleteStatement(ctx, id) {
+        return await(statementService.deleteStatement({ id }))
+    }
 };
