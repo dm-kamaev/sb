@@ -18,9 +18,21 @@ var StatementService = {};
  * @return {[type]}
  */
 StatementService.getAll = function(where) {
-    return await (sequelize.models.Statement.findAll({
-        where
-    }));
+    return await(sequelize.sequelize.query(`
+    SELECT "id",
+        "fileName",
+        "dateStart",
+        "dateEnd",
+        "recommendation",
+        "status",
+        (SELECT id FROM "StatementOrder"
+            WHERE "StatementOrder"."statementId" != "Statement".id
+            AND "StatementOrder"."deletedAt" IS NULL
+            LIMIT 1)::BOOLEAN AS "conflict"
+    FROM "Statement"
+          WHERE "Statement"."deletedAt" IS NULL`, {
+            type: sequelize.QueryTypes.SELECT
+         }))
 };
 
 
@@ -159,6 +171,29 @@ StatementService.updateStatement = function(id, data) {
             })
 
             return sequelize.models.StatementOrder.bulkCreate(statementOrders)
+        })
+    }))
+}
+
+StatementService.deleteStatement = function(where) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.Statement.update({
+          deletedAt: new Date()
+        }, {
+          where,
+          returning: true
+        })
+        .then(res => {
+            var ids = res[1].map(statement => statement.id)
+            return sequelize.models.StatementOrder.update({
+                deletedAt: new Date()
+            }, {
+                where: {
+                    statementId: {
+                        $in: ids
+                    }
+                }
+            })
         })
     }))
 }
