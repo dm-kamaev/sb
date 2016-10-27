@@ -150,9 +150,13 @@ class UserFundController extends Controller {
 
         userFundService.removeEntities({ userFundId, entityIds });
 
-        // return description removed entities
-        var describeEntities = await(new EntitiesApi({ entityIds }).getEntities());
-        return userFundView.renderEntities(describeEntities);
+        // return remaining entities from userFund
+        var userFund = userFundService.getUserFund(userFundId, true, true);
+        var topics     = userFund.topic     || [],
+            directions = userFund.direction || [],
+            funds      = userFund.fund      || [];
+        var remainingEntity = topics.concat(directions).concat(funds);
+        return userFundView.renderEntities(remainingEntity);
     }
 
 
