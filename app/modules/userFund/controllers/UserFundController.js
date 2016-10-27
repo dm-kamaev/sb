@@ -126,8 +126,24 @@ class UserFundController extends Controller {
         entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
         userFundService.addEntities({ userFundId, entityIds });
 
+        var userFund = userFundService.getUserFund(userFundId, true, true);
+        var topics     = userFund.topic     || [],
+            directions = userFund.direction || [],
+            funds      = userFund.fund      || [];
+        var remainingEntity = topics.concat(directions).concat(funds);
+
+        var uniqEntityIds = {};
+        remainingEntity.forEach(function(entity) {
+            entityApi = new EntityApi({ entityId: parseInt(entity.id, 10) });
+            entityApi.setEntity(entity);
+            uniqEntityIds[entityApi.getNestedEntityIdsToFunds()] = true;
+            // console.log('res=', res);
+            // console.log('--------------');
+        });
         // return description added entities
-        var describeEntities = await(new EntitiesApi({ entityIds }).getEntities());
+        var describeEntities = await(new EntitiesApi({
+            entityIds: Object.keys(uniqEntityIds).map(e => parseInt(e, 10))
+        }).getEntities());
         return userFundView.renderEntities(describeEntities);
     }
 
