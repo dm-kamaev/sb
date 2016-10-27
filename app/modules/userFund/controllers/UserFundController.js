@@ -11,8 +11,9 @@ const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
 const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
-const entityTypes = require('../../entity/enums/entityTypes.js');
-const ExtractEntity = require('../../entity/services/extractEntity.js');
+// const entityTypes = require('../../entity/enums/entityTypes.js');
+// const ExtractEntity = require('../../entity/services/extractEntity.js');
+const UserFund     = require('../services/userFund.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
@@ -126,19 +127,20 @@ class UserFundController extends Controller {
         entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
         userFundService.addEntities({ userFundId, entityIds });
 
-        var userFund = userFundService.getUserFund(userFundId, true, true);
-        var topics     = userFund.topic     || [],
-            directions = userFund.direction || [],
-            funds      = userFund.fund      || [];
-        var remainingEntity = topics.concat(directions).concat(funds);
+        var remainingEntity = new UserFund({ userFundId }).getEntity();
 
         var uniqEntityIds = {};
         remainingEntity.forEach(function(entity) {
             entityApi = new EntityApi({ entityId: parseInt(entity.id, 10) });
             entityApi.setEntity(entity);
-            uniqEntityIds[entityApi.getNestedEntityIdsToFunds()] = true;
-            // console.log('res=', res);
-            // console.log('--------------');
+            entityIds = entityApi.getNestedEntityIdsToFunds();
+            if (entityIds.length === 1) {
+                uniqEntityIds[entityIds[0]] = true;
+            } else {
+                entityIds.forEach((entityId) =>  {
+                    uniqEntityIds[entityId] = true;
+                });
+            }
         });
         // return description added entities
         var describeEntities = await(new EntitiesApi({
@@ -167,11 +169,7 @@ class UserFundController extends Controller {
         userFundService.removeEntities({ userFundId, entityIds });
 
         // return remaining entities from userFund
-        var userFund = userFundService.getUserFund(userFundId, true, true);
-        var topics     = userFund.topic     || [],
-            directions = userFund.direction || [],
-            funds      = userFund.fund      || [];
-        var remainingEntity = topics.concat(directions).concat(funds);
+        var remainingEntity = new UserFund({ userFundId }).getEntity();;
         return userFundView.renderEntities(remainingEntity);
     }
 
