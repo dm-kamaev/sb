@@ -24,7 +24,8 @@ describe('Switch subscription =>', function() {
     var context = {
         chakram,
         expect,
-        listEntities: []
+        listEntities: [],
+        db
     };
 
     before('Logout',   logout(context));
