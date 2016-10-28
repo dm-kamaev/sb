@@ -13,13 +13,13 @@ const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
 // const entityTypes = require('../../entity/enums/entityTypes.js');
 // const ExtractEntity = require('../../entity/services/extractEntity.js');
-const UserFund     = require('../services/userFund.js');
+const UserFundApi  = require('../services/userFundApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
+const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
-const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const subscriptionExtractionService =
     require('../services/subscriptionExtractionService');
 const _ = require('lodash');
@@ -124,29 +124,13 @@ class UserFundController extends Controller {
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
-        entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
-        userFundService.addEntities({ userFundId, entityIds });
+        var userFundApi = new UserFundApi({ userFundId });
+        entityIds = userFundApi.filterExistRelations({ entityIds });
+        userFundApi.addEntities({ entityIds });
 
-        var remainingEntity = new UserFund({ userFundId }).getEntity();
-
-        var uniqEntityIds = {};
-        remainingEntity.forEach(function(entity) {
-            entityApi = new EntityApi({ entityId: parseInt(entity.id, 10) });
-            entityApi.setEntity(entity);
-            entityIds = entityApi.getNestedEntityIdsToFunds();
-            if (entityIds.length === 1) {
-                uniqEntityIds[entityIds[0]] = true;
-            } else {
-                entityIds.forEach((entityId) =>  {
-                    uniqEntityIds[entityId] = true;
-                });
-            }
-        });
-        // return description added entities
-        var describeEntities = await(new EntitiesApi({
-            entityIds: Object.keys(uniqEntityIds).map(e => parseInt(e, 10))
-        }).getEntities());
-        return userFundView.renderEntities(describeEntities);
+        // return entities from userFund
+        var entityAfterAdd = userFundApi.getEntity();
+        return userFundView.renderEntities(entityAfterAdd);
     }
 
 
@@ -154,7 +138,30 @@ class UserFundController extends Controller {
      * @api {delete} /user-fund/:entityId
      * @apiName remove entity
      * @apiGroup UserFund
-     *
+     * @apiSuccessExample {json} Example response:
+     * [
+     *      {
+     *          "id": 3,
+     *           "title": "МОЙ ФОНД",
+     *           "description": "lorem ipsum",
+     *           "imgUrl": "entity_pics/defaultFund.png",
+     *           "type": "fund"
+     *       },
+     *       {
+     *           "id": 4,
+     *           "title": "Рак",
+     *           "description": "sample description",
+     *           "imgUrl": "entity_pics/defaultDirection.png",
+     *           "type": "topic"
+     *       },
+     *      {
+     *          "id": 1,
+     *           "title": "Рак крови",
+     *           "description": "lorem ipsum",
+     *           "imgUrl": "entity_pics/defaultTopic.png",
+     *           "type": "direction"
+     *      }
+     *]
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
@@ -166,10 +173,11 @@ class UserFundController extends Controller {
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
-        userFundService.removeEntities({ userFundId, entityIds });
+        var userFundApi = new UserFundApi({ userFundId });
+        userFundApi.removeEntities({ entityIds });
 
-        // return remaining entities from userFund
-        var remainingEntity = new UserFund({ userFundId }).getEntity();;
+        // return entities from userFund
+        var remainingEntity = userFundApi.getEntity();
         return userFundView.renderEntities(remainingEntity);
     }
 
