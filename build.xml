@@ -86,7 +86,10 @@
     <target name="sber.shared.folders.media.create">
         <for list="${sber.shared.folders.names}" param="name">
             <sequential>
-                <mkdir dir=">${packaging.target.shared.path}/public/uploads/@{name}"/>
+                <!--<mkdir dir=">${packaging.target.shared.path}/public/uploads/@{name}"/> -->
+                <exec executable="mkdir" dir="${packaging.target.shared.path}">
+                    <arg line="public/uploads/@{name}"/>
+                </exec>
                 <echo>${packaging.target.shared.path}/public/uploads/@{name}</echo>
             </sequential>
         </for>
