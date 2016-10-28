@@ -86,8 +86,8 @@
     <target name="sber.shared.folders.media.create">
         <for list="${sber.shared.folders.names}" param="name">
             <sequential>
-                <mkdir dir=">${packaging.target.shared.path}/@{name}"/>
-                <echo>${packaging.target.shared.path}/@{name}</echo>
+                <mkdir dir=">${packaging.target.shared.path}/public/uploads/@{name}"/>
+                <echo>${packaging.target.shared.path}/public/uploads/@{name}</echo>
             </sequential>
         </for>
     </target>
@@ -96,8 +96,8 @@
             depends="sber.shared.folders.media.unlink">
         <for list="${sber.shared.folders.names}" param="name">
             <sequential>
-                <symlink link="${basedir}/public/uploads/@{name}" resource="${packaging.target.shared.path}/@{name}"/>
-                <echo>link="${basedir}/public/uploads/@{name}" resource="${packaging.target.shared.path}/@{name}"</echo>
+                <symlink link="${basedir}/public/uploads/@{name}" resource="${packaging.target.shared.path}/public/uploads/@{name}"/>
+                <echo>link="${basedir}/public/uploads/@{name}" resource="${packaging.target.shared.path}/public/uploads/@{name}"</echo>
             </sequential>
         </for>
     </target>
@@ -106,7 +106,7 @@
         <for list="${sber.shared.folders.names}" param="name">
             <sequential>
                 <shellscript shell="bash">
-                    find ${packaging.target.shared.path}/@{name} -type d -exec chmod -c 777 \{\} \;
+                    find ${packaging.target.shared.path}/public/uploads/@{name} -type d -exec chmod -c 777 \{\} \;
                 </shellscript>
             </sequential>
         </for>
