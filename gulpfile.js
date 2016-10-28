@@ -41,6 +41,7 @@ gulp.task('buildFrontend', () => {
     var gulpArgs = [
         `--environment="${environment}"`,
         `--modulesPath="${sberModules}"`,
+	`--"${config.environment}"`,
         `--apiAddress="${config.hostname}"`,
         `--cwd ${sberModules}/${frontDirName} build`
     ];

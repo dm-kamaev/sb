@@ -19,7 +19,7 @@ const config = require('../../../../config/config');
 const userFundStatus = require('../../userFund/enum/userFundStatus');
 const mail = require('../../mail');
 
-const HOSTNAME = `http://${os.hostname()}:${config.port}`;
+const HOSTNAME = `${config.hostname.replace(/\/+$/, '')}:${config.port}`;
 const VERIFY_LINK = `${HOSTNAME}/auth/verify?token=`;
 const RECOVER_LINK = `${HOSTNAME}#registration?token=`;
 const SUCCESS_MAIL_REDIRECT = `${HOSTNAME}#success?type=mail`;
@@ -256,6 +256,8 @@ class AuthController extends Controller {
         if (!authUser) { throw new errors.NotFoundError('User', email); }
 
         var sberUser = userService.findSberUserByAuthId(authUser.id);
+
+        if (!sberUser) sberUser = userService.createSberUser(authUser.id);
 
         var tryToken = new Jwt({
             expiresIn: '2 days'

@@ -9,18 +9,20 @@ const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
-const EntityApi = require('../../entity/services/entityApi.js');
-const entityTypes = require('../../entity/enums/entityTypes.js');
-const ExtractEntity = require('../../entity/services/extractEntity.js');
+const EntityApi   = require('../../entity/services/entityApi.js');
+const EntitiesApi = require('../../entity/services/entitiesApi.js');
+// const entityTypes = require('../../entity/enums/entityTypes.js');
+// const ExtractEntity = require('../../entity/services/extractEntity.js');
+const UserFundApi  = require('../services/userFundApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
+const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
-const sendMail = require('../services/sendMail.js');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
-const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const subscriptionExtractionService =
     require('../services/subscriptionExtractionService');
+const _ = require('lodash');
 
 
 class UserFundController extends Controller {
@@ -86,6 +88,30 @@ class UserFundController extends Controller {
      * @api {post} /user-fund/:entityId add entity
      * @apiName add entity
      * @apiGroup UserFund
+     * @apiSuccessExample {json} Example response:
+     * [
+     *      {
+     *          "id": 3,
+     *           "title": "МОЙ ФОНД",
+     *           "description": "lorem ipsum",
+     *           "imgUrl": "entity_pics/defaultFund.png",
+     *           "type": "fund"
+     *       },
+     *       {
+     *           "id": 4,
+     *           "title": "Рак",
+     *           "description": "sample description",
+     *           "imgUrl": "entity_pics/defaultDirection.png",
+     *           "type": "topic"
+     *       },
+     *      {
+     *          "id": 1,
+     *           "title": "Рак крови",
+     *           "description": "lorem ipsum",
+     *           "imgUrl": "entity_pics/defaultTopic.png",
+     *           "type": "direction"
+     *      }
+     *]
      *
      * @apiError (Error 404) NotFoundError "entity", "userfund", "type of organization" not found
      * @apiError (Error 400) HttpError relation exists
@@ -98,8 +124,13 @@ class UserFundController extends Controller {
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
-        entityIds = userFundService.filterExistRelations({ userFundId, entityIds });
-        userFundService.addEntities({ userFundId, entityIds });
+        var userFundApi = new UserFundApi({ userFundId });
+        entityIds = userFundApi.filterExistRelations({ entityIds });
+        userFundApi.addEntities({ entityIds });
+
+        // return entities from userFund
+        var entityAfterAdd = userFundApi.getEntity();
+        return userFundView.renderEntities(entityAfterAdd);
     }
 
 
@@ -107,7 +138,30 @@ class UserFundController extends Controller {
      * @api {delete} /user-fund/:entityId
      * @apiName remove entity
      * @apiGroup UserFund
-     *
+     * @apiSuccessExample {json} Example response:
+     * [
+     *      {
+     *          "id": 3,
+     *           "title": "МОЙ ФОНД",
+     *           "description": "lorem ipsum",
+     *           "imgUrl": "entity_pics/defaultFund.png",
+     *           "type": "fund"
+     *       },
+     *       {
+     *           "id": 4,
+     *           "title": "Рак",
+     *           "description": "sample description",
+     *           "imgUrl": "entity_pics/defaultDirection.png",
+     *           "type": "topic"
+     *       },
+     *      {
+     *          "id": 1,
+     *           "title": "Рак крови",
+     *           "description": "lorem ipsum",
+     *           "imgUrl": "entity_pics/defaultTopic.png",
+     *           "type": "direction"
+     *      }
+     *]
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
@@ -119,7 +173,12 @@ class UserFundController extends Controller {
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
-        userFundService.removeEntities({ userFundId, entityIds });
+        var userFundApi = new UserFundApi({ userFundId });
+        userFundApi.removeEntities({ entityIds });
+
+        // return entities from userFund
+        var remainingEntity = userFundApi.getEntity();
+        return userFundView.renderEntities(remainingEntity);
     }
 
 
@@ -132,8 +191,11 @@ class UserFundController extends Controller {
      *
      * @apiError (Error 404) NotFoundError userfund not found
      */
-    actionGetEntities(actionContext, id) {
-        var userFundId = actionContext.request.user.userFund.id;
+    actionGetEntities(ctx, id) {
+        var passwordAuth = new PasswordAuth({ ctx });
+        if (_.isEmpty(passwordAuth.getUser())) { return []; }
+        var userFundId = passwordAuth.getUserFund('id');
+
         var entities = await(userFundService.getEntities(userFundId));
         var renderedEntities = entityView.renderEntities(entities);
         return renderedEntities.map(entity => Object.assign(entity, {
@@ -298,9 +360,6 @@ class UserFundController extends Controller {
         // removed UF, card and send email owner
         await(userFundService.removeUserFund(userFundId));
         await(userService.removeCard(sberUserId));
-        new sendMail.userFund().removeUserFunds([
-            { authId: sberUser.authId, userFundName: userFund.title },
-        ]);
 
         // disable subcriptions on UF, send email to subscribers
         var subscriptions = userFundService.getSubscriptions({ userFundId }) || [];
@@ -318,7 +377,6 @@ class UserFundController extends Controller {
             { userFundId },
             { enabled: false }
         ));
-        new sendMail.userFundSubscription().disableSubscriptions(dataForMail);
 
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund

@@ -62,7 +62,7 @@ module.exports = class CallbackController extends Controller {
 
             if (sberUser.categories == mailingCategory.ALL) {
                 mail.sendFirstPayment(authUser.email, {
-                    userName: sberUser.firstName
+                    userName: authUser.firstName
                 })
             }
         } else {

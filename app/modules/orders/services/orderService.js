@@ -7,7 +7,6 @@ const util = require('util');
 const sequelize = require('../../../components/sequelize');
 const entityService = require('../../entity/services/entityService');
 const userFundService = require('../../userFund/services/userFundService');
-const sendMail = require('../../userFund/services/sendMail.js');
 const sberAcquiring = require('../../sberAcquiring/services/sberAcquiring.js');
 const UserApi = require('../../micro/services/microService.js').UserApi;
 const errors = require('../../../components/errors');
@@ -21,6 +20,7 @@ const _ = require('lodash');
 const mail = require('../../mail')
 const aqconfig = require('../../../../config/config-sberAcquiring')
 const mailingCategory = require('../../mail/enum/mailingCategory')
+const BASEURL = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
 
 
 var OrderService = {};
@@ -37,6 +37,11 @@ OrderService.update = function(where, data) {
         where
     }));
 };
+
+
+OrderService.getOrders = function(where) {
+    return await(sequelize.models.Order.findAll({ where }))
+}
 
 
 OrderService.getOrderWithInludes = function(sberAcquOrderNumber) {
@@ -139,8 +144,8 @@ OrderService.firstPayOrSendMessage = function(params) {
             responceSberAcqu = sberAcquiring.firstPay({
                 orderNumber: sberAcquOrderNumber,
                 amount: params.amount,
-                returnUrl: `${config.hostname}/#success?app=${params.isCordova}&type=payment`,
-                failUrl: `${config.hostname}/#failure?app=${params.isCordova}&type=payment`,
+                returnUrl: `${BASEURL}/#success?app=${params.isCordova}&type=payment`,
+                failUrl: `${BASEURL}/#failure?app=${params.isCordova}&type=payment`,
                 language: 'ru',
                 clientId: params.sberUserId,
             });
@@ -588,29 +593,7 @@ function disableUserFundsAndSendMail_(hasNotSubscribers) {
         }
     });
     disableUserFunds_(hasNotSubscribers);
-    new sendMail.userFund({
-        isReccurent: true
-    }).disableUserFunds(dataForMail);
 }
-
-
-OrderService.getOrderComposition = function(sberAcquOrderNumber) {
-    return await (sequelize.sequelize.query(`
-    SELECT
-        entities -> 'id' AS "id",
-        entities -> 'type' as "type",
-        entities -> 'title' AS "title",
-        entities -> 'description' AS "description"
-    FROM (SELECT jsonb_array_elements(("Order"."userFundSnapshot" -> 'topic') ||
-                             ("Order"."userFundSnapshot" -> 'fund') ||
-                             ("Order"."userFundSnapshot" -> 'direction')) AS entities
-    FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
-        type: sequelize.sequelize.QueryTypes.SELECT,
-        replacements: {
-            sberAcquOrderNumber
-        }
-    }));
-};
 
 
 /**

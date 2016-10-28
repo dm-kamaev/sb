@@ -5,6 +5,9 @@ const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const excel = require('../../../components/excel');
 const moment = require('moment');
+const parse = require('csv-parse');
+const path = require('path')
+const fs = require('fs')
 
 var StatementService = {};
 
@@ -14,72 +17,55 @@ var StatementService = {};
  * @param  {[obj]} where
  * @return {[type]}
  */
-StatementService.getAll = function (where) {
-    return await(sequelize.models.Statement.findAll({ where }));
+StatementService.getAll = function(where) {
+    return await(sequelize.sequelize.query(`
+    SELECT "id",
+        "fileName",
+        "dateStart",
+        "dateEnd",
+        "recommendation",
+        "status",
+        (SELECT id FROM "StatementOrder"
+            WHERE "StatementOrder"."statementId" != "Statement".id
+            AND "StatementOrder"."deletedAt" IS NULL
+            LIMIT 1)::BOOLEAN AS "conflict"
+    FROM "Statement"
+          WHERE "Statement"."deletedAt" IS NULL`, {
+            type: sequelize.QueryTypes.SELECT
+         }))
 };
 
 
 StatementService.parseStatement = function(file) {
-    var arr = file.toString().split('\r\n'),
-        orders = [];
+    if (file instanceof Buffer) file = file.toString()
+    return await (new Promise((resolve, reject) => {
+        var opts = { delimiter: ';' }
+        parse(file, opts, function(err, output) {
+            if (err) reject(err);
+            output.splice(0, 1);
+            resolve(output.map(row => {
+                var chargeDate = parseDotDate_(row[7]),
+                    supplyDate = parseDotDate_(row[6]);
 
-    for (var i = 0; i < arr.length; i++) {
-        if (~arr[i].indexOf('СекцияДокумент=Банковский ордер')) {
-            var order = {
-                // sberAcquOrderNumber:
-                bankNumber: arr[++i].split('=')[1],
-                bankDate: arr[++i].split('=')[1],
-                bankAmount: arr[++i].split('=')[1],
-                payerBill: arr[++i].split('=')[1],
-                dateWriteOff: arr[++i].split('=')[1],
-                payerName: arr[++i].split('=')[1],
-                payerINN: arr[++i].split('=')[1],
-                payerKPP: arr[++i].split('=')[1],
-                payerCheckingAccount: arr[++i].split('=')[1],
-                payerBank: arr[++i].split('=')[1],
-                payerBIK: arr[++i].split('=')[1],
-                payerCorrespondentBill: arr[++i].split('=')[1],
-                jsonParams: arr[i + 22].split('=')[1]
-            };
-
-            i += 22;
-            orders.push(order);
-        }
-    }
-    return orders;
-
-    // sequelize.models.Statement.create({
-    //     fileName:
-    // })
+                return {
+                    sberAcquOrderNumber: row[14],
+                    chargeDate,
+                    supplyDate,
+                    amount: row[9] * 100,
+                }
+            }))
+        })
+    }))
 };
 
-StatementService.handleStatement = function(data) {
-    return await(sequelize.sequelize.transaction(async(t => {
-        var orders = await(sequelize.sequelize.query('SELECT * FROM "StatementItem" WHERE "sberAcquOrderNumber" IN (:sberAcquOrderIds)', {
-            type: sequelize.sequelize.QueryTypes.SELECT,
-            replacements: {
-                sberAcquOrderIds: data.bankOrders.map(order => order.sberAcquOrderNumber)
-            }
-        }));
+function parseDotDate_(date) {
+    var dates = date.split('.');
+    return new Date(dates[2].substring(0,4), dates[1] - 1, dates[0]);
+}
 
-        if (orders.length) return {
-            success: false,
-            orders
-        };
-
-        var statement = await(sequelize.models.Statement.create(data));
-
-        var statementItem = await(sequelize.models.StatementItem.bulkCreate(data.bankOrders.map(order => Object.assign(order, {
-            statementId: statement.id
-        }))));
-
-        return {
-            success: true,
-            statement,
-            statementItem
-        };
-    })));
-};
+StatementService.createStatement = function(data) {
+    return await(sequelize.models.Statement.create(data))
+}
 
 
 /**
@@ -92,28 +78,27 @@ StatementService.writeInExcel = function(countPayments) {
     var fundPayments = countPayments.payments,
         remainderDivision = countPayments.sumModulo;
     var dataForSheet = [
-        [ 'id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)' ]
+        ['id', 'Имя фонда', 'рекомендуем начислить в этом периоде (коп.)']
     ];
     fundPayments.forEach((fundPayment) => {
         dataForSheet.push(
-            [ fundPayment.id, fundPayment.title, fundPayment.payment ]
+            [fundPayment.id, fundPayment.title, fundPayment.payment]
         );
     });
-    dataForSheet.push([ 'Остатки', ' ', remainderDivision ]);
+    dataForSheet.push(['Остатки', ' ', remainderDivision]);
 
     var sheet = excel.createSheets(
-        [
-            {
-                name: 'Рекомендация',
-                value: dataForSheet,
-            }
-        ]
+        [{
+            name: 'Рекомендация',
+            value: dataForSheet,
+        }]
     );
+    var fileName = `recommendation/Рекомендация_${Date.now()}.xlsx`
     excel.write(
-        '../../../../public/uploads/recommendation/Рекомендация_' +
-        moment().format('YYYY_DD_MM') + '.xlsx',
+        path.join(__dirname, `../../../../public/uploads/${fileName}`),
         sheet
     );
+    return fileName;
 };
 
 /**
@@ -169,6 +154,48 @@ StatementService.generateReportTest = function(sberOrderId) {
     return StatementService.countPayments(orders);
 };
 
+StatementService.updateStatement = function(id, data) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.Statement.update(data, {
+            where: {
+                id
+            }
+        })
+        .then(() => {
+            if (!data.statementOrders || !data.statementOrders.length) return;
 
+            var statementOrders = data.statementOrders.map(order => {
+                return Object.assign(order, {
+                    statementId: id
+                })
+            })
+
+            return sequelize.models.StatementOrder.bulkCreate(statementOrders)
+        })
+    }))
+}
+
+StatementService.deleteStatement = function(where) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.Statement.update({
+          deletedAt: new Date()
+        }, {
+          where,
+          returning: true
+        })
+        .then(res => {
+            var ids = res[1].map(statement => statement.id)
+            return sequelize.models.StatementOrder.update({
+                deletedAt: new Date()
+            }, {
+                where: {
+                    statementId: {
+                        $in: ids
+                    }
+                }
+            })
+        })
+    }))
+}
 
 module.exports = StatementService;

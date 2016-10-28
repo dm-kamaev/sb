@@ -21,12 +21,14 @@ async(function() {
         statuses = getStatuses();
     if (!statuses[status]) {
         throw new Error(
-      'Not valid status: "' + status + '";\n' +
-      'Valid statuses: [ ' + (Object.keys(statuses).join(', ')) + ' ]'
-    );
+            'Not valid status: "' + status + '";\n' +
+            'Valid statuses: [ ' + (Object.keys(statuses).join(', ')) + ' ]'
+        );
     }
 
-    var subscriptions = await(userFundService.getSubscriptions({ sberUserId })) || [];
+    var subscriptions = await (userFundService.getSubscriptions({
+        sberUserId
+    })) || [];
     if (!subscriptions.length) {
         throw new Error(`Not found subscriptions by sberUserId: ${sberUserId}`);
     }

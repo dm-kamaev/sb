@@ -39,7 +39,7 @@ module.exports = class EntityApi {
      * @return {[type]}       [description]
      */
     getEntity(where) {
-        return await (this.Entity.findOne({ where }));
+        return await(this.Entity.findOne({ where }));
     }
 
     /**
@@ -94,6 +94,37 @@ module.exports = class EntityApi {
                 type: entityTypes.TOPIC,
                 entityIds,
                 skipType: 'nothing',
+            }).extract();
+            entityIds = entityIds.concat(fundIds);
+        }
+        return entityIds;
+    }
+
+    /**
+     * get nested entityIds to Fund
+     * if entity is direction, push array id funds
+     * @param  {[int or array]} entityId
+     * @return {[array]}        [ 1,2,3 ]
+     */
+    getNestedEntityIdsToFunds (entityId) {
+        entityId = entityId || this.entityId;
+        var entityIds = (entityId instanceof Array) ? entityId : [ entityId ];
+        var type      = this.entity.type,
+            DIRECTION = entityTypes.DIRECTION,
+            TOPIC     = entityTypes.TOPIC,
+            fundIds   = [];
+        if (type === DIRECTION) {
+            fundIds = new ExtractEntity({
+                type: DIRECTION,
+                entityIds,
+                skipType: TOPIC,
+            }).extract();
+            entityIds = entityIds.concat(fundIds);
+        } else if (type === TOPIC) {
+            fundIds = new ExtractEntity({
+                type: TOPIC,
+                entityIds,
+                skipType: DIRECTION,
             }).extract();
             entityIds = entityIds.concat(fundIds);
         }

@@ -8,8 +8,8 @@ var log = logger.getLogger('sequelize');
 
 var sequelizeWrapper = new SequelizeWrapper({
     sequelize: sequelize,
-    logging: log.info.bind(log),
-    /* logging: function (query) {
+    // logging: log.info.bind(log),
+     logging: function (query) {
         log.info(query
             .replace(/SELECT/, '\nSELECT')
             .replace(/INSERT/, '\nINSERT')
@@ -18,7 +18,7 @@ var sequelizeWrapper = new SequelizeWrapper({
             .replace(/LEFT OUTER JOIN/g, '\nLEFT OUTER JOIN')
             .replace(/WHERE/g, '\nWHERE')
         );
-    },*/
+    },
     paths: {
         projectRoot: path.resolve(__dirname, '../../..'),
         migrations: '/migrations',

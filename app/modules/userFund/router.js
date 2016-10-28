@@ -23,12 +23,13 @@ userFundRouter.get('/count', versionedController.actionCountUserFunds);
 // userFundRouter.post('/', userFundController.actionCreateUserFund);
 // userFundRouter.delete('/:id(\\d+)', userFundController.actionDeleteUserFund);
 userFundRouter.put('/', userFundController.actionUpdateUserFund);
-userFundRouter.use(anonymous);
+userFundRouter.get('/entity', versionedController.actionGetEntities);
 
+userFundRouter.use(anonymous);
 userFundRouter.post('/:entityId(\\d+)', versionedController.actionAddEntity);
 userFundRouter.delete('/:entityId(\\d+)',
                 versionedController.actionRemoveEntity);
-userFundRouter.get('/entity', versionedController.actionGetEntities);
+
 userFundRouter.use((req, res, next) => {
     if (req.user && req.user.authId) return next();
     throw new errors.HttpError('Unathorized', 403);

@@ -1,11 +1,64 @@
-Здравствуйте, <%= userName %>!
-
-Вы зарегистрированы на сайте sberbankvmeste.ru
-
-Вы сделали запрос на восстановления пароля.
-Вот ссылка, по которой можно придумать новый пароль:
-<%= link %>
-
-Мы хотим сделать подход к благотворительности осознанным, спасибо, что вы с нами!
-С уважением,
-команда Сбербанк Вместе
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body style="width: 100%; height: 100%; padding: 0; margin: 0;">
+    <div class="wrap" style="background: #f6f5f3; padding: 0 2%;">
+        <div class="main" style="max-width: 768px; margin: auto; font-family: Tahoma, sans-serif;">
+            <div class="main__header" style="padding: 30px 0 20px 0;">
+                <div class="main__header-logo" style="text-align: center;">
+                    <img src="<%= linkToStatic %>/sber-logo.png" alt="" style="width: 172px; height: 43px;" width="172" height="43">
+                </div>
+            </div>
+            <div class="main__content" style="background: #fff; border-radius: 6px;">
+                <div class="main__content-image" style="text-align: center;">
+                    <img src="<%= linkToStatic %>/main.png" alt="" style="width: 100%;">
+                </div>
+                <div class="main__content-body" style="padding: 7% 5%;">
+                    <div class="main__content-title" style="text-align: center; font-size: 24px; padding-bottom: 3%;">Здравствуйте, <%= userName %>!</div>
+                    <div class="main__content-text" style="font-size: 18px;">
+                        <p style="line-height: 1.44;">
+                            Вы зарегистрированы на сайте <a href="http://www.sberbankvmeste.ru" style="color: #2a911f; word-wrap: break-word; text-decoration: none;">sberbankvmeste.ru</a><br>
+                        </p>
+                        <p style="line-height: 1.44;">
+                            Вы сделали запрос на восстановления пароля.<br>
+                            Вот ссылка, по которой можно придумать новый пароль:<br>
+                            <a href="<%= link %>" style="color: #2a911f; word-wrap: break-word; text-decoration: none;"><%= link %></a>
+                        </p>
+                        <p style="line-height: 1.44;">
+                            Мы хотим сделать подход к благотворительности осознанным, спасибо, что Вы с нами!
+                        </p>
+                        <p style="line-height: 1.44;">
+                          С уважением,<br>
+                          команда Сбербанк Вместе
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="main__footer" style="padding-top: 40px; padding-bottom: 30px;">
+                <div class="main__footer-text" style="font-size: 12px; color: #a1a1a0;">
+                    <p>
+                        Убедиться, что сообщение действительно отправлено ПАО Сбербанк и не содержит вредоносных ссылок, Вы можете, позвонив по телефонам ПАО Сбербанк 900 и 8 800 555 55 50.
+                    </p>
+                    <p>
+                        Организатор проекта — ПАО Сбербанк. Генеральная лицензия Банка России № 1481 от 11.08.2015. Организатор площадки — «ФОМ». Реквизиты: полное наименование фирмы (в соответствии с учредительными документами): общество с ограниченной ответственностью «Институт фонда Общественное мнение»; краткое наименование фирмы: ООО «ИНФОМ»; адрес местонахождения: 125047, г. Москва, ул. 4-я Тверская-Ямская, д. 2/11, стр. 1, почтовый адрес: 123022, г. Москва, ул. Рочдельская, д. 15, стр. 16а; телефон:(495) 620-62-32, (495) 620-62-33.
+                    </p>
+                    <p>
+                        ПАО Сбербанк. Генеральная лицензия Банка России № 1481 от 11.08.2015.
+                    </p>
+                </div>
+                <div class="main__footer-logos" style="padding-top: 36px; text-align: center;">
+                    <div class="main__footer-logo-sber" style="display: inline-block; margin: 0 5px;">
+                        <img src="<%= linkToStatic %>/sber-logo.png" alt="" style="max-height: 41px;">
+                    </div>
+                    <div class="main__footer-logo-mastercard" style="display: inline-block; margin: 0 5px;">
+                        <img src="<%= linkToStatic %>/master-logo.png" alt="" style="max-height: 41px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

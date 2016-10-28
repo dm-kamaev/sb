@@ -1,5 +1,7 @@
 'use strict';
 
+const statementStatus = require('../enums/statementStatus');
+
 module.exports = function(sequelize, DataTypes) {
     var Statement = sequelize.define('Statement', {
         id: {
@@ -10,6 +12,17 @@ module.exports = function(sequelize, DataTypes) {
         },
         fileName: {
             type: DataTypes.STRING,
+            allowNull: false
+        },
+        recommendation: {
+            type: DataTypes.STRING
+        },
+        status: {
+            type: DataTypes.STRING,
+            validate: {
+                isIn: [Object.keys(statementStatus)
+                             .map(status => statementStatus[status])]
+            },
             allowNull: false
         },
         dateStart: {
@@ -37,8 +50,8 @@ module.exports = function(sequelize, DataTypes) {
         paranoid: true,
         classMethods: {
             associate: function(models) {
-                Statement.hasMany(models.StatementItem, {
-                    as: 'statementItem',
+                Statement.hasMany(models.StatementOrder, {
+                    as: 'statementOrder',
                     foreignKey: 'statementId'
                 });
             }

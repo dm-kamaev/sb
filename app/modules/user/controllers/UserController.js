@@ -122,11 +122,19 @@ class UserController extends Controller {
                     && actionContext.request.query.email.toLowerCase()
         if (email) {
             var authUser = await(userService.findAuthUserByEmail(email));
-            var status = 'FOUND';
             if (!authUser || authUser.email != email) {
-                status = 'NOT_FOUND'
+                return {
+                    status: 'NOT_FOUND'
+                }
+            } else {
+              return {
+                status: 'FOUND',
+                userData: {
+                    initials: authUser.firstName.substring(0,1) +
+                              authUser.lastName.substring(0,1)
+                }
+              }
             }
-            return { status }
         } else {
             if (!sberUser) return null;
             var authId = sberUser.authId;

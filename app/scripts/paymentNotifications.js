@@ -8,7 +8,7 @@ const userFundService = require('../modules/userFund/services/userFundService')
 const mail = require('../modules/mail')
 const argv = require('yargs').argv;
 const nowDate = argv.now ? new Date(argv.now) : new Date();
-
+const logger = require('../components/logger').getLogger('main');
 
 (async(function() {
     var sberUsers = await (models.SberUser.findAll({
@@ -31,8 +31,9 @@ const nowDate = argv.now ? new Date(argv.now) : new Date();
         }
     }));
 
-    var ids = sberUsers.map(sberUser => sberUser.authId).join(',');
-    var authUsers = ids ? userService.getAuthUsersByIds(ids) : [];
+    var ids = sberUsers.map(sberUser => sberUser.authId);
+    var searchStr = ids.join(',');
+    var authUsers = ids.length ? userService.getAuthUsersByIds(searchStr) : [];
     authUsers.forEach(authUser => {
         try {
             mail.sendPendingDraft(authUser.email, {
@@ -43,7 +44,7 @@ const nowDate = argv.now ? new Date(argv.now) : new Date();
         }
     })
 
-    await (models.SberUser.update({
+    if (ids.length) await(models.SberUser.update({
         notified: true
     }, {
         where: {
@@ -53,8 +54,9 @@ const nowDate = argv.now ? new Date(argv.now) : new Date();
         }
     }))
 
-    var dayAfterTommorow = new Date(nowDate.getTime() + 1000 * 60 * 60 * 24 * 2),
-        subscriptions = userFundService.getUnhandledSubscriptions([nowDate.getDate()], dayAfterTommorow),
+    var duration = 1000 * 60 * 60 * 24 * 2
+    var dayAfterTommorow = new Date(nowDate.getTime() + duration),
+        subscriptions = userFundService.getUnhandledSubscriptions([dayAfterTommorow.getDate()], dayAfterTommorow),
         ids = subscriptions.filter(sub => sub.categories == 'all')
                            .map(subscription => subscription.sberUserAuthId)
                            .join(','),

@@ -6,6 +6,8 @@ const logger = require('../logger').getLogger('main');
 const prettyJSON = require('../prettyJSON');
 const bodyparser = require('body-parser');
 const path = require('path');
+const signature = require('cookie-signature');
+const cookie = require('cookie');
 
 const debugForm = require('./middleware/debugForm');
 
@@ -27,8 +29,10 @@ const passport = require('./middleware/passport');
 const anonymous = require('./middleware/anonymous');
 const metaTags = require('./middleware/metaTags');
 const accesslog = require('./middleware/access-log');
+const hideRoutes = require('./middleware/hideRoutes');
+const cordovaSession = require('./middleware/session/cordova');
 
-app.use('/', debugForm);
+app.use('/dev', hideRoutes, debugForm);
 
 app.set('view engine', 'pug');
 
@@ -43,11 +47,14 @@ app.use(bodyparser.urlencoded({
 app.use(metaTags);
 
 app.set('views', path.join(__dirname, '../../../public/meta_templates'));
-app.use('/doc', express.static(path.join(__dirname, '../../../public/doc')));
+
+app.use('/doc', hideRoutes, express.static(path.join(__dirname, '../../../public/doc')));
 app.use('/static', express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use(express.static(path.join(__dirname, '../../../public/frontend/static')));
 app.use('/entities', express.static(path.join(__dirname, '../../../public/uploads/entities')));
-app.use('/mail', express.static(path.join(__dirname, '../../../public/mail_static')))
+app.use('/mail_static', express.static(path.join(__dirname, '../../../public/mail_static')))
+app.use('/recommendation', express.static(path.join(__dirname, '../../../public/uploads/recommendation')))
+app.use('/statement', express.static(path.join(__dirname, '../../../public/uploads/statement')))
 
 app.use('/callback', callbackRouter);
 
@@ -56,6 +63,7 @@ app.use(passport.init);
 app.use(passport.session);
 
 app.use(headers);
+app.use(cordovaSession);
 
 app.use(/\/v?\d*\.?\d*\/?entity/, entityRoutes);
 app.use(/\/v?\d*\.?\d*\/?user-fund/, userFundRoutes);
