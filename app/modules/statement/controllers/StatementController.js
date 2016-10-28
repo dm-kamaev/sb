@@ -9,7 +9,8 @@ const orderService = require('../../orders/services/orderService')
 const statementStatus = require('../enums/statementStatus');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
-const fs = require('fs')
+const fs = require('fs');
+const moment = require('moment')
 
 module.exports = class StatementController extends Controller {
     /**
@@ -35,6 +36,9 @@ module.exports = class StatementController extends Controller {
         if (!file || !dateStart || !dateEnd) {
             throw new errors.HttpError('Wrong request', 400);
         }
+
+        dateStart = moment(dateStart, "DD.MM.YYYY").toDate(),
+        dateEnd = moment(dateEnd, "DD.MM.YYYY").toDate();
 
         var statement = statementService.createStatement({
             dateStart,
