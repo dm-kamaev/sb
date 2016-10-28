@@ -49,7 +49,7 @@
     <target name="packaging.release.switch"
       depends="
         packaging.shared-folders,
-             sber.shared-media-folders
+             sber.shared-media-folders,
              packaging.supervisor.link,
              user.supervisor.link,
              auth.supervisor.link,
