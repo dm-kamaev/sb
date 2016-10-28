@@ -42,7 +42,7 @@ module.exports = class EntitiesApi {
         entities = entities || this.context.get('entities');
         var promises = entities.map(entity => chakram.post(this.entityUrl, entity));
         return Promise.all(promises).then(responces =>
-          responces.forEach(responce => expect(responce).checkAddEntity(entities))
+            responces.forEach(responce => expect(responce).checkAddEntity(entities))
         );
     }
 

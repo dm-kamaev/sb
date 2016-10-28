@@ -5,6 +5,7 @@ var service = function(urlTail) {
 };
 
 service.concatUrl = service;
+service.addPath = service;
 
 service.concatEmulUrl = function(urlTail) {
     var url = 'http://localhost:3005/' + urlTail;
