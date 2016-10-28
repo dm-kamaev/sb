@@ -31,7 +31,7 @@ StatementService.getAll = function(where) {
             LIMIT 1)::BOOLEAN AS "conflict"
     FROM "Statement"
           WHERE "Statement"."deletedAt" IS NULL`, {
-            type: sequelize.QueryTypes.SELECT
+            type: sequelize.sequelize.QueryTypes.SELECT
          }))
 };
 

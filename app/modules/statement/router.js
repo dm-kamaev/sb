@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
     },
     filename: function(req, file, cb) {
         var filename = `sber_statement-${Date.now()}.${file.mimetype.split('/')[1]}`
-        req.body.fileName = `statements/${filename}`
+        req.body.fileName = `statement/${filename}`
         cb(null, filename)
     }
 })
@@ -34,6 +34,6 @@ statementRouter.post(
 statementRouter.get('/', versionedController.actionGetAllStatement);
 statementRouter.get('/count-payments-test/:orderId',
     versionedController.actionCountPaymentsTest);
-statementRouter.delete('/:id(\\d+)', versionedController.actionDeleteStatement)    
+statementRouter.delete('/:id(\\d+)', versionedController.actionDeleteStatement)
 
 module.exports = statementRouter;
