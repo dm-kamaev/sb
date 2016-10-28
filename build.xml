@@ -106,7 +106,7 @@
         <for list="${sber.shared.folders.names}" param="name">
             <sequential>
                 <shellscript shell="bash">
-                    find ${packaging.target.shared.path}@{name} -type d -exec chmod -c 777 \{\} \;
+                    find ${packaging.target.shared.path}/@{name} -type d -exec chmod -c 777 \{\} \;
                 </shellscript>
             </sequential>
         </for>
