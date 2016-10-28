@@ -77,7 +77,7 @@
     <target name="sber.shared.folders.media.unlink">
         <for list="${sber.shared.folders.names}" param="name">
             <sequential>
-                <symlink action="delete" path=">${basedir}/public/uploads/@{name}"/>
+                <symlink action="delete" link=">${basedir}/public/uploads/@{name}"/>
                 <echo>${basedir}/public/uploads/@{name}</echo>
             </sequential>
         </for>
