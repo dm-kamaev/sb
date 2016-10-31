@@ -126,4 +126,22 @@ module.exports = class UserFundApi {
         }));
     }
 
+    /**
+     * is empty userFund after remove entity from him
+     * @param  {[obj]}  data {
+     *   entityIds, // array
+     * }
+     * @return {Boolean}
+     */
+    isEmptyAfterRemoveEntity(data) {
+        var entityIds  = data.entityIds, entityIdsForRemove = {};
+        entityIds.forEach(entityId => entityIdsForRemove[entityId] = true);
+        var entities = this.getEntity();
+        var remaningEntities = entities.filter(entity => {
+            if (!entityIdsForRemove[entity.id]) { return true; }
+        });
+        if (!remaningEntities.length) { return true; }
+        return false;
+    }
+
 }

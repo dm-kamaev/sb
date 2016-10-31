@@ -162,6 +162,12 @@ class UserFundController extends Controller {
      *           "type": "direction"
      *      }
      *]
+     *@apiSuccessExample {json} Example response:
+     *[
+     *    {
+     *       "message": "TRY_DELETE_USERFUND"
+     *    }
+     *]
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
@@ -174,6 +180,10 @@ class UserFundController extends Controller {
         var entityIds = entityApi.getNestedEntityIds();
 
         var userFundApi = new UserFundApi({ userFundId });
+        // if userFund empty after delete
+        if (userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
+            return [{ message: 'TRY_DELETE_USERFUND' }];
+        }
         userFundApi.removeEntities({ entityIds });
 
         // return entities from userFund
