@@ -39,7 +39,7 @@ module.exports = class Context {
      * @param {[str]} key
      * @return {[any]}  return val
      */
-    get (key) {
+    get(key) {
         var data = this;
         var val = data[key];
         if (val || val === '' || val === 0) {
@@ -61,6 +61,20 @@ module.exports = class Context {
           return val;
         } else {
           throw new Error('context.change => not exist element by key: "'+key+'"');
+        }
+    }
+
+
+    /**
+     * check exist data by key in context
+     * @param  {[str]} key
+     * @return {[boolean]}  return true || false
+     */
+    exist(key) {
+        if(this[key] || this[key] === 0 || this[key] === '' || this[key] === false) {
+          return true;
+        } else {
+          return false;
         }
     }
 };
