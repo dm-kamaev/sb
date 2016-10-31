@@ -172,16 +172,17 @@ class UserFundController extends Controller {
      * @apiError (Error 400) HttpError relation don't exists
      */
     actionRemoveEntity(ctx, entityId) {
-        var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
-            entityApi  = new EntityApi({ entityId });
-
+        var passwordAuth = new PasswordAuth({ ctx }),
+            userFundId   = passwordAuth.getUserFund('id'),
+            entityApi    = new EntityApi({ entityId }),
+            loggedIn     = Boolean(passwordAuth.getUser('authId'));
         entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
         var userFundApi = new UserFundApi({ userFundId });
         // if userFund empty after delete
-        if (userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
+        if (loggedIn && userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
             return [{ message: 'TRY_DELETE_USERFUND' }];
         }
         userFundApi.removeEntities({ entityIds });
