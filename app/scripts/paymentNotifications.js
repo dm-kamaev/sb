@@ -5,6 +5,7 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const userService = require('../modules/user/services/userService')
 const userFundService = require('../modules/userFund/services/userFundService')
+const orderService = require('../modules/orders/services/orderService')
 const mail = require('../modules/mail')
 const argv = require('yargs').argv;
 const nowDate = argv.now ? new Date(argv.now) : new Date();
@@ -56,7 +57,8 @@ const logger = require('../components/logger').getLogger('main');
 
     var duration = 1000 * 60 * 60 * 24 * 2
     var dayAfterTommorow = new Date(nowDate.getTime() + duration),
-        subscriptions = userFundService.getUnhandledSubscriptions([dayAfterTommorow.getDate()], dayAfterTommorow),
+        days = orderService.getMissingDays(null, dayAfterTommorow),
+        subscriptions = userFundService.getUnhandledSubscriptions(days, dayAfterTommorow),
         ids = subscriptions.filter(sub => sub.categories == 'all')
                            .map(subscription => subscription.sberUserAuthId)
                            .join(','),
@@ -69,7 +71,7 @@ const logger = require('../components/logger').getLogger('main');
         try {
             mail.sendBeforePayment(authUser.email, {
                 userName: authUser.firstName,
-                amount: subscription.amount
+                amount: Math.trunc(subscription.amount / 100)
             })
         } catch (err) {
             logger.critical(err)
