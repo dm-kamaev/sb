@@ -38,34 +38,6 @@ module.exports = function(sequelize, DataTypes) {
                 isIn: [['user', 'admin']]
             }
         },
-        percent: {
-            type: DataTypes.INTEGER,
-            defaultValue: null,
-            validate: {
-                min: {
-                    args: 1,
-                    msg: 'Минимальный процент от доходов: 1%',
-                },
-                max: {
-                    args: 100,
-                    msg: 'Максимальный процент от доходов: 100%',
-                }
-            }
-        },
-        salary: {
-            type: DataTypes.INTEGER,
-            defaultValue: null,
-            validate: {
-                min: {
-                    args: 10000,
-                    msg: 'Минимальная сумма пожертвования 100 рублей'
-                },
-                max: {
-                    args: 50000000,
-                    msg: 'Мы не можем принять от вас сразу больше, чем 500 тыс. рублей'
-                }
-            }
-        },
         createdAt: {
             type: DataTypes.DATE
         },
