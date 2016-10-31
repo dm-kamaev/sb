@@ -101,7 +101,7 @@ module.exports = class PasswordAuth {
             return user;
         } else {
             var userEl = user[key] || null;
-            if (!userEl) {
+            if (userEl === undefined) {
                 throw new errors.NotFoundError(
                     i18n.__('Not found field "{{key}}" in User {{userEl}}', {
                         key: [key],
@@ -127,7 +127,7 @@ module.exports = class PasswordAuth {
             return userFund;
         } else {
             var userFundEl = userFund[key] || null;
-            if (!userFundEl) {
+            if (userFundEl === undefined) {
                 throw new errors.NotFoundError(
                     i18n.__('Not found field "{{key}}" in UserFund: {{userFundEl}}', {
                         key: [key],
