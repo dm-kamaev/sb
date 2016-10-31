@@ -36,7 +36,16 @@ module.exports = class UserFundApi {
     getEntity(data) {
         data = data || {};
         var userFundId = data.userFundId || this.userFundId;
-        var userFund = userFundService.getUserFund(userFundId, true, true);
+        var entities = userFundService.getEntities(userFundId)
+        var userFund = entities.reduce((obj, entity) => {
+            obj[entity.type].push(entity);
+            return obj;
+        }, {
+            topic: [],
+            direction: [],
+            fund: []
+        })
+        // var userFund = userFundService.getUserFund(userFundId, true, false);
         var topics     = userFund.topic     || [],
             directions = userFund.direction || [],
             funds      = userFund.fund      || [],
