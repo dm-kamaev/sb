@@ -24,7 +24,7 @@ module.exports = class ExtractEntity {
         if (!params.entityIds) {
             throw new Error('ExtractEntity => not exist entityIds: "'+params.entityIds+'"');
         }
-        if (!entityTypes[params.type]) {
+        if (params.type && !entityTypes[params.type]) {
             throw new Error('ExtractEntity => there is no such type: "'+params.type+'"');
         }
         this.type              = params.type;
@@ -58,6 +58,21 @@ module.exports = class ExtractEntity {
         // console.log('entityIdsNested = ', entityIdsNested);
         // console.log('uniqEntityIds = ', uniqEntityIds);
         return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
+    }
+
+    buildTreeId() {
+        var EntityOtherEntity = this.EntityOtherEntity,
+            entityIds         = this.entityIds;
+
+        var hashTree = {};
+        entityIds.forEach(entityId => {
+            var entities = await(EntityOtherEntity.findAll({
+                where: { entityId: entityId }
+            })) || [];
+            entities = getDescriptionEntities_(entities).filter(entity => entity.type === entityTypes.FUND);
+            hashTree[entityId] = entities.map(entity => entity.id);
+        });
+        return hashTree; // { '1': [ 2, 3, 4 ] }
     }
 };
 
