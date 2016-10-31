@@ -379,6 +379,8 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
 
     if (isEmptyUserFund_(userFund)) {
         // this should never happened
+        console.log(userFund);
+        userFund = null;
         return;
     }
 
@@ -464,7 +466,7 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
  * @return {[array]}          ['29', '28','27', ... ]
  */
 OrderService.getMissingDays = function(allDates, date) {
-    allDates = allDates && allDates.length || []
+    allDates = Array.isArray(allDates) ? allDates : []
     var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
     var dateObjTime = moment(date);
     if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
@@ -480,6 +482,24 @@ OrderService.getMissingDays = function(allDates, date) {
     allDates.push(dateObjTime.format('DD'));
     return allDates;
 };
+
+OrderService.getOrderComposition = function(sberAcquOrderNumber) {
+    return await(sequelize.sequelize.query(`
+    SELECT
+        entities -> 'id' AS "id",
+        entities -> 'type' as "type",
+        entities -> 'title' AS "title",
+        entities -> 'description' AS "description"
+    FROM (SELECT jsonb_array_elements(("Order"."userFundSnapshot" -> 'topic') ||
+                             ("Order"."userFundSnapshot" -> 'fund') ||
+                             ("Order"."userFundSnapshot" -> 'direction')) AS entities
+    FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            sberAcquOrderNumber
+        }
+    }))
+}
 
 
 /**
