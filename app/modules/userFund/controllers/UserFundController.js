@@ -181,12 +181,15 @@ class UserFundController extends Controller {
         var entityIds = entityApi.getNestedEntityIds();
 
         var userFundApi = new UserFundApi({ userFundId });
-        userFundApi.addEmptyEntity({ entityIds });
-        console.log('HERE=', entityIds);
+
+        console.log('FOR REMOVE entityIds=', entityIds);
+        console.log('+++++++++++++++++++++++++');
         // if userFund empty after delete
-        // if (loggedIn && userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
-        //     return [{ message: 'TRY_DELETE_USERFUND' }];
-        // }
+        if (loggedIn && userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
+            return [{ message: 'TRY_DELETE_USERFUND' }];
+        }
+        // userFundApi.addEmptyDirectionsTopics({ entityIds });
+        console.log('+++++++++++++++++++++++++');
         userFundApi.removeEntities({ entityIds });
 
         // return entities from userFund

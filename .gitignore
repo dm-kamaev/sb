@@ -38,3 +38,5 @@ clean_log.sh
 # test
 test.js
 test.sql
+entities.sql
+entityOtherEntity.sql

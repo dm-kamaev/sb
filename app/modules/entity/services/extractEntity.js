@@ -60,16 +60,24 @@ module.exports = class ExtractEntity {
         return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
     }
 
-    buildTreeId() {
+    buildTreeId(type) {
         var EntityOtherEntity = this.EntityOtherEntity,
-            entityIds         = this.entityIds;
-
+            entityIds         = this.entityIds,
+            type              = this.type;
+        const extractType = '';
+        if (type === entityTypes.TOPIC)  {
+            extractType = entityTypes.DIRECTION;
+        } else if (type === entityTypes.DIRECTION) {
+            extractType = entityTypes.FUND;
+        }
         var hashTree = {};
         entityIds.forEach(entityId => {
             var entities = await(EntityOtherEntity.findAll({
                 where: { entityId: entityId }
             })) || [];
-            entities = getDescriptionEntities_(entities).filter(entity => entity.type === entityTypes.FUND);
+            entities = getDescriptionEntities_(entities).filter(
+                entity => entity.type === extractType
+            );
             hashTree[entityId] = entities.map(entity => entity.id);
         });
         return hashTree; // { '1': [ 2, 3, 4 ] }

@@ -37,7 +37,8 @@ module.exports = class UserFundApi {
      */
     getEntity(data) {
         data = data || {};
-        var userFundId = data.userFundId || this.userFundId;
+        var userFundId = data.userFundId || this.userFundId,
+            type       = data.type;
         var userFund = userFundService.getUserFund(userFundId, true, true);
         var topics     = userFund.topic     || [],
             directions = userFund.direction || [],
@@ -144,53 +145,59 @@ module.exports = class UserFundApi {
      * @return {Boolean}
      */
     isEmptyAfterRemoveEntity(data) {
-        var entityIds  = data.entityIds, entityIdsForRemove = {};
-        entityIds.forEach(entityId => entityIdsForRemove[entityId] = true);
-        var entities = this.getEntity();
-        var remaningEntities = entities.filter(entity => {
-            if (!entityIdsForRemove[entity.id]) { return true; }
+        var entityIdsForRemove = data.entityIds, hashForRemove = {};
+        entityIdsForRemove.forEach(entityId => hashForRemove[entityId] = true);
+        var fundsUserFund = this.getEntity({ type: entityTypes.FUND });
+        // console.log('fundsUserFund=', fundsUserFund);
+        var remaningFunds = fundsUserFund.filter(fund => {
+            if (!hashForRemove[fund.id]) { return true; }
         });
-        if (!remaningEntities.length) { return true; }
+        // console.log('remaningFunds=', remaningFunds);
+        if (!remaningFunds.length) { return true; }
+        // global.process.exit();
         return false;
     }
 
 
-    addEmptyEntity(data) {
-        var entityIds = data.entityIds;
-        var remaningEntities = this.remainingEntities({ entityIds });
+    addEmptyDirectionsTopics(data) {
+        var entityIdsForRemove = data.entityIds;
+        var remaningEntities = this.remainingEntities({ entityIds: entityIdsForRemove });
+        // console.log('entityIdsForRemove=', entityIdsForRemove);
+        // console.log('remaningEntities=', remaningEntities);
         var hashRemaning = {};
         remaningEntities.forEach(entity => hashRemaning[entity.id] = true);
-        // var topicsDirections = remaningEntities.filter(entity =>
-        //     entity.type === entityTypes.TOPIC ||
-        //     entity.type === entityTypes.DIRECTION
-        // );
-        var directions = remaningEntities.filter(entity => entity.type === entityTypes.DIRECTION);
+        var topics     = remaningEntities.filter(entity => entity.type === entityTypes.TOPIC);
+            directions = remaningEntities.filter(entity => entity.type === entityTypes.DIRECTION);
+
         // { 1: [3,4,5], 2:[10, 9] }
-        var hashTree = new ExtractEntity({
+        var relationDirections = new ExtractEntity({
+            type: entityTypes.DIRECTION,
             entityIds: directions.map(entity => entity.id) || []
         }).buildTreeId();
-        var ids_directionTopic = Object.keys(hashTree);
-        console.log('++++++++++++++++++++++++++')
-        console.log('entityIds for remove', entityIds);
-        console.log('hashTree=', hashTree);
-        console.log('hashRemaning=', hashRemaning);
-        console.log('++++++++++++++++++++++++++')
-        for (var i = 0, l = ids_directionTopic.length; i < l; i++) {
-            var id = ids_directionTopic[i], subEntityIds = hashTree[id];
-            var deleted = true;
-            for (var j = 0, l1 = subEntityIds.length; j < l1; j++) {
-                var subEntityId = subEntityIds[j];
-                console.log('subEntityId=', subEntityId);
-                if (hashRemaning[subEntityId]) {
-                    deleted = false;
-                    break;
-                }
-            }
-            console.log(id, deleted);
-            if (deleted) { entityIds.push(id); }
-        }
-        console.log('entityIds=', entityIds);
-        // global.process.exit();
+        var res = Object.assign(relationDirections);
+        console.log('relationDirections=', relationDirections);
+        // var ids_directionTopic = Object.keys(hashTree);
+        // console.log('++++++++++++++++++++++++++')
+        // console.log('entityIds for remove', entityIds);
+        // console.log('hashTree=', hashTree);
+        // console.log('hashRemaning=', hashRemaning);
+        // console.log('++++++++++++++++++++++++++')
+        // for (var i = 0, l = ids_directionTopic.length; i < l; i++) {
+        //     var id = ids_directionTopic[i], subEntityIds = hashTree[id];
+        //     var deleted = true;
+        //     for (var j = 0, l1 = subEntityIds.length; j < l1; j++) {
+        //         var subEntityId = subEntityIds[j];
+        //         // console.log('subEntityId=', subEntityId);
+        //         if (hashRemaning[subEntityId]) {
+        //             deleted = false;
+        //             break;
+        //         }
+        //     }
+        //     console.log(id, deleted);
+        //     if (deleted) { entityIds.push(id); }
+        // }
+        // console.log('entityIds=', entityIds);
+        global.process.exit();
     }
 
 }
