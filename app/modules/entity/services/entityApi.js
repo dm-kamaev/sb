@@ -82,20 +82,27 @@ module.exports = class EntityApi {
         entityId = entityId || this.entityId;
         var entityIds = (entityId instanceof Array) ? entityId : [ entityId ];
         var type = this.entity.type;
-        if (type === entityTypes.DIRECTION) {
+        const TOPIC = entityTypes.TOPIC, DIRECTION = entityTypes.DIRECTION;
+        if (type === TOPIC) {
+            var directionFundIds = new ExtractEntity({
+                type: entityTypes.TOPIC,
+                entityIds,
+                skipType: 'nothing',
+            }).extract();
+            entityIds = entityIds.concat(directionFundIds);
+            entityIds = uniqueIds_(entityIds);
+            // console.log('directionFundIds=', entityIds);
+            // global.process.exit();
+        } else if (type === DIRECTION) {
             var fundIds = new ExtractEntity({
                 type: entityTypes.DIRECTION,
                 entityIds,
                 skipType: entityTypes.TOPIC,
             }).extract();
             entityIds = entityIds.concat(fundIds);
-        } else if (type === entityTypes.TOPIC) {
-            var fundIds = new ExtractEntity({
-                type: entityTypes.TOPIC,
-                entityIds,
-                skipType: 'nothing',
-            }).extract();
-            entityIds = entityIds.concat(fundIds);
+            entityIds = uniqueIds_(entityIds);
+            // console.log('fundIds=', entityIds);
+            // global.process.exit();
         }
         return entityIds;
     }
@@ -131,3 +138,15 @@ module.exports = class EntityApi {
         return entityIds;
     }
 };
+
+
+/**
+ * the unique ids
+ * @param  {[array]} ids [ "11", 11, '1', 2]
+ * @return {[array]}     [ 11, 1, 2 ]
+ */
+function uniqueIds_ (ids) {
+    var uniqEntityIds = {};
+    ids.forEach(id => uniqEntityIds[id] = true);
+    return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
+}

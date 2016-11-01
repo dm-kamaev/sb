@@ -110,6 +110,8 @@ module.exports = class UserFundApi {
         var multiRows = entityIds.map(entityId => {
             return { userFundId, entityId };
         });
+        console.log('multiRows= ', multiRows);
+        // global.process.exit();
         await(this.UserFundEntity.bulkCreate(multiRows));
     }
 

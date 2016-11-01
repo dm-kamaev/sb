@@ -126,6 +126,7 @@ class UserFundController extends Controller {
 
         var userFundApi = new UserFundApi({ userFundId });
         entityIds = userFundApi.filterExistRelations({ entityIds });
+        // console.log('entityIds FOR ADD =', entityIds);
         userFundApi.addEntities({ entityIds });
 
         // return entities from userFund

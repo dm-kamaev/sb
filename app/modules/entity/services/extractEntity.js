@@ -40,44 +40,53 @@ module.exports = class ExtractEntity {
         var EntityOtherEntity = this.EntityOtherEntity,
             type              = this.type,
             entityIds         = this.entityIds;
-
         var skipType = this.skipType;
-        var otherEntities = getEntitiesOtherEntity_(entityIds),
-            uniqEntityIds = {};
-        if (type === entityTypes.DIRECTION || type === entityTypes.FUND) {
-            skipType = skipType || entityTypes.TOPIC;
-        } else if (type === entityTypes.TOPIC) {
-            skipType = skipType || entityTypes.FUND;
-            var directions = otherEntities.filter(entity => await(isNotFund_(entity.id)))
-            otherEntities = otherEntities.concat(directions);
+        const FUND      = entityTypes.FUND,
+              DIRECTION = entityTypes.DIRECTION,
+              TOPIC     = entityTypes.TOPIC;
+
+        var resIds = [];
+        if (type === TOPIC) {
+            skipType = skipType || FUND;
+            var otherEntities = getEntitiesOtherEntity_(entityIds);
+            var ids = otherEntities.map(entity => entity.otherEntityId) || [];
+            var directions   = getDirectionsFromTopics(ids),
+                directionIds = directions.map(direction => direction.id);
+            var fundIds = getFundIdsFromDirection_(directionIds);
+            // var funds   = getFundsFromDirection_(directions),
+            //     fundIds = funds.map(fund => fund.otherEntityId);
+            // console.log('entityIds=', entityIds);
+            // console.log('directionIds=', directionIds);
+            // console.log('fundIds=', fundIds);
+            switch (skipType) {
+                case DIRECTION:
+                    resIds = fundIds;
+                    break;
+                case FUND:
+                    resIds = directionIds;
+                    break;
+                default:
+                    resIds = directionIds.concat(fundIds);
+            }
+            // console.log('HERE=', resIds);
+            // global.process.exit();
+            // return resIds;
+        } else if (type === DIRECTION) {
+            var fundIds = getFundIdsFromDirection_(entityIds);
+            resIds = fundIds;
+            // console.log('resIds=', resIds);
+            // global.process.exit();
         }
-        var entityIdsNested = skipType_(
-            getDescriptionEntities_(otherEntities), skipType
-        );
-        entityIdsNested.forEach(entityId => uniqEntityIds[entityId] = true);
-        // console.log('entityIdsNested = ', entityIdsNested);
-        // console.log('uniqEntityIds = ', uniqEntityIds);
-        return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
+        // console.log('entityIdsNested = ', uniqueIds_(resIds));
+        return uniqueIds_(resIds);
     }
 };
 
 
 /**
- * skipType_ skip entity by type
- * @param  {[array]} entities [{ id, title, type }, ... ]
- * @param  {[str]}  type      'FUND' || 'DIRECTION' || 'TOPIC'
- * @return {[array]}          [ 1,2 3] // entity id
- */
-function skipType_ (entities, type) {
-    return entities.filter(entity => entity.type !== type)
-                   .map(entity => entity.id) || [];
-}
-
-
-/**
  * getEntitiesOtherEntity_ get entity from table EntityOtherEntity by entity ids
  * @param  {[array]} entityIds [1,2,3]
- * @return {[type]}           [description]
+ * @return {[type]}           [ { entityId, entityOtherEntity }, ... ]
  */
 function getEntitiesOtherEntity_ (entityIds) {
     var query = {
@@ -91,33 +100,63 @@ function getEntitiesOtherEntity_ (entityIds) {
 }
 
 
-/**
- * get description entities from table entity
- * @param  {[type]} entities [description]
- * @return {[type]}          [description]
- */
-function getDescriptionEntities_ (entities) {
-    return await(tables.Entity.findAll({
+function getDirectionsFromTopics (ids) {
+    var entitiesFrom = await(tables.Entity.findAll({
         where: {
             id: {
-                $in: entities.map(entity => entity.otherEntityId) || []
-            }
+                $in: ids
+            },
+            type: entityTypes.DIRECTION
         }
     }));
+    return entitiesFrom;
+}
+
+
+
+/**
+ * getEntitiesOtherEntity_ get entity from table EntityOtherEntity by entity ids
+ * @param  {[array]} entityIds [1,2,3]
+ * @return {[type]}           [ { entityId, entityOtherEntity }, ... ]
+ */
+function getFundsFromDirection_ (directions, key) {
+    var ids = directions.map(direction => direction.id);
+    var query = {
+        where: {
+            entityId: {
+                $in: ids
+            }
+        }
+    };
+    var otherEntities = await(tables.EntityOtherEntity.findAll(query)) || [];
+    return otherEntities;
 }
 
 
 /**
- * isNotFund_ check entity is DIRECTION OR TOPIC
- * @param  {[int]}  entityId
- * @return {Boolean}
+ * the unique ids
+ * @param  {[array]} ids [ "11", 11, '1', 2]
+ * @return {[array]}     [ 11, 1, 2 ]
  */
-function isNotFund_(entityId) {
-    var where = {
-        id: entityId,
-        type: {
-            $ne: entityTypes.FUND
+function uniqueIds_ (ids) {
+    var uniqEntityIds = {};
+    ids.forEach(id => uniqEntityIds[id] = true);
+    return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
+}
+
+function getFundIdsFromDirection_ (ids) {
+    var res = await(sequelize.sequelize.query(
+    `SELECT e.id
+        FROM "EntityOtherEntity" as eoe
+        JOIN "Entity" as e
+            ON eoe."otherEntityId"=e.id
+        WHERE eoe."entityId" IN ( :ids ) AND e.type= :type
+    `, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            ids,
+            type: entityTypes.FUND
         }
-    };
-    return Boolean(await (tables.Entity.findOne({ where }))) || false;
+    })) || [];
+    return res.map(entity => entity.id);
 }
