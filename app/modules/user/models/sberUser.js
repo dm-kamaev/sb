@@ -28,7 +28,12 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             // defaultValue:
         },
-        notified: {
+        paymentNotified: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        draftNotified: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false

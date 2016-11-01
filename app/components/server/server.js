@@ -6,8 +6,6 @@ const logger = require('../logger').getLogger('main');
 const prettyJSON = require('../prettyJSON');
 const bodyparser = require('body-parser');
 const path = require('path');
-const signature = require('cookie-signature');
-const cookie = require('cookie');
 
 const debugForm = require('./middleware/debugForm');
 

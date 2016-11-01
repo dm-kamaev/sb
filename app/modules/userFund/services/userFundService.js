@@ -507,29 +507,10 @@ UserFundService.getUserFundWithIncludes = function(id) {
             model: sequelize.models.Entity,
             as: 'topic',
             required: false,
-            include: [{
-                model: sequelize.models.Entity,
-                as: 'direction',
-                required: false,
-                include: {
-                    model: sequelize.models.Entity,
-                    as: 'fund',
-                    required: false
-                }
-            }, {
-                model: sequelize.models.Entity,
-                as: 'fund',
-                required: false
-            }]
         }, {
             model: sequelize.models.Entity,
             as: 'direction',
             required: false,
-            include: {
-                model: sequelize.models.Entity,
-                as: 'fund',
-                required: false
-            }
         },
         {
             model: sequelize.models.Entity,

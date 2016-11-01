@@ -379,7 +379,6 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
 
     if (isEmptyUserFund_(userFund)) {
         // this should never happened
-        console.log(userFund);
         userFund = null;
         return;
     }
@@ -534,7 +533,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         if (sberUser.categories == mailingCategory.ALL) {
             mail.sendFirstFailure(userEmail, {
                 userName: authUser.firstName,
-                amount
+                amount: Math.trunc(amount / 100)
             })
         }
         // this is the second time the payment failed
@@ -542,7 +541,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         if (sberUser.categories == mailingCategory.ALL) {
             mail.sendSecondFailure(userEmail, {
                 userName: authUser.firstName,
-                amount
+                amount: Math.trunc(amount / 100)
             })
         }
         // get all user subscription and turn off their
@@ -652,10 +651,7 @@ function disableUserFunds_(userFundIds) {
 
 
 function isEmptyUserFund_(userFund) {
-    return !(
-        userFund &&
-        (userFund.topic.length || userFund.direction.length || userFund.fund.length)
-    );
+    return userFund && !userFund.fund.length
 }
 
 module.exports = OrderService;
