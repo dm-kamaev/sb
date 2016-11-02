@@ -147,7 +147,7 @@ UserFundService.removeUserFund = function(userFundId) {
 };
 
 
-UserFundService.getEntities = function(id) {
+UserFundService.getEntities = function(id, includes) {
     var userFund = await(sequelize.models.UserFund.findOne({
         where: {
             id
@@ -156,11 +156,11 @@ UserFundService.getEntities = function(id) {
             model: sequelize.models.Entity,
             as: 'entity',
             required: false,
-            include: {
+            include: includes ? {
                 model: sequelize.models.Entity,
                 as: 'fund',
                 required: false
-            }
+            } : undefined
         }
     }));
 
@@ -502,34 +502,17 @@ UserFundService.getUserFundWithIncludes = function(id) {
         where: {
             id
         },
-        include: [{
+        include: [
+          {
             model: sequelize.models.Entity,
             as: 'topic',
             required: false,
-            include: [{
-                model: sequelize.models.Entity,
-                as: 'direction',
-                required: false,
-                include: {
-                    model: sequelize.models.Entity,
-                    as: 'fund',
-                    required: false
-                }
-            }, {
-                model: sequelize.models.Entity,
-                as: 'fund',
-                required: false
-            }]
         }, {
             model: sequelize.models.Entity,
             as: 'direction',
             required: false,
-            include: {
-                model: sequelize.models.Entity,
-                as: 'fund',
-                required: false
-            }
-        }, {
+        },
+        {
             model: sequelize.models.Entity,
             as: 'fund',
             required: false

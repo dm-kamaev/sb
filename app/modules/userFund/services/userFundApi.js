@@ -37,13 +37,20 @@ module.exports = class UserFundApi {
      */
     getEntity(data) {
         data = data || {};
-        var userFundId = data.userFundId || this.userFundId,
-            type       = data.type;
-        var userFund = userFundService.getUserFund(userFundId, true, true);
-        var topics     = userFund.topic     || [],
+        var userFundId = data.userFundId || this.userFundId;
+        var entities = userFundService.getEntities(userFundId)
+        var userFund = entities.reduce((obj, entity) => {
+                obj[entity.type].push(entity);
+                return obj;
+            },{
+                topic: [],
+                direction: [],
+                fund: []
+            });
+        var topics = userFund.topic || [],
             directions = userFund.direction || [],
-            funds      = userFund.fund      || [],
-            res        = [];
+            funds = userFund.fund || [],
+            res = [];
         switch (data.type) {
             case entityTypes.TOPIC:
                 res = topics;
@@ -158,7 +165,6 @@ module.exports = class UserFundApi {
         return false;
     }
 
-
     addEmptyDirectionsTopics(data) {
         var entityIdsForRemove = data.entityIds;
         var remaningEntities = this.remainingEntities({ entityIds: entityIdsForRemove });
@@ -166,7 +172,7 @@ module.exports = class UserFundApi {
         // console.log('remaningEntities=', remaningEntities);
         var hashRemaning = {};
         remaningEntities.forEach(entity => hashRemaning[entity.id] = true);
-        var topics     = remaningEntities.filter(entity => entity.type === entityTypes.TOPIC);
+        var topics     = remaningEntities.filter(entity => entity.type === entityTypes.TOPIC),
             directions = remaningEntities.filter(entity => entity.type === entityTypes.DIRECTION);
 
         // { 1: [3,4,5], 2:[10, 9] }

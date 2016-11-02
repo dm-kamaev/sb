@@ -6,8 +6,6 @@ const logger = require('../logger').getLogger('main');
 const prettyJSON = require('../prettyJSON');
 const bodyparser = require('body-parser');
 const path = require('path');
-const signature = require('cookie-signature');
-const cookie = require('cookie');
 
 const debugForm = require('./middleware/debugForm');
 
@@ -31,6 +29,7 @@ const metaTags = require('./middleware/metaTags');
 const accesslog = require('./middleware/access-log');
 const hideRoutes = require('./middleware/hideRoutes');
 const cordovaSession = require('./middleware/session/cordova');
+const cordovaSessionParser = require('./middleware/session/cordovaSessionParser.js');
 
 app.use('/dev', hideRoutes, debugForm);
 
@@ -57,7 +56,7 @@ app.use('/recommendation', express.static(path.join(__dirname, '../../../public/
 app.use('/statement', express.static(path.join(__dirname, '../../../public/uploads/statement')))
 
 app.use('/callback', callbackRouter);
-
+app.use(cordovaSessionParser);
 app.use(session);
 app.use(passport.init);
 app.use(passport.session);

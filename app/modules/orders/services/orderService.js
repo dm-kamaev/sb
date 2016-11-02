@@ -374,34 +374,12 @@ OrderService.getListDatesBefore = function(NumberDays, date) {
 };
 
 
-/**
- * if last day in month then push '28', '30', '31'
- * @param  {[aarray]} allDates [ '2016-02-29', '2016-02-28','2016-02-27', '2016-02-26', '2016-02-25', '2016-02-24' ]
- * @param  {[string]} date     '2016-02-29'
- * @return {[array]}          ['29', '28','27', ... ]
- */
-OrderService.getMissingDays = function(allDates, date) {
-    var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
-    var dateObjTime = moment(date);
-    if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
-        var dd = formatLastDayMonth.replace(/^\d{4}-\d{2}-/, '');
-        var digitLastDay = parseInt(dd, 10),
-            diff = 31 - digitLastDay;
-        if (diff) {
-            for (var i = diff; i >= 1; i--) {
-                allDates.push((digitLastDay + i).toString());
-            }
-        }
-    }
-    allDates.push(dateObjTime.format('DD'));
-};
-
-
 OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     var userFund = userFundService.getUserFundWithIncludes(userFundSubscription.userFundId);
 
     if (isEmptyUserFund_(userFund)) {
         // this should never happened
+        userFund = null;
         return;
     }
 
@@ -480,8 +458,14 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     });
 };
 
-
+/**
+ * if last day in month then push '28', '30', '31'
+ * @param  {[aarray]} allDates [ '2016-02-29', '2016-02-28','2016-02-27', '2016-02-26', '2016-02-25', '2016-02-24' ]
+ * @param  {[string]} date     '2016-02-29'
+ * @return {[array]}          ['29', '28','27', ... ]
+ */
 OrderService.getMissingDays = function(allDates, date) {
+    allDates = Array.isArray(allDates) ? allDates : []
     var formatLastDayMonth = moment(date).endOf('month').format('YYYY-MM-DD');
     var dateObjTime = moment(date);
     if (dateObjTime.format('YYYY-MM-DD') === formatLastDayMonth) {
@@ -495,7 +479,26 @@ OrderService.getMissingDays = function(allDates, date) {
         }
     }
     allDates.push(dateObjTime.format('DD'));
+    return allDates;
 };
+
+OrderService.getOrderComposition = function(sberAcquOrderNumber) {
+    return await(sequelize.sequelize.query(`
+    SELECT
+        entities -> 'id' AS "id",
+        entities -> 'type' as "type",
+        entities -> 'title' AS "title",
+        entities -> 'description' AS "description"
+    FROM (SELECT jsonb_array_elements(("Order"."userFundSnapshot" -> 'topic') ||
+                             ("Order"."userFundSnapshot" -> 'fund') ||
+                             ("Order"."userFundSnapshot" -> 'direction')) AS entities
+    FROM "Order" WHERE "sberAcquOrderNumber" = :sberAcquOrderNumber) AS entities`, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            sberAcquOrderNumber
+        }
+    }))
+}
 
 
 /**
@@ -530,7 +533,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         if (sberUser.categories == mailingCategory.ALL) {
             mail.sendFirstFailure(userEmail, {
                 userName: authUser.firstName,
-                amount
+                amount: Math.trunc(amount / 100)
             })
         }
         // this is the second time the payment failed
@@ -538,7 +541,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
         if (sberUser.categories == mailingCategory.ALL) {
             mail.sendSecondFailure(userEmail, {
                 userName: authUser.firstName,
-                amount
+                amount: Math.trunc(amount / 100)
             })
         }
         // get all user subscription and turn off their
@@ -648,10 +651,7 @@ function disableUserFunds_(userFundIds) {
 
 
 function isEmptyUserFund_(userFund) {
-    return !(
-        userFund &&
-        (userFund.topic.length || userFund.direction.length || userFund.fund.length)
-    );
+    return userFund && !userFund.fund.length
 }
 
 module.exports = OrderService;

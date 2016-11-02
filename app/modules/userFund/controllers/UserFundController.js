@@ -11,8 +11,6 @@ const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
 const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
-// const entityTypes = require('../../entity/enums/entityTypes.js');
-// const ExtractEntity = require('../../entity/services/extractEntity.js');
 const UserFundApi  = require('../services/userFundApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
@@ -126,6 +124,7 @@ class UserFundController extends Controller {
 
         var userFundApi = new UserFundApi({ userFundId });
         entityIds = userFundApi.filterExistRelations({ entityIds });
+        // console.log('entityIds FOR ADD =', entityIds);
         userFundApi.addEntities({ entityIds });
 
         // return entities from userFund

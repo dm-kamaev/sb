@@ -24,7 +24,7 @@ module.exports = class ExtractEntity {
         if (!params.entityIds) {
             throw new Error('ExtractEntity => not exist entityIds: "'+params.entityIds+'"');
         }
-        if (params.type && !entityTypes[params.type]) {
+        if (!entityTypes[params.type]) {
             throw new Error('ExtractEntity => there is no such type: "'+params.type+'"');
         }
         this.type              = params.type;
@@ -40,40 +40,58 @@ module.exports = class ExtractEntity {
         var EntityOtherEntity = this.EntityOtherEntity,
             type              = this.type,
             entityIds         = this.entityIds;
-
         var skipType = this.skipType;
-        var otherEntities = getEntitiesOtherEntity_(entityIds),
-            uniqEntityIds = {};
-        if (type === entityTypes.DIRECTION || type === entityTypes.FUND) {
-            skipType = skipType || entityTypes.TOPIC;
-        } else if (type === entityTypes.TOPIC) {
-            skipType = skipType || entityTypes.FUND;
-            var directions = otherEntities.filter(entity => await(isNotFund_(entity.id)))
-            otherEntities = otherEntities.concat(directions);
+        const FUND      = entityTypes.FUND,
+              DIRECTION = entityTypes.DIRECTION,
+              TOPIC     = entityTypes.TOPIC;
+
+        var resIds = [];
+        if (type === TOPIC) {
+            skipType = skipType || FUND;
+            var directionIds = getNestedIdsFrom_(entityIds, DIRECTION);
+            var fundIds      = getNestedIdsFrom_(directionIds, FUND);
+            // console.log('entityIds=', entityIds);
+            // console.log('directionIds=', directionIds);
+            // console.log('fundIds=', fundIds);
+            switch (skipType) {
+                case DIRECTION:
+                    resIds = fundIds;
+                    break;
+                case FUND:
+                    resIds = directionIds;
+                    break;
+                default:
+                    resIds = directionIds.concat(fundIds);
+            }
+            // console.log('HERE=', resIds);
+            // global.process.exit();
+            // return resIds;
+        } else if (type === DIRECTION) {
+            var fundIds = getNestedIdsFrom_(entityIds, FUND);
+            resIds = fundIds;
+            // console.log('resIds=', resIds);
+            // global.process.exit();
         }
-        var entityIdsNested = skipType_(
-            getDescriptionEntities_(otherEntities), skipType
-        );
-        entityIdsNested.forEach(entityId => uniqEntityIds[entityId] = true);
-        // console.log('entityIdsNested = ', entityIdsNested);
-        // console.log('uniqEntityIds = ', uniqEntityIds);
-        return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
+        // console.log('entityIdsNested = ', uniqueIds_(resIds));
+        return uniqueIds_(resIds);
     }
 
     buildTreeId(type) {
         var EntityOtherEntity = this.EntityOtherEntity,
-            entityIds         = this.entityIds,
-            type              = this.type;
-        const extractType = '';
-        if (type === entityTypes.TOPIC)  {
+            entityIds = this.entityIds;
+        type = this.type;
+        var extractType = '';
+        if (type === entityTypes.TOPIC) {
             extractType = entityTypes.DIRECTION;
         } else if (type === entityTypes.DIRECTION) {
             extractType = entityTypes.FUND;
         }
         var hashTree = {};
         entityIds.forEach(entityId => {
-            var entities = await(EntityOtherEntity.findAll({
-                where: { entityId: entityId }
+            var entities = await (EntityOtherEntity.findAll({
+                where: {
+                    entityId: entityId
+                }
             })) || [];
             entities = getDescriptionEntities_(entities).filter(
                 entity => entity.type === extractType
@@ -85,62 +103,31 @@ module.exports = class ExtractEntity {
 };
 
 
-/**
- * skipType_ skip entity by type
- * @param  {[array]} entities [{ id, title, type }, ... ]
- * @param  {[str]}  type      'FUND' || 'DIRECTION' || 'TOPIC'
- * @return {[array]}          [ 1,2 3] // entity id
- */
-function skipType_ (entities, type) {
-    return entities.filter(entity => entity.type !== type)
-                   .map(entity => entity.id) || [];
+function getNestedIdsFrom_ (ids, type) {
+    var res = await(sequelize.sequelize.query(
+    `SELECT e.id
+        FROM "EntityOtherEntity" as eoe
+        JOIN "Entity" as e
+            ON eoe."otherEntityId"=e.id
+        WHERE eoe."entityId" IN ( :ids ) AND e.type= :type
+    `, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            ids,
+            type
+        }
+    })) || [];
+    return res.map(entity => entity.id);
 }
 
 
 /**
- * getEntitiesOtherEntity_ get entity from table EntityOtherEntity by entity ids
- * @param  {[array]} entityIds [1,2,3]
- * @return {[type]}           [description]
+ * the unique ids
+ * @param  {[array]} ids [ "11", 11, '1', 2]
+ * @return {[array]}     [ 11, 1, 2 ]
  */
-function getEntitiesOtherEntity_ (entityIds) {
-    var query = {
-        where: {
-            entityId: {
-                $in: entityIds
-            }
-        }
-    };
-    return await(tables.EntityOtherEntity.findAll(query)) || [];
-}
-
-
-/**
- * get description entities from table entity
- * @param  {[type]} entities [description]
- * @return {[type]}          [description]
- */
-function getDescriptionEntities_ (entities) {
-    return await(tables.Entity.findAll({
-        where: {
-            id: {
-                $in: entities.map(entity => entity.otherEntityId) || []
-            }
-        }
-    }));
-}
-
-
-/**
- * isNotFund_ check entity is DIRECTION OR TOPIC
- * @param  {[int]}  entityId
- * @return {Boolean}
- */
-function isNotFund_(entityId) {
-    var where = {
-        id: entityId,
-        type: {
-            $ne: entityTypes.FUND
-        }
-    };
-    return Boolean(await (tables.Entity.findOne({ where }))) || false;
+function uniqueIds_ (ids) {
+    var uniqEntityIds = {};
+    ids.forEach(id => uniqEntityIds[id] = true);
+    return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
 }

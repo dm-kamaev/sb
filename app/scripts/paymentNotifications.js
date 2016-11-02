@@ -5,6 +5,7 @@ const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const userService = require('../modules/user/services/userService')
 const userFundService = require('../modules/userFund/services/userFundService')
+const orderService = require('../modules/orders/services/orderService')
 const mail = require('../modules/mail')
 const argv = require('yargs').argv;
 const nowDate = argv.now ? new Date(argv.now) : new Date();
@@ -16,7 +17,7 @@ const logger = require('../components/logger').getLogger('main');
             authId: {
                 $not: null
             },
-            notified: false,
+            draftNotified: false,
             categories: 'all'
         },
         include: {
@@ -24,7 +25,7 @@ const logger = require('../components/logger').getLogger('main');
             as: 'userFund',
             where: {
                 updatedAt: {
-                    $lt: new Date(nowDate.getTime() - 1000 * 60 * 60 * 24 * 14)
+                    $lt: new Date(nowDate.getTime() - 1000 * 60 * 60 * 24 * 13)
                 },
                 enabled: false
             }
@@ -45,7 +46,7 @@ const logger = require('../components/logger').getLogger('main');
     })
 
     if (ids.length) await(models.SberUser.update({
-        notified: true
+        draftNotified: true
     }, {
         where: {
             authId: {
@@ -56,23 +57,36 @@ const logger = require('../components/logger').getLogger('main');
 
     var duration = 1000 * 60 * 60 * 24 * 2
     var dayAfterTommorow = new Date(nowDate.getTime() + duration),
-        subscriptions = userFundService.getUnhandledSubscriptions([dayAfterTommorow.getDate()], dayAfterTommorow),
+        days = orderService.getMissingDays(null, dayAfterTommorow),
+        subscriptions = userFundService.getUnhandledSubscriptions(days, dayAfterTommorow),
         ids = subscriptions.filter(sub => sub.categories == 'all')
-                           .map(subscription => subscription.sberUserAuthId)
-                           .join(','),
-        authUsers = ids ? userService.getAuthUsersByIds(ids) : [];
+                           .map(subscription => subscription.sberUserAuthId),
+        searchStr = ids.join(','),
+        authUsers = searchStr ? userService.getAuthUsersByIds(searchStr) : [];
 
-    subscriptions.forEach(subscription => {
+    subscriptions
+    .filter(sub => userService.findSberUserById(sub.sberUserId).paymentNotified)
+    .forEach(subscription => {
         var authUser = authUsers.find(authUser => {
             return authUser.id == subscription.sberUserAuthId
         })
         try {
             mail.sendBeforePayment(authUser.email, {
                 userName: authUser.firstName,
-                amount: subscription.amount
+                amount: Math.trunc(subscription.amount / 100)
             })
         } catch (err) {
             logger.critical(err)
         }
     })
+
+    if (ids.length) await(models.SberUser.update({
+        paymentNotified: true
+    }, {
+        where: {
+            authId: {
+                $in: ids
+            }
+        }
+    }))
 }))();

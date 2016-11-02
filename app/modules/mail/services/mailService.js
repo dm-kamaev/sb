@@ -7,7 +7,7 @@ const transporter = transporterGenerator.createSMTPTransporter({
     debug: true,
     name: 'cochanges.com'
 });
-const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbank.com>');
+const mailSender = new MailSender(transporter, 'Cбербанк Вместе <noreply@sberbankvmeste.ru>');
 const logger = require('../../../components/logger').getLogger('main');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
