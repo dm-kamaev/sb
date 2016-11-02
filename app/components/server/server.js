@@ -20,7 +20,7 @@ const orderRouter = require('../../modules/orders/router');
 const statementRouter = require('../../modules/statement/router');
 const techRouter = require('../../modules/tech/router');
 const mailRouter = require('../../modules/mail/router');
-
+const optionsMiddleware = require('nodules/middleware/endOptions');
 const headers = require('./middleware/headers');
 const session = require('./middleware/session/session');
 const passport = require('./middleware/passport');
@@ -43,6 +43,10 @@ app.use(bodyparser.urlencoded({
     extended: false
 }));
 
+app.use(cordovaSessionParser);
+app.use(headers);
+app.use(optionsMiddleware);
+
 app.use(metaTags);
 
 app.set('views', path.join(__dirname, '../../../public/meta_templates'));
@@ -56,12 +60,10 @@ app.use('/recommendation', express.static(path.join(__dirname, '../../../public/
 app.use('/statement', express.static(path.join(__dirname, '../../../public/uploads/statement')))
 
 app.use('/callback', callbackRouter);
-app.use(cordovaSessionParser);
 app.use(session);
 app.use(passport.init);
 app.use(passport.session);
 
-app.use(headers);
 app.use(cordovaSession);
 
 app.use(/\/v?\d*\.?\d*\/?entity/, entityRoutes);
