@@ -48,11 +48,8 @@ module.exports = class ExtractEntity {
         var resIds = [];
         if (type === TOPIC) {
             skipType = skipType || FUND;
-            var otherEntities = getEntitiesOtherEntity_(entityIds);
-            var ids = otherEntities.map(entity => entity.otherEntityId) || [];
-            var directions   = getDirectionsFromTopics(ids),
-                directionIds = directions.map(direction => direction.id);
-            var fundIds = getFundIdsFromDirection_(directionIds);
+            var directionIds = getNestedIdsFrom_(entityIds, DIRECTION);
+            var fundIds      = getNestedIdsFrom_(directionIds, FUND);
             // console.log('entityIds=', entityIds);
             // console.log('directionIds=', directionIds);
             // console.log('fundIds=', fundIds);
@@ -70,7 +67,7 @@ module.exports = class ExtractEntity {
             // global.process.exit();
             // return resIds;
         } else if (type === DIRECTION) {
-            var fundIds = getFundIdsFromDirection_(entityIds);
+            var fundIds = getNestedIdsFrom_(entityIds, FUND);
             resIds = fundIds;
             // console.log('resIds=', resIds);
             // global.process.exit();
@@ -79,48 +76,6 @@ module.exports = class ExtractEntity {
         return uniqueIds_(resIds);
     }
 };
-
-
-/**
- * getEntitiesOtherEntity_ get entity from table EntityOtherEntity by entity ids
- * @param  {[array]} entityIds [1,2,3]
- * @return {[type]}           [ { entityId, entityOtherEntity }, ... ]
- */
-function getEntitiesOtherEntity_ (entityIds) {
-    var query = {
-        where: {
-            entityId: {
-                $in: entityIds
-            }
-        }
-    };
-    return await(tables.EntityOtherEntity.findAll(query)) || [];
-}
-
-
-function getDirectionsFromTopics (ids) {
-    var entitiesFrom = await(tables.Entity.findAll({
-        where: {
-            id: {
-                $in: ids
-            },
-            type: entityTypes.DIRECTION
-        }
-    }));
-    return entitiesFrom;
-}
-
-
-/**
- * the unique ids
- * @param  {[array]} ids [ "11", 11, '1', 2]
- * @return {[array]}     [ 11, 1, 2 ]
- */
-function uniqueIds_ (ids) {
-    var uniqEntityIds = {};
-    ids.forEach(id => uniqEntityIds[id] = true);
-    return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
-}
 
 
 function getFundIdsFromDirection_ (ids) {
@@ -138,4 +93,34 @@ function getFundIdsFromDirection_ (ids) {
         }
     })) || [];
     return res.map(entity => entity.id);
+}
+
+
+function getNestedIdsFrom_ (ids, type) {
+    var res = await(sequelize.sequelize.query(
+    `SELECT e.id
+        FROM "EntityOtherEntity" as eoe
+        JOIN "Entity" as e
+            ON eoe."otherEntityId"=e.id
+        WHERE eoe."entityId" IN ( :ids ) AND e.type= :type
+    `, {
+        type: sequelize.sequelize.QueryTypes.SELECT,
+        replacements: {
+            ids,
+            type
+        }
+    })) || [];
+    return res.map(entity => entity.id);
+}
+
+
+/**
+ * the unique ids
+ * @param  {[array]} ids [ "11", 11, '1', 2]
+ * @return {[array]}     [ 11, 1, 2 ]
+ */
+function uniqueIds_ (ids) {
+    var uniqEntityIds = {};
+    ids.forEach(id => uniqEntityIds[id] = true);
+    return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
 }
