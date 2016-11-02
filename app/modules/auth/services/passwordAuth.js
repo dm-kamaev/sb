@@ -52,6 +52,13 @@ module.exports = class PasswordAuth {
         }
     }
 
+    /**
+     * getLoggedIn determine auth
+     * @return {[Boolean]}
+     */
+    getLoggedIn() {
+        return Boolean(this.getUser('authId'));
+    }
 
     logout() {
         var request = this.request;
@@ -69,7 +76,11 @@ module.exports = class PasswordAuth {
         response.redirect(url);
     }
 
-
+    /**
+     * getPostData post data from request
+     * @param  {[str]} key from request.body
+     * @return {[any]}
+     */
     getPostData(key) {
         var body = this.request.body || {};
         if (!key) {

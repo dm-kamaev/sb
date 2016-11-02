@@ -136,6 +136,13 @@ module.exports = class UserFundApi {
         }));
     }
 
+    /**
+     * return remaining entities will be remove entities
+     * @param  {[obj]} data {
+     *    entityIds: [ 1,2,3 ] // entites which remove
+     * }
+     * @return {[obj]}  [ { id, title, desription } ]
+     */
     remainingEntities(data) {
         var entityIds  = data.entityIds, entityIdsForRemove = {};
         entityIds.forEach(entityId => entityIdsForRemove[entityId] = true);
@@ -144,6 +151,8 @@ module.exports = class UserFundApi {
             if (!entityIdsForRemove[entity.id]) { return true; }
         });
     }
+
+
     /**
      * is empty userFund after remove entity from him
      * @param  {[obj]}  data {
@@ -155,55 +164,83 @@ module.exports = class UserFundApi {
         var entityIdsForRemove = data.entityIds, hashForRemove = {};
         entityIdsForRemove.forEach(entityId => hashForRemove[entityId] = true);
         var fundsUserFund = this.getEntity({ type: entityTypes.FUND });
-        // console.log('fundsUserFund=', fundsUserFund);
         var remaningFunds = fundsUserFund.filter(fund => {
             if (!hashForRemove[fund.id]) { return true; }
         });
-        // console.log('remaningFunds=', remaningFunds);
         if (!remaningFunds.length) { return true; }
-        // global.process.exit();
         return false;
     }
 
+
+    /**
+     * add empty directions  and topics
+     * @param  {[obj]}   data {
+     *   entityIds: [1, 2, 3], // entityIds for remove
+     * }
+     * @return {[array]} [ 1,2,3,4]
+     */
     addEmptyDirectionsTopics(data) {
+        const TOPIC     = entityTypes.TOPIC,
+              DIRECTION = entityTypes.DIRECTION,
+              FUND      = entityTypes.FUND;
         var entityIdsForRemove = data.entityIds;
         var remaningEntities = this.remainingEntities({ entityIds: entityIdsForRemove });
-        // console.log('entityIdsForRemove=', entityIdsForRemove);
-        // console.log('remaningEntities=', remaningEntities);
+
         var hashRemaning = {};
         remaningEntities.forEach(entity => hashRemaning[entity.id] = true);
-        var topics     = remaningEntities.filter(entity => entity.type === entityTypes.TOPIC),
-            directions = remaningEntities.filter(entity => entity.type === entityTypes.DIRECTION);
+        var directions = remaningEntities.filter(entity => entity.type === DIRECTION);
 
         // { 1: [3,4,5], 2:[10, 9] }
         var relationDirections = new ExtractEntity({
-            type: entityTypes.DIRECTION,
+            type: DIRECTION,
             entityIds: directions.map(entity => entity.id) || []
         }).buildTreeId();
-        var res = Object.assign(relationDirections);
-        console.log('relationDirections=', relationDirections);
-        // var ids_directionTopic = Object.keys(hashTree);
-        // console.log('++++++++++++++++++++++++++')
-        // console.log('entityIds for remove', entityIds);
-        // console.log('hashTree=', hashTree);
-        // console.log('hashRemaning=', hashRemaning);
-        // console.log('++++++++++++++++++++++++++')
-        // for (var i = 0, l = ids_directionTopic.length; i < l; i++) {
-        //     var id = ids_directionTopic[i], subEntityIds = hashTree[id];
-        //     var deleted = true;
-        //     for (var j = 0, l1 = subEntityIds.length; j < l1; j++) {
-        //         var subEntityId = subEntityIds[j];
-        //         // console.log('subEntityId=', subEntityId);
-        //         if (hashRemaning[subEntityId]) {
-        //             deleted = false;
-        //             break;
-        //         }
-        //     }
-        //     console.log(id, deleted);
-        //     if (deleted) { entityIds.push(id); }
-        // }
-        // console.log('entityIds=', entityIds);
-        global.process.exit();
+
+        var emptyDirectionIds = addEmptyDirectionsTopics_(hashRemaning, relationDirections);
+        entityIdsForRemove = entityIdsForRemove.concat(emptyDirectionIds);
+        var topics = remaningEntities.filter(entity => entity.type === TOPIC);
+        // { 1: [3,4,5], 2:[10, 9] }
+        var relationTopics = new ExtractEntity({
+            type: TOPIC,
+            entityIds: topics.map(entity => entity.id) || []
+        }).buildTreeId();
+        var emptyTopicIds = addEmptyDirectionsTopics_(hashRemaning, relationTopics);
+        if (emptyTopicIds.length) {
+            entityIdsForRemove = entityIdsForRemove.concat(emptyTopicIds);
+        }
+        return entityIdsForRemove;
     }
 
 }
+
+/**
+ * return empty directions topics
+ * by comparison
+ * @param {[obj]}  hashRemaning { 1: true, 2: true, ... }
+ * from userFund after will removed
+ * @param {[obj]}  relationDirections { '1': [ 2, 3, 4 ], ... }
+ * it's schema association  topic: [ directions ] or direction: [ funds ]
+ * @return {[array]} // list id empty topics or directions
+ */
+function addEmptyDirectionsTopics_ (hashRemaning, relationEntities) {
+    var emptyDirectionsTopics = [];
+    var entityIds = Object.keys(relationEntities);
+    for (var i = 0, l = entityIds.length; i < l; i++) {
+        var entityId = entityIds[i],
+            nestedIds = relationEntities[entityId];
+        var deleted = true;
+        for (var j = 0, l1 = nestedIds.length; j < l1; j++) {
+            var nestedId = nestedIds[j];
+            if (hashRemaning[nestedId]) {
+                deleted = false;
+                break;
+            }
+        }
+        if (deleted) {
+            hashRemaning[entityId] = false; // deleted from remaning entity from userFund
+            emptyDirectionsTopics.push(entityId);
+        }
+    }
+    return emptyDirectionsTopics;
+}
+
