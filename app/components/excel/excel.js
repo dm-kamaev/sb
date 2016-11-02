@@ -47,6 +47,15 @@ exports.createSheets = function(data) {
     return wb;
 };
 
+/**
+ * returns workbook written to buffer
+ * @param {[obj]} –– object which created exports.createSheets
+ * @return {[Buffer]}
+ */ 
+exports.writeBuffer = function(wb) {
+    return await(wb.writeToBuffer())
+}
+
 
 /**
  * set data in cell
@@ -63,13 +72,18 @@ function setCell_(ws, rows, style) {
     function iterateColumn() {
         for (var c = 0, l1 = row.length; c < l1; c++) {
             var el = row[c];
+            var elStyle = style;
+            if (typeof el == 'object') {
+                elStyle = Object.assign({}, style, el.style)
+                el = el.value
+            }
             var num_row = r + 1,
                 num_col = c + 1;
             var cell = ws.cell(num_row, num_col);
             if (typeof el === 'string') {
-                cell.string(el).style(style);
+                cell.string(el).style(elStyle);
             } else if (typeof el === 'number') {
-                cell.number(el).style(style);
+                cell.number(el).style(elStyle);
             } else {
                 logger.critical(
                     'Not valid type for elements => type element "' + typeof (el) + '", only number or string'

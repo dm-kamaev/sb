@@ -15,8 +15,10 @@ exports.renderStatements = function(statements) { return statements.map(renderSt
 function renderStatement_ (statement) {
     return {
         id:        statement.id,
-        link:      BASE_URL+'/'+staticPath.recommendation+'/'+statement.fileName,
+        link:      `${BASE_URL}/${statement.fileName}`,
         dateStart: statement.dateStart, // statement range
         dateEnd:   statement.dateEnd,
+        status:    statement.status,
+        recommendation: `${BASE_URL}/${statement.recommendation}`
     };
 }
