@@ -78,24 +78,6 @@ module.exports = class ExtractEntity {
 };
 
 
-function getFundIdsFromDirection_ (ids) {
-    var res = await(sequelize.sequelize.query(
-    `SELECT e.id
-        FROM "EntityOtherEntity" as eoe
-        JOIN "Entity" as e
-            ON eoe."otherEntityId"=e.id
-        WHERE eoe."entityId" IN ( :ids ) AND e.type= :type
-    `, {
-        type: sequelize.sequelize.QueryTypes.SELECT,
-        replacements: {
-            ids,
-            type: entityTypes.FUND
-        }
-    })) || [];
-    return res.map(entity => entity.id);
-}
-
-
 function getNestedIdsFrom_ (ids, type) {
     var res = await(sequelize.sequelize.query(
     `SELECT e.id
