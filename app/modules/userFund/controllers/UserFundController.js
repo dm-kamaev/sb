@@ -124,7 +124,6 @@ class UserFundController extends Controller {
 
         var userFundApi = new UserFundApi({ userFundId });
         entityIds = userFundApi.filterExistRelations({ entityIds });
-        // console.log('entityIds FOR ADD =', entityIds);
         userFundApi.addEntities({ entityIds });
 
         // return entities from userFund
@@ -173,17 +172,20 @@ class UserFundController extends Controller {
     actionRemoveEntity(ctx, entityId) {
         var passwordAuth = new PasswordAuth({ ctx }),
             userFundId   = passwordAuth.getUserFund('id'),
-            entityApi    = new EntityApi({ entityId }),
-            loggedIn     = Boolean(passwordAuth.getUser('authId'));
+            loggedIn     = passwordAuth.getLoggedIn(),
+            entityApi    = new EntityApi({ entityId });
+
         entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
         var userFundApi = new UserFundApi({ userFundId });
+
         // if userFund empty after delete
         if (loggedIn && userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
             return [{ message: 'TRY_DELETE_USERFUND' }];
         }
+        entityIds = userFundApi.addEmptyDirectionsTopics({ entityIds });
         userFundApi.removeEntities({ entityIds });
 
         // return entities from userFund
