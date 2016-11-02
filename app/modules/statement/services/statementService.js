@@ -8,6 +8,10 @@ const moment = require('moment');
 const parse = require('csv-parse');
 const path = require('path')
 const fs = require('fs')
+const colors = {
+    ORANGE: 'FFCC66',
+    WHITE: 'FFFFFF'
+}
 
 var StatementService = {};
 
@@ -100,6 +104,78 @@ StatementService.writeInExcel = function(countPayments) {
     );
     return fileName;
 };
+
+StatementService.getBuffer = function(wb) {
+    return excel.writeBuffer(wb)
+}
+
+StatementService.getExcelStatement = function(statementId) {
+    var statementOrders = await(sequelize.sequelize.query(`
+      SELECT
+  "outer"."id",
+  "outer"."sberAcquOrderNumber",
+  "outer"."statementId",
+  "outer"."chargeDate",
+  "outer"."supplyDate",
+  "outer"."amount",
+  (SELECT id
+   FROM "StatementOrder" AS "conflict"
+   WHERE "conflict"."sberAcquOrderNumber" = "outer"."sberAcquOrderNumber"
+         AND "conflict".id != "outer".id
+         AND "conflict"."deletedAt" IS NULL
+   LIMIT 1) :: BOOLEAN AS "conflict"
+FROM "StatementOrder" AS "outer"
+WHERE "outer"."statementId" = :statementId
+      AND "outer"."deletedAt" IS NULL`, {
+          type: sequelize.sequelize.QueryTypes.SELECT,
+          replacements: {
+              statementId
+          }
+      }))
+
+    var headers = [
+        ['id',
+        'sberAcquOrderNumber',
+        'statementId',
+        'Дата списания',
+        'Дата зачисления',
+        'сумма (коп.)',
+        'конфликт?']
+    ]
+    var data = statementOrders.map(order => {
+        var style = { },
+            conflictCell = ''
+        if (order.conflict) {
+            style.fill = {
+                type: 'pattern',
+                patternType: 'solid',
+                fgColor: colors.ORANGE
+            }
+            conflictCell = 'ДА'
+        }
+
+        return [
+          order.id,
+          order.sberAcquOrderNumber,
+          order.statementId,
+          moment(order.chargeDate).format('DD-MM-YYYY'),
+          moment(order.supplyDate).format('DD-MM-YYYY'),
+          order.amount,
+          conflictCell
+        ]
+        .map(e => ({value: e, style}))
+    });
+    var sheets = excel.createSheets(
+        [
+            {
+                name: 'Sheet 1',
+                value: headers.concat(data)
+            }
+        ]
+    );
+
+    return sheets;
+}
 
 /**
  * count payments to all funds
