@@ -53,8 +53,6 @@ module.exports = class ExtractEntity {
             var directions   = getDirectionsFromTopics(ids),
                 directionIds = directions.map(direction => direction.id);
             var fundIds = getFundIdsFromDirection_(directionIds);
-            // var funds   = getFundsFromDirection_(directions),
-            //     fundIds = funds.map(fund => fund.otherEntityId);
             // console.log('entityIds=', entityIds);
             // console.log('directionIds=', directionIds);
             // console.log('fundIds=', fundIds);
@@ -113,26 +111,6 @@ function getDirectionsFromTopics (ids) {
 }
 
 
-
-/**
- * getEntitiesOtherEntity_ get entity from table EntityOtherEntity by entity ids
- * @param  {[array]} entityIds [1,2,3]
- * @return {[type]}           [ { entityId, entityOtherEntity }, ... ]
- */
-function getFundsFromDirection_ (directions, key) {
-    var ids = directions.map(direction => direction.id);
-    var query = {
-        where: {
-            entityId: {
-                $in: ids
-            }
-        }
-    };
-    var otherEntities = await(tables.EntityOtherEntity.findAll(query)) || [];
-    return otherEntities;
-}
-
-
 /**
  * the unique ids
  * @param  {[array]} ids [ "11", 11, '1', 2]
@@ -143,6 +121,7 @@ function uniqueIds_ (ids) {
     ids.forEach(id => uniqEntityIds[id] = true);
     return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
 }
+
 
 function getFundIdsFromDirection_ (ids) {
     var res = await(sequelize.sequelize.query(
