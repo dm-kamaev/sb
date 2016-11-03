@@ -9,7 +9,7 @@ done < <(find "tests/" -type f -print0)
 
 for testfile in "${file_list[@]}"
     do
-        ../node_modules/.bin/mocha --timeout 0 $testfile
+        $PWD/node_modules/.bin/mocha --timeout 0 $testfile
 	if [ $(echo $?) = 1 ]; then
 		errCode=1
 	fi

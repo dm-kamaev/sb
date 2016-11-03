@@ -9,7 +9,8 @@ const orderService = require('../../orders/services/orderService')
 const statementStatus = require('../enums/statementStatus');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
-const fs = require('fs')
+const fs = require('fs');
+const moment = require('moment')
 
 module.exports = class StatementController extends Controller {
     /**
@@ -36,6 +37,12 @@ module.exports = class StatementController extends Controller {
             throw new errors.HttpError('Wrong request', 400);
         }
 
+        console.log(dateStart);
+        console.log(dateEnd);
+
+        dateStart = moment(dateStart, "YYYY-MM-DD").toDate(),
+        dateEnd = moment(dateEnd, "YYYY-MM-DD").toDate();
+
         var statement = statementService.createStatement({
             dateStart,
             dateEnd,
@@ -44,7 +51,16 @@ module.exports = class StatementController extends Controller {
         })
 
         process.nextTick(async(() => {
-            var statementOrders = statementService.parseStatement(file);
+            var statementOrders;
+
+            try {
+                statementOrders = statementService.parseStatement(file);
+            } catch (err) {
+                logger.critical(err)
+                statementService.updateStatement(statement.id, {
+                    status: statementStatus.PARSING_ERROR
+                })
+            }
             var orders = orderService.getOrders({
                 sberAcquOrderNumber: {
                     $in: statementOrders.map(order => order.sberAcquOrderNumber)
@@ -87,6 +103,18 @@ module.exports = class StatementController extends Controller {
         return statementView.renderStatements(
             statementService.getAll()
         );
+    }
+
+    /**
+     * @api {get} /statement/:id/excel get excel statement
+     * @apiName get excel statement
+     * @apiGroup Statement
+     * @apiParam {Number} id id of statement
+     */ 
+    actionGetExcelStatement(ctx, id) {
+        // ctx.contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        // var nodebuffer = statementService.wrieExcelStatement(id)
+        // return new Buffer(nodebuffer, 'binary').toString()
     }
 
     /**

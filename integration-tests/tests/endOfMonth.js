@@ -15,6 +15,8 @@ const connection = {
     user: 'gorod',
     password: '123qwe'
 }
+const MONTHLY_PATH = path.join(__dirname, '../../app/scripts/monthlyPayments.js')
+const CHECK_STATUS_PATH = path.join(__dirname, '../../app/scripts/checkOrderStatus.js')
 const db = pgp(connection)
 
 var extend = require('util')._extend;
@@ -104,8 +106,8 @@ describe('Today recurrent payment test', function() {
             })
             .then(() => {
                 return new Promise(function (resolve, reject) {
-                    var nextDate = new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10);
-    		        execSync(`node ../app/scripts/monthlyPayments.js --now ${nextDate}`,
+                var nextDate = new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().substring(0, 10);
+    		        execSync(`node ${MONTHLY_PATH} --now '${nextDate}'`,
                         (error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
@@ -329,7 +331,7 @@ describe('Yesterday recurrent test', function () {
         return new Promise(function (resolve, reject) {
             var nextDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
             nextDate = new Date(nextDate.setDate(nextDate.getDate() + 1)).toISOString().substring(0, 10);
-            execSync('node ../app/scripts/monthlyPayments.js --now ' + nextDate,
+            execSync(`node ${MONTHLY_PATH} --now '${nextDate}'`,
                 (error, stdout,  stderr) => {
                     if (error) {
                         console.error(`execSync error: ${error}`);
@@ -530,7 +532,7 @@ describe('End of month recurrent test', function () {
     it('Should run monthly payment script', function() {
         var nextDate = new Date(new Date(this.dateString).setMonth(new Date().getMonth() + 1));
         nextDate = new Date(nextDate.setDate(31)).toISOString().substring(0, 10);
-        execSync('node ../app/scripts/monthlyPayments.js --now ' + nextDate,
+        execSync(`node ${MONTHLY_PATH} --now ` + nextDate,
             (error, stdout,  stderr) => {
                 if (error) {
                     console.error(`execSync error: ${error}`);

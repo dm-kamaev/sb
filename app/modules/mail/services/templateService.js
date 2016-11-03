@@ -22,7 +22,7 @@ module.exports = fs.readdirSync(templatesPath).reduce((obj, template) => {
 function buildTemplate_(templateDir, templateName, locals, email) {
     var template = new EmailTemplate(templateDir)
     Object.assign(locals, {
-        linkToStatic: STATIC_PATH,
+        linkToStatic: 'https://sberbankvmeste.ru/mail_static' || STATIC_PATH,
         cancelSubscriptionLink: getUnsubscribeLink_(email)
     })
     var rendered = await (new Promise((resolve, reject) => {

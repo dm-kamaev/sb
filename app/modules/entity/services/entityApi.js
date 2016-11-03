@@ -73,8 +73,8 @@ module.exports = class EntityApi {
     }
 
     /**
-     * get nested entityIds
-     * if entity is direction, push array id funds
+     * get nested entityIds for entities
+     * if entity is topic or direction, push array nested ids directions or funds
      * @param  {[int or array]} entityId
      * @return {[array]}        [ 1,2,3 ]
      */
@@ -82,52 +82,37 @@ module.exports = class EntityApi {
         entityId = entityId || this.entityId;
         var entityIds = (entityId instanceof Array) ? entityId : [ entityId ];
         var type = this.entity.type;
-        if (type === entityTypes.DIRECTION) {
-            var fundIds = new ExtractEntity({
-                type: entityTypes.DIRECTION,
-                entityIds,
-                skipType: entityTypes.TOPIC,
-            }).extract();
-            entityIds = entityIds.concat(fundIds);
-        } else if (type === entityTypes.TOPIC) {
-            var fundIds = new ExtractEntity({
-                type: entityTypes.TOPIC,
+        const TOPIC     = entityTypes.TOPIC,
+              DIRECTION = entityTypes.DIRECTION;
+        if (type === TOPIC) {
+            var directionFundIds = new ExtractEntity({
+                type: TOPIC,
                 entityIds,
                 skipType: 'nothing',
             }).extract();
-            entityIds = entityIds.concat(fundIds);
-        }
-        return entityIds;
-    }
-
-    /**
-     * get nested entityIds to Fund
-     * if entity is direction, push array id funds
-     * @param  {[int or array]} entityId
-     * @return {[array]}        [ 1,2,3 ]
-     */
-    getNestedEntityIdsToFunds (entityId) {
-        entityId = entityId || this.entityId;
-        var entityIds = (entityId instanceof Array) ? entityId : [ entityId ];
-        var type      = this.entity.type,
-            DIRECTION = entityTypes.DIRECTION,
-            TOPIC     = entityTypes.TOPIC,
-            fundIds   = [];
-        if (type === DIRECTION) {
-            fundIds = new ExtractEntity({
+            entityIds = entityIds.concat(directionFundIds);
+            entityIds = uniqueIds_(entityIds);
+        } else if (type === DIRECTION) {
+            var fundIds = new ExtractEntity({
                 type: DIRECTION,
                 entityIds,
                 skipType: TOPIC,
             }).extract();
             entityIds = entityIds.concat(fundIds);
-        } else if (type === TOPIC) {
-            fundIds = new ExtractEntity({
-                type: TOPIC,
-                entityIds,
-                skipType: DIRECTION,
-            }).extract();
-            entityIds = entityIds.concat(fundIds);
+            entityIds = uniqueIds_(entityIds);
         }
         return entityIds;
     }
 };
+
+
+/**
+ * the unique ids
+ * @param  {[array]} ids [ "11", 11, '1', 2]
+ * @return {[array]}     [ 11, 1, 2 ]
+ */
+function uniqueIds_ (ids) {
+    var uniqEntityIds = {};
+    ids.forEach(id => uniqEntityIds[id] = true);
+    return Object.keys(uniqEntityIds).map(id => parseInt(id, 10));
+}

@@ -36,6 +36,8 @@
     <property name="auth.config-path" value="${basedir}/config/auth-config"/>
     <property name="emulator.path" value="${basedir}/sber-emulator"/>
 
+    <property name="sber.shared.folders.names" value="entities,recommendation,statement"/>
+
     <import file="${basedir}/node_modules/deployment/packaging.xml"/>
     <import file="${basedir}/node_modules/deployment/node.xml"/>
     <import file="${basedir}/node_modules/user-service/build.xml"/>
@@ -47,7 +49,7 @@
     <target name="packaging.release.switch"
       depends="
         packaging.shared-folders,
-             packaging.shared-folders.media,
+             sber.shared-media-folders,
              packaging.supervisor.link,
              user.supervisor.link,
              auth.supervisor.link,
@@ -71,6 +73,52 @@
              sber.change-cron-permissions,
              sber.run-integration-tests
              "/>
+
+    <target name="sber.shared.folders.media.unlink">
+        <for list="${sber.shared.folders.names}" param="name">
+            <sequential>
+                <symlink action="delete" link=">${basedir}/public/uploads/@{name}"/>
+                <echo>${basedir}/public/uploads/@{name}</echo>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="sber.shared.folders.media.create">
+        <for list="${sber.shared.folders.names}" param="name">
+            <sequential>
+                <!--<mkdir dir=">${packaging.target.shared.path}/public/uploads/@{name}"/> -->
+                <exec executable="mkdir" dir="${packaging.target.shared.path}">
+                    <arg line="public/uploads/@{name}"/>
+                </exec>
+                <echo>${packaging.target.shared.path}/public/uploads/@{name}</echo>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="sber.shared.folders.media.link"
+            depends="sber.shared.folders.media.unlink">
+        <for list="${sber.shared.folders.names}" param="name">
+            <sequential>
+                <symlink link="${basedir}/public/uploads/@{name}" resource="${packaging.target.shared.path}/public/uploads/@{name}"/>
+                <echo>link="${basedir}/public/uploads/@{name}" resource="${packaging.target.shared.path}/public/uploads/@{name}"</echo>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="sber.shared.folders.media.set-permissions">
+        <for list="${sber.shared.folders.names}" param="name">
+            <sequential>
+                <shellscript shell="bash">
+                    find ${packaging.target.shared.path}/public/uploads/@{name} -type d -exec chmod -c 777 \{\} \;
+                </shellscript>
+            </sequential>
+        </for>
+    </target>
+
+    <target name="sber.shared-media-folders"
+            depends="sber.shared.folders.media.create,
+                     sber.shared.folders.media.set-permissions,
+                     sber.shared.folders.media.link"/>
 
   <target name="packaging.release.clean"
             depends="packaging.shared-folders.unlink"/>

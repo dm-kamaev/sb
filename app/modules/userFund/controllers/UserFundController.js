@@ -11,8 +11,6 @@ const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
 const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
-// const entityTypes = require('../../entity/enums/entityTypes.js');
-// const ExtractEntity = require('../../entity/services/extractEntity.js');
 const UserFundApi  = require('../services/userFundApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
@@ -162,18 +160,32 @@ class UserFundController extends Controller {
      *           "type": "direction"
      *      }
      *]
+     *@apiSuccessExample {json} Example response:
+     *[
+     *    {
+     *       "message": "TRY_DELETE_USERFUND"
+     *    }
+     *]
      * @apiError (Error 404) NotFoundError entity or userfund not found
      * @apiError (Error 400) HttpError relation don't exists
      */
     actionRemoveEntity(ctx, entityId) {
-        var userFundId = new PasswordAuth({ ctx }).getUserFund('id'),
-            entityApi  = new EntityApi({ entityId });
+        var passwordAuth = new PasswordAuth({ ctx }),
+            userFundId   = passwordAuth.getUserFund('id'),
+            loggedIn     = passwordAuth.getLoggedIn(),
+            entityApi    = new EntityApi({ entityId });
 
         entityApi.checkExist();
         entityApi.checkType();
         var entityIds = entityApi.getNestedEntityIds();
 
         var userFundApi = new UserFundApi({ userFundId });
+
+        // if userFund empty after delete
+        if (loggedIn && userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
+            return [{ message: 'TRY_DELETE_USERFUND' }];
+        }
+        entityIds = userFundApi.addEmptyDirectionsTopics({ entityIds });
         userFundApi.removeEntities({ entityIds });
 
         // return entities from userFund

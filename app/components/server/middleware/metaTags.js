@@ -41,7 +41,7 @@ function handleEntity_(req, res) {
     if (entity) {
         var renderedEntity = entityView.renderEntity(entity);
         var imagePath = path.join(__dirname,
-            '../../../../public/uploads', entity.imgUrl);
+            '../../../../public/uploads', entity.imgUrl || '');
         calculateSize_(imagePath, (err, dimensions) => {
             if (err) dimensions = {};
             var suffix = {

@@ -4,13 +4,14 @@ const statementRouter = require('express').Router();
 
 const multer = require('multer');
 const path = require('path');
+const statementService = require('./services/statementService');
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, path.join(__dirname, '../../../public/uploads/statement'))
     },
     filename: function(req, file, cb) {
         var filename = `sber_statement-${Date.now()}.${file.mimetype.split('/')[1]}`
-        req.body.fileName = `statements/${filename}`
+        req.body.fileName = `statement/${filename}`
         cb(null, filename)
     }
 })
@@ -30,10 +31,22 @@ statementRouter.post(
     upload.single('statement'),
     versionedController.actionUploadStatement
 );
+// statementRouter.get('/:id(\\d+)/excel',
+//     versionedController.actionGetExcelStatement)
 
+// sending buffer isn't implemented in controller for now
+statementRouter.get('/:id(\\d+)/excel', function(req, res) {
+    var id       = req.params.id,
+        workbook = statementService.getExcelStatement(id),
+        buffer   = statementService.getBuffer(workbook);
+
+    res.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.set('Content-disposition', `attachment;filename=statement-${Date.now()}.xlsx`)
+    res.end(buffer)
+})
 statementRouter.get('/', versionedController.actionGetAllStatement);
 statementRouter.get('/count-payments-test/:orderId',
     versionedController.actionCountPaymentsTest);
-statementRouter.delete('/:id(\\d+)', versionedController.actionDeleteStatement)    
+statementRouter.delete('/:id(\\d+)', versionedController.actionDeleteStatement)
 
 module.exports = statementRouter;

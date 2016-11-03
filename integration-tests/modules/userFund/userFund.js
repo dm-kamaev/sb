@@ -2,7 +2,7 @@
 
 const services = require('../../services');
 const config_db = require('../../config/db.json');
-const db = require('pg-promise')()(config_db);
+// const db = require('pg-promise')()(config_db);
 const chakram = require('chakram');
 const expect = chakram.expect;
 
@@ -35,6 +35,7 @@ exports.checkStatusSubscription = function(context) {
         );
         return chakram.wait();
     });
+    var db = context.db;
 
     return function () {
         var query = 'SELECT enabled FROM "UserFundSubscription" WHERE "userFundId"='+context.userFundId;

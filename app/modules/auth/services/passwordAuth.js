@@ -52,6 +52,13 @@ module.exports = class PasswordAuth {
         }
     }
 
+    /**
+     * getLoggedIn determine auth
+     * @return {[Boolean]}
+     */
+    getLoggedIn() {
+        return Boolean(this.getUser('authId'));
+    }
 
     logout() {
         var request = this.request;
@@ -69,7 +76,11 @@ module.exports = class PasswordAuth {
         response.redirect(url);
     }
 
-
+    /**
+     * getPostData post data from request
+     * @param  {[str]} key from request.body
+     * @return {[any]}
+     */
     getPostData(key) {
         var body = this.request.body || {};
         if (!key) {
@@ -101,7 +112,7 @@ module.exports = class PasswordAuth {
             return user;
         } else {
             var userEl = user[key] || null;
-            if (!userEl) {
+            if (userEl === undefined) {
                 throw new errors.NotFoundError(
                     i18n.__('Not found field "{{key}}" in User {{userEl}}', {
                         key: [key],
@@ -127,7 +138,7 @@ module.exports = class PasswordAuth {
             return userFund;
         } else {
             var userFundEl = userFund[key] || null;
-            if (!userFundEl) {
+            if (userFundEl === undefined) {
                 throw new errors.NotFoundError(
                     i18n.__('Not found field "{{key}}" in UserFund: {{userFundEl}}', {
                         key: [key],

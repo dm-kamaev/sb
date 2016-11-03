@@ -46,7 +46,8 @@ describe('Count payments to funds', function() {
         expect,
         entities: [],
         sberOrderId: '',
-        amount: 6969696
+        amount: 6969696,
+        db
     };
 
     before('Register', register(context));

@@ -25,7 +25,8 @@ describe('Remove userFund =>', function() {
         chakram,
         expect,
         listEntities: [],
-        userFundId: 0
+        userFundId: 0,
+        db
     };
 
     before('Logout',   logout(context));
