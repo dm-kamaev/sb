@@ -22,7 +22,6 @@ exports.switchSubscription = function(context) {
         var url = services.url.concatUrl('user-fund/switching-subscriptions');
         var response = chakram.post(url, { enabled: context.enabled });
         expect(response).checkTurnOnSubscribe();
-        //console.log('+++++++++++++++++++++++++++++++++++++++++++++++++++');
         return chakram.wait();
     };
 };
@@ -39,7 +38,6 @@ exports.checkStatusSubscription = function(context) {
     var db = context.db;
 
     return function () {
-        //console.log(context);
         var query = 'SELECT enabled FROM "UserFundSubscription" WHERE "userFundId"='+context.userFundId;
         return db.one(query).then(subscribe => expect(subscribe.enabled).checkStatusSubscribe());
     };

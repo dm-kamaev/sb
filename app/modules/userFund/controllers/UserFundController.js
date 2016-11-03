@@ -170,10 +170,11 @@ class UserFundController extends Controller {
      * @apiError (Error 400) HttpError relation don't exists
      */
     actionRemoveEntity(ctx, entityId) {
-        var passwordAuth = new PasswordAuth({ ctx }),
-            userFundId   = passwordAuth.getUserFund('id'),
-            loggedIn     = passwordAuth.getLoggedIn(),
-            entityApi    = new EntityApi({ entityId });
+        var passwordAuth       = new PasswordAuth({ ctx }),
+            userFundId         = passwordAuth.getUserFund('id'),
+            loggedIn           = passwordAuth.getLoggedIn(),
+            isNotDraftUserFund = passwordAuth.isNotDraftUserFund(),
+            entityApi          = new EntityApi({ entityId });
 
         entityApi.checkExist();
         entityApi.checkType();
@@ -181,14 +182,18 @@ class UserFundController extends Controller {
 
         var userFundApi = new UserFundApi({ userFundId });
 
-        // if userFund empty after delete
-        if (loggedIn && userFundApi.isEmptyAfterRemoveEntity({ entityIds })) {
+        // auth user with confirmed userFund can't has empty userFund after delete
+        if (
+            loggedIn &&
+            isNotDraftUserFund &&
+            userFundApi.isEmptyAfterRemoveEntity({ entityIds })
+        ) {
             return [{ message: 'TRY_DELETE_USERFUND' }];
         }
         entityIds = userFundApi.addEmptyDirectionsTopics({ entityIds });
         userFundApi.removeEntities({ entityIds });
 
-        // return entities from userFund
+        // return all entities from userFund
         var remainingEntity = userFundApi.getEntity();
         return userFundView.renderEntities(remainingEntity);
     }
