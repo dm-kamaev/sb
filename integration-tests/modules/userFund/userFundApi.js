@@ -39,12 +39,34 @@ module.exports = class UserFundApi {
 
         var url = urlService.addPath('user-fund/');
         var promises = entities.map(entity => {
-            console.log('url=', url+entity.id);
             return chakram.post(url+entity.id)
         });
         return Promise.all(promises).then(responces =>
             responces.forEach(responce => expect(responce).checkAddEntity(entities))
         );
+    }
+
+
+    /**
+     * addEntity to userFund
+     * @param {[array]} entities [ { id }, { id }]
+     */
+    addEntity(entity) {
+        var context = this.context;
+        chakram.addMethod('checkAddEntity', function(respObj) {
+            var response   = respObj.response || {},
+                statusCode = response.statusCode,
+                body       = response.body;
+            this.assert(
+                statusCode === 200,
+                'Error status ' + statusCode + '; body:' + util.inspect(body, { depth: 5 })
+            );
+            save_userFund_(context, body);
+            return chakram.wait();
+        });
+
+        var responce = chakram.post(urlService.addPath('user-fund/')+entity.id);
+        return expect(responce).checkAddEntity();
     }
 
 

@@ -149,4 +149,13 @@ module.exports = class PasswordAuth {
             return userFundEl;
         }
     }
+
+    /**
+     * check userFund is active or not
+     * @return {[Boolean]}
+     */
+    isNotDraftUserFund() {
+        var userFund = this.getUserFund() || {};
+        return Boolean(userFund.enabled);
+    }
 };
