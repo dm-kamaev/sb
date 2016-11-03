@@ -58,6 +58,7 @@ app.use('/entities', express.static(path.join(__dirname, '../../../public/upload
 app.use('/mail_static', express.static(path.join(__dirname, '../../../public/mail_static')))
 app.use('/recommendation', express.static(path.join(__dirname, '../../../public/uploads/recommendation')))
 app.use('/statement', express.static(path.join(__dirname, '../../../public/uploads/statement')))
+app.use('/share/vlad', express.static(path.join(__dirname, '../../../public/share/vlad')))
 
 app.use('/callback', callbackRouter);
 app.use(session);
