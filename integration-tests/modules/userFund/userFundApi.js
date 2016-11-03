@@ -69,6 +69,27 @@ module.exports = class UserFundApi {
         return expect(responce).checkAddEntity();
     }
 
+    /**
+     * addEntity to userFund
+     * @param {[array]} entities [ { id }, { id }]
+     */
+    removeEntity(entity) {
+        var context = this.context;
+        chakram.addMethod('checkRemoveEntity', function(respObj) {
+            var response   = respObj.response || {},
+                statusCode = response.statusCode,
+                body       = response.body;
+            this.assert(
+                statusCode === 200,
+                'Error status ' + statusCode + '; body:' + util.inspect(body, { depth: 5 })
+            );
+            save_userFund_(context, body);
+            return chakram.wait();
+        });
+
+        var responce = chakram.delete(urlService.addPath('user-fund/')+entity.id);
+        return expect(responce).checkRemoveEntity();
+    }
 
     /**
      * removeEntity from userFund

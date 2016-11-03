@@ -1,5 +1,8 @@
 'use strict'
 
+// author: dm-kamaev
+// added entites in userFund
+
 const util = require('util');
 const chakram = require('chakram');
 const expect = chakram.expect;
@@ -24,7 +27,7 @@ const FUND      = entityTypes.FUND,
 chakram.setRequestDefaults(config_admin);
 
 
-describe('filling userFund', function() {
+describe('Filling userFund', function() {
     const context = new Context();
     var userFundApi   = new UserFundApi(context);
 
@@ -37,14 +40,14 @@ describe('filling userFund', function() {
 
     // --------------------------------------------------------------------------
     // { '19': [ 126, 42, 70, 46, 51, .. ] }
-    it(`Build association for ${TOPIC}`, buildAssociation(context, TOPIC, [ DIRECTION, FUND ]));
+    it(`Build association for ${TOPIC}`, buildAssociation_(context, TOPIC, [ DIRECTION, FUND ]));
 
     it('Add topic in userFund', () => {
         userFundApi.addEntity(context.get('topic'));
         return chakram.wait();
     });
 
-    it('Check added entities in userFund', checkAddedEntities(context));
+    it('Check added entities in userFund', checkAddedEntities_(context));
 
     it('Get user info', getUserInfo(context));
 
@@ -53,14 +56,14 @@ describe('filling userFund', function() {
 
     // --------------------------------------------------------------------------
     // { '19': [ 126, 42, 70, 46, 51, .. ] }
-    it(`Build association for ${DIRECTION}`, buildAssociation(context, DIRECTION, [ FUND ]));
+    it(`Build association for ${DIRECTION}`, buildAssociation_(context, DIRECTION, [ FUND ]));
 
     it(`Add ${DIRECTION} in userFund`, () => {
         userFundApi.addEntity(context.get(DIRECTION));
         return chakram.wait();
     });
 
-    it('Check added entities in userFund', checkAddedEntities(context));
+    it('Check added entities in userFund', checkAddedEntities_(context));
 
     it('Clean userFund via db', cleanUserFund_(context));
 
@@ -71,7 +74,7 @@ describe('filling userFund', function() {
         return chakram.wait();
     });
 
-    it(`Check added ${FUND} in userFund`, checkAddedEntities(context));
+    it(`Check added ${FUND} in userFund`, checkAddedEntities_(context));
 
     it('Clean userFund via db', cleanUserFund_(context));
 
@@ -106,7 +109,7 @@ function searchRandomEntity_ (context, type) {
 }
 
 
-function buildAssociation(context, entityType, types) {
+function buildAssociation_(context, entityType, types) {
     var strType = '';
     if (types.length === 1) {
         strType = `e.type='${types[0]}'`;
@@ -146,7 +149,7 @@ function buildAssociation(context, entityType, types) {
 }
 
 
-function checkAddedEntities (context) {
+function checkAddedEntities_ (context) {
     chakram.addMethod('notExistEnityInUserFund', function(entity) {
         this.assert(
             false,
