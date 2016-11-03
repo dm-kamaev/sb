@@ -101,7 +101,10 @@ UserService.findCardBySberUserId = function(sberUserId) {
         include: {
             model: sequelize.models.Card,
             as: 'currentCard',
-            required: false
+            required: false,
+            where: {
+                deletedAt: null
+            }
         }
     }));
 };
@@ -256,13 +259,24 @@ UserService.createCard = function(sberUserId, data) {
  * @return {[type]}            [description]
  */
 UserService.removeCard = function(sberUserId) {
-    return await(sequelize.models.Card.update({
-        deletedAt: new Date()
-    }, {
-        where: {
-            sberUserId
-        }
-    }));
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.SberUser.update({
+            currentCardId: null
+        }, {
+            where: {
+              id: sberUserId
+            }
+        })
+        .then(sberUser => {
+            return sequelize.models.Card.update({
+                deletedAt: new Date()
+            }, {
+                where: {
+                    sberUserId
+                }
+            })
+        })
+    }))
 };
 
 
@@ -337,7 +351,7 @@ UserService.changeMailSubscription = function(userData, categories) {
 
         sberUserId = UserService.findSberUserByAuthId(authUser.id)
     }
-    
+
     return await(sequelize.models.SberUser.update({
         categories
     },{
