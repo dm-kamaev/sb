@@ -7,7 +7,10 @@ const chakram = require('chakram');
 const expect = chakram.expect;
 const services = require('../../services');
 const urlService = services.url;
-
+const entityTypes = require('../../../app/modules/entity/enums/entityTypes.js');
+const FUND      = entityTypes.FUND,
+      DIRECTION = entityTypes.DIRECTION,
+      TOPIC     = entityTypes.TOPIC;
 
 module.exports = class UserFundApi {
     /**
@@ -140,6 +143,36 @@ module.exports = class UserFundApi {
 
         var responce = chakram.delete(urlService.addPath('user-fund/')+entity.id);
         return expect(responce).checkNotRemoveLastEntity();
+    }
+
+
+    /**
+     * check added entities in userFund: comparison userFund from HTTP responce and entites from
+     * association
+     * @return {[type]} [description]
+     */
+    checkAddedEntities () {
+        var context = this.context;
+        chakram.addMethod('notExistEnityInUserFund', function(entity) {
+            this.assert(
+                false,
+                'entity is not exist in userFund => entity: '+ util.inspect(entity, { depth: 5 })
+            )
+            return chakram.wait();
+        });
+        var associations;
+        if (context.exist('associations')) {
+            associations = context.get('associations');
+        } else {
+            associations = [context.get(FUND).id];
+        }
+        var hashId = {};
+        associations.forEach(id => hashId[id] = true);
+        var userFundEntityIds = context.get('responceEditUserFund').forEach(entity => {
+            if (!hashId[entity.id]) {
+                expect(entity).notExistEnityInUserFund();
+            }
+        });
     }
 }
 
