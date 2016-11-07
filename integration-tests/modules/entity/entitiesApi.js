@@ -8,8 +8,8 @@ const expect = chakram.expect;
 const services = require('../../services');
 const util = require('util');
 const entityTypes = require('../../../app/modules/entity/enums/entityTypes.js');
-// const config_db = require('../../config/db.json');
-// const db = require('pg-promise')()(config_db);
+const config_db = require('../../config/db.json');
+const db = require('pg-promise')()(config_db);
 
 
 module.exports = class EntitiesApi {
@@ -67,9 +67,30 @@ module.exports = class EntitiesApi {
         });
 
         var url = this.entityUrl+'/'+firstEntyId.id+'/'+secondEntityId.id;
-        console.log(url);
         var responce = chakram.post(url);
         expect(responce).checkAssociatedEntity();
         return chakram.wait();
+    }
+
+
+    /**
+     * search random entity by type ande set in context
+     * @param  {[str]} type 'fund' || 'topic' || 'direction'
+     * @return {[type]}
+     */
+    searchRandomEntity (type) {
+        var context = this.context;
+        chakram.addMethod('checkSearchRandomEntity', function(entity) {
+            this.assert(
+                entity.id,
+                'Entity id is not exist => id: '+entity.id+' entity:'+util.inspect(entity, { depth: 5 })
+            )
+            return chakram.wait();
+        });
+        var query = `SELECT * FROM "Entity" WHERE type='${type}' LIMIT 1`;
+        return db.one(query).then(entity => {
+            context.set(type, entity);
+            expect(entity).checkSearchRandomEntity();
+        });
     }
 }
