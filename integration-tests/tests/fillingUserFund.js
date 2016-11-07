@@ -27,7 +27,7 @@ const FUND      = entityTypes.FUND,
 chakram.setRequestDefaults(config_admin);
 
 
-describe('Filling userFund', function() {
+describe('Filling userFund =>', function() {
     const context = new Context();
     var userFundApi   = new UserFundApi(context);
 

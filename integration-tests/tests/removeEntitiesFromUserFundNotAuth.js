@@ -17,18 +17,14 @@ const Context = require('./../../app/components/context');
 const entityTypes = require('../../app/modules/entity/enums/entityTypes.js');
 
 const logout = require('../modules/user/logout.js');
-const register = require('../modules/user/register.js');
-const getUserInfo = require('../modules/user/getUserInfo.js');
-const EntitiesApi = require('../modules/entity/entitiesApi.js');
 const UserFundApi = require('../modules/userFund/userFundApi.js');
-const CheckEntityInUserFund = require('../modules/userFund/CheckEntityInUserFund.js');
 const FUND      = entityTypes.FUND,
       DIRECTION = entityTypes.DIRECTION,
       TOPIC     = entityTypes.TOPIC;
 chakram.setRequestDefaults(config_admin);
 
 
-describe('Remove entities from userFund (NotAuth)', function() {
+describe('Remove entities from userFund (not auth user)  =>', function() {
     const context   = new Context();
     const userFundApi = new UserFundApi(context);
 

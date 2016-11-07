@@ -49,7 +49,7 @@ module.exports = class UserFundApi {
 
     /**
      * addEntity to userFund
-     * @param {[array]} entities [ { id }, { id }]
+     * @param {[array]} entities { id }
      */
     addEntity(entity) {
         var context = this.context;
@@ -70,8 +70,8 @@ module.exports = class UserFundApi {
     }
 
     /**
-     * addEntity to userFund
-     * @param {[array]} entities [ { id }, { id }]
+     * removeEntity from userFund
+     * @param {[array]} entities { id }
      */
     removeEntity(entity) {
         var context = this.context;
@@ -92,7 +92,7 @@ module.exports = class UserFundApi {
     }
 
     /**
-     * removeEntity from userFund
+     * removeEntities from userFund
      * @param {[array]} entities [ { id }, { id }]
      */
     removeEntities(entities) {
@@ -116,6 +116,31 @@ module.exports = class UserFundApi {
         );
     }
 
+    /**
+     * not remove last entity from userFund !!! ONLY user auth and userFUnd enavled=true !!!
+     * @param {[obj]} entities { id }
+     */
+    notRemoveLastEntity(entity) {
+        var context = this.context;
+        chakram.addMethod('checkNotRemoveLastEntity', function(respObj) {
+            var response   = respObj.response || {},
+                statusCode = response.statusCode,
+                body       = response.body;
+            // body [{ "message": "TRY_DELETE_USERFUND"}]
+            this.assert(
+                statusCode === 200 &&
+                body instanceof Array &&
+                body[0] instanceof Object &&
+                body[0].message &&
+                body[0].message === 'TRY_DELETE_USERFUND',
+                'Error status '+statusCode+'; body:'+util.inspect(body, { depth: 5 })
+            );
+            return chakram.wait();
+        });
+
+        var responce = chakram.delete(urlService.addPath('user-fund/')+entity.id);
+        return expect(responce).checkNotRemoveLastEntity();
+    }
 }
 
 
