@@ -18,6 +18,7 @@ const entityTypes = require('../../app/modules/entity/enums/entityTypes.js');
 
 const logout = require('../modules/user/logout.js');
 const UserFundApi = require('../modules/userFund/userFundApi.js');
+const EntitiesApi = require('../modules/entity/entitiesApi.js');
 const FUND      = entityTypes.FUND,
       DIRECTION = entityTypes.DIRECTION,
       TOPIC     = entityTypes.TOPIC;
@@ -27,61 +28,63 @@ chakram.setRequestDefaults(config_admin);
 describe('Remove entities from userFund (not auth user)  =>', function() {
     const context   = new Context();
     const userFundApi = new UserFundApi(context);
+    const entitiesApi = new EntitiesApi(context);
 
     before('Logout',   logout(context));
 
-    before('Search random topic',     searchRandomEntity_(context, TOPIC));
-    before('Search random direction', searchRandomEntity_(context, DIRECTION));
-    before('Search random fund',      searchRandomEntity_(context, FUND));
+    before('Search random topic',     () => entitiesApi.searchRandomEntity(TOPIC));
+    before('Search random direction', () => entitiesApi.searchRandomEntity(DIRECTION));
+    before('Search random fund',      () => entitiesApi.searchRandomEntity(FUND));
+
 
     // --------------------------------------------------------------------------
-    it('Add topic in userFund', () => {
-        userFundApi.removeEntity(context.get('topic'));
-        return chakram.wait();
-    });
+    // { '19': [ 126, 42, 70, 46, 51, .. ] }
+    it(`Build association for ${TOPIC}`, () =>
+        entitiesApi.buildAssociation(TOPIC, [ DIRECTION, FUND ])
+    );
+
+    it(`Add ${TOPIC} in userFund`, ()=>userFundApi.addEntity(context.get(TOPIC)));
+
+    it('Check added entities in userFund', () => userFundApi.checkAddedEntities());
+
+    it(`Remove ${TOPIC} from userFund`, ()=>userFundApi.removeEntity(context.get(TOPIC)));
 
     it('Check empty userFund', checkEmptyUserFund_(context));
 
 
     // --------------------------------------------------------------------------
+    // { '19': [ 126, 42, 70, 46, 51, .. ] }
+    it(`Build association for ${DIRECTION}`, () =>
+        entitiesApi.buildAssociation(DIRECTION, [ FUND ])
+    );
 
-    it(`Add ${DIRECTION} in userFund`, () => {
-        userFundApi.removeEntity(context.get(DIRECTION));
-        return chakram.wait();
-    });
+    it(`Add ${DIRECTION} in userFund`, () => userFundApi.addEntity(context.get(DIRECTION)));
+
+    it('Check added entities in userFund', () => userFundApi.checkAddedEntities());
+
+    it(`Remove ${DIRECTION} from userFund`, () =>
+        userFundApi.removeEntity(context.get(DIRECTION))
+    );
 
     it('Check empty userFund', checkEmptyUserFund_(context));
 
+
     // --------------------------------------------------------------------------
-    it(`Add ${FUND} in userFund`, () => {
-        userFundApi.removeEntity(context.get(FUND));
-        return chakram.wait();
+    it(`Add ${FUND} in userFund`, ()=>{
+        context.change('associations', null);
+        return userFundApi.addEntity(context.get(FUND));
     });
 
-    it(`Check empty userFund`, checkEmptyUserFund_(context));
+    it('Check added entities in userFund', () => userFundApi.checkAddedEntities());
+
+    it(`Remove ${FUND} from userFund`, ()=>userFundApi.removeEntity(context.get(FUND)));
+
+    it('Check empty userFund', checkEmptyUserFund_(context));
 
     // --------------------------------------------------------------------------
     after('Terminate db connection pool', () => pgp.end());
 
 });
-
-
-function searchRandomEntity_ (context, type) {
-    chakram.addMethod('checkSearchRandomEntity', function(entity) {
-        this.assert(
-            entity.id,
-            'Entity id is not exist => id: '+entity.id+' entity:'+util.inspect(entity, { depth: 5 })
-        )
-        return chakram.wait();
-    });
-    var query = `SELECT * FROM "Entity" WHERE type='${type}' LIMIT 1`;
-    return function () {
-        return db.one(query).then(entity => {
-            context.set(type, entity);
-            expect(entity).checkSearchRandomEntity();
-        });
-    }
-}
 
 
 function checkEmptyUserFund_ (context) {

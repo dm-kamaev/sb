@@ -93,4 +93,50 @@ module.exports = class EntitiesApi {
             expect(entity).checkSearchRandomEntity();
         });
     }
+
+
+    /**
+     * buildAssociations between entites
+     * @param  {[str]} entityType root type 'topic' || 'direction' || 'fund'
+     * @param  {[array]} types    sub type 'topic' || 'direction' || 'fund'
+     * @return {[type]} set in context assoicantions
+     * { '19': [ 126, 42, 70, 46, 51, .. ] }
+     */
+    buildAssociation (entityType, types) {
+        var context = this.context;
+        var strType = '';
+        if (types.length === 1) {
+            strType = `e.type='${types[0]}'`;
+        } else if (types.length === 2) {
+            strType = `e.type='${types[0]}' OR e.type='${types[1]}'`;
+        } else {
+            throw new Error('Many types');
+        }
+
+        chakram.addMethod('checkGetEntityIds', function(entityIds) {
+            this.assert(
+                entityIds.length,
+                'entityIds is not exist => entityIds: '+ util.inspect(entityIds, { depth: 5 })
+            )
+            return chakram.wait();
+        });
+
+        var entity = context.get(entityType),
+            id = entity.id;
+        var query =
+            `SELECT e.id
+                FROM "EntityOtherEntity" as eoe
+                JOIN "Entity" as e
+                    ON eoe."otherEntityId"=e.id
+                WHERE eoe."entityId"=${id} AND
+                      ${strType} AND
+                      published=true
+                `;
+        return db.query(query).then(entityIds => {
+            expect(entityIds).checkGetEntityIds();
+            var associations = entityIds.map(entity => entity.id);
+            associations.unshift(id);
+            context.associations = associations;
+        });
+    }
 }

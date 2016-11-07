@@ -38,6 +38,3 @@ clean_log.sh
 # test
 test.js
 test.sql
-entities.sql
-entityOtherEntity.sql
-integration-tests/tests/fillingUserFund_old.js
