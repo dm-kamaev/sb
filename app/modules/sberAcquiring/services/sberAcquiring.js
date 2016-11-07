@@ -126,8 +126,8 @@ sberAcquiring.getStatusAndGetBind = function(params) {
               userName: params.userName || configSberAcquiring.userName,
               password: params.password || configSberAcquiring.password,
               language: 'ru',
-              orderNumber: params.orderNumber,
-              orderId: params.orderId,
+              orderNumber: params.orderNumber || params.sberAcquOrderNumber,
+              orderId: params.orderId || params.sberAcquOrderId,
               clientId: params.clientId,
           }
       })).data;
@@ -218,7 +218,7 @@ sberAcquiring.payByBind = function(params) {
     var data = {
         userName: params.userName || configSberAcquiring.userNameSsl,
         password: params.password || configSberAcquiring.passwordSsl,
-        mdOrder: params.orderId,
+        mdOrder: params.orderId || params.sberAcquOrderId,
         bindingId: params.bindingId,
         language: 'ru',
     };

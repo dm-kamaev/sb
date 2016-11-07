@@ -21,6 +21,7 @@ const mail = require('../../mail')
 const aqconfig = require('../../../../config/config-sberAcquiring')
 const mailingCategory = require('../../mail/enum/mailingCategory')
 const BASEURL = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
+const createOrder = require('../Order');
 
 
 var OrderService = {};
@@ -133,39 +134,20 @@ OrderService.firstPayOrSendMessage = function(params) {
             userFundSubscriptionId: params.userFundSubscriptionId,
             amount: params.amount,
             userFundSnapshot: userFund,
+            isCordova: params.isCordova,
+            clientId: params.sberUserId,
             status: orderStatus.NEW,
             type: orderTypes.FIRST,
         };
-        var sberAcquOrderNumber = OrderService.createOrder(data);
+        // var sberAcquOrderNumber = OrderService.createOrder(data);
         var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
 
-        var responceSberAcqu;
+        var order = createOrder(data)
         try {
-            responceSberAcqu = sberAcquiring.firstPay({
-                orderNumber: sberAcquOrderNumber,
-                amount: params.amount,
-                returnUrl: `${BASEURL}/#success?app=${params.isCordova}&type=payment`,
-                failUrl: `${BASEURL}/#failure?app=${params.isCordova}&type=payment`,
-                language: 'ru',
-                clientId: params.sberUserId,
-            });
+            return await(order.makePayment())
         } catch (err) {
-            await (OrderService.updateInfo(sberAcquOrderNumber, {
-                status: orderStatus.EQ_ORDER_NOT_CREATED
-            }));
-            var textError = i18n.__(
-                'Failed connection with sberbank acquiring (first pay). {{error}}', {
-                    error: util.inspect(err, {
-                        depth: 5
-                    })
-                }
-            );
-            throw new errors.AcquiringError(textError);
+            throw new errors.AcquiringError(err.message)
         }
-
-        return handlerResponceSberAcqu_(
-            sberAcquOrderNumber, responceSberAcqu
-        );
     } else {
         await (sequelize.models.UserFundSubscription.update({
             enabled: true
@@ -407,55 +389,27 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     console.log('payDate: ', payDate.getDate());
     console.log('now: ', realDate);
 
-    var sberAcquOrderNumber = OrderService.createOrder({
+    // var sberAcquOrderNumber = OrderService.createOrder();
+
+    var data = {
         userFundSubscriptionId: userFundSubscription.userFundSubscriptionId,
         userFundSnapshot: userFund,
         amount: userFundSubscription.amount,
         type: orderTypes.RECURRENT,
+        clientId: userFundSubscription.sberUserId,
+        bindingId: userFundSubscription.bindingId,
         status: orderStatus.CONFIRMING_PAYMENT,
         scheduledPayDate
-    });
-
-    var sberAcquPayment = sberAcquiring.createPayByBind({
-        amount: userFundSubscription.amount,
-        sberAcquOrderNumber,
-        clientId: userFundSubscription.sberUserId
-    });
-
-    if (sberAcquPayment.errorCode) {
-        throw new errors.AcquiringError(sberAcquPayment.errorMessage);
     }
-    console.log(sberAcquPayment);
 
-    var paymentResultResponse = sberAcquiring.payByBind({
-        orderId: sberAcquPayment.orderId,
-        bindingId: userFundSubscription.bindingId
-    });
+    var order = createOrder(data)
 
-    var paymentResult = JSON.parse(paymentResultResponse);
-    // return
-    console.log(paymentResult);
-    var orderStatusExtended = sberAcquiring.getStatusAndGetBind({
-        userName: aqconfig.userNameSsl,
-        password: aqconfig.passwordSsl,
-        orderNumber: sberAcquOrderNumber,
-        orderId: sberAcquPayment.orderId,
-        clientId: userFundSubscription.sberUserId
-    });
-
-    if (orderStatusExtended.actionCode !== 0) {
-        OrderService.failedReccurentPayment(sberAcquOrderNumber,
-            userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate, userFundSubscription.amount);
+    order.makePayment()
+    var status = order.checkStatus()
+    if (status.actionCode != 0) {
+      OrderService.failedReccurentPayment(order.sberAcquOrderNumber,
+        userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate, userFundSubscription.amount);
     }
-    OrderService.updateInfo(sberAcquOrderNumber, {
-        sberAcquErrorCode: orderStatusExtended.errorCode,
-        sberAcquErrorMessage: orderStatusExtended.errorMessage,
-        sberAcquActionCode: orderStatusExtended.actionCode,
-        sberAcquOrderId: sberAcquPayment.orderId,
-        sberAcquActionCodeDescription: orderStatusExtended.actionCodeDescription,
-        amount: orderStatusExtended.amount,
-        status: orderStatusExtended.actionCode === 0 ? orderStatus.PAID : orderStatus.PROBLEM_WITH_CARD
-    });
 };
 
 /**
