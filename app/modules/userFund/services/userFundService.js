@@ -204,17 +204,13 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
  *    userFundId [int],
  *    changer    [str] –– 'user' || 'admin',
  *    amount     [int] –– in cents,
- *    percent    [int] null –– current amount, integer –– a percentage of your salary,
- *    salary     [int] null –– current amount, integer –– salary per month in cents,
  * }
  */
 UserFundService.setAmount = function(params) {
     var sberUserId = params.sberUserId,
         userFundId = params.userFundId,
         changer = params.changer,
-        amount = params.amount,
-        percent = params.percent,
-        salary = params.salary;
+        amount = params.amount;
 
     function createTransaction(transact) {
         return sequelize.models.UserFundSubscription.findOrCreate({
@@ -234,10 +230,7 @@ UserFundService.setAmount = function(params) {
             changer,
             amount,
         };
-        if (percent && salary) {
-            recordAmount.percent = percent;
-            recordAmount.salary = salary;
-        }
+
         return sequelize.models.DesiredAmountHistory.create(recordAmount);
     }
 
@@ -460,7 +453,7 @@ UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
       ON "payDayHistory"."subscriptionId" = "UserFundSubscription"."id"
     JOIN "DesiredAmountHistory" ON "DesiredAmountHistory"."id" = "UserFundSubscription"."currentAmountId"
     JOIN "SberUser" ON "SberUser"."id" = "UserFundSubscription"."sberUserId"
-    JOIN "Card" ON "SberUser"."currentCardId" = "Card"."id"
+    JOIN "Card" ON "SberUser"."currentCardId" = "Card"."id" AND "Card"."deletedAt" IS NULL
   WHERE "UserFundSubscription"."enabled" = TRUE
         AND ("UserFundSubscription"."id", "payDayHistory"."processedMonth") NOT IN (SELECT
                                                                                           "id",

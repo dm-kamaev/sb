@@ -149,13 +149,8 @@ OrderService.firstPayOrSendMessage = function(params) {
             throw new errors.AcquiringError(err.message)
         }
     } else {
-        await (sequelize.models.UserFundSubscription.update({
-            enabled: true
-        }, {
-            where: {
-                id: params.userFundSubscriptionId
-            }
-        }));
+        enableSubscription_(params.userFundSubscriptionId)
+
         return {
             message: i18n.__('You changed the monthly payment amount.')
         };
@@ -184,6 +179,33 @@ function isOrderValid_(subscriptionId, intervalInSeconds) {
     } else {
         return true;
     }
+}
+
+/**
+ * @private
+ * enable subscription for active users
+ * @param {number} subscriptionId
+ */
+function enableSubscription_(userFundSubscriptionId) {
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.UserFundSubscription.update({
+          enabled: true
+        }, {
+            where: {
+                id: userFundSubscriptionId
+            }
+        })
+        .then(() => {
+            return sequelize.models.PayDayHistory.findOrCreate({
+                where: {
+                    subscriptionId: userFundSubscriptionId
+                },
+                defaults: {
+                    payDate: new Date()
+                }
+            })
+        })
+    }))
 }
 
 

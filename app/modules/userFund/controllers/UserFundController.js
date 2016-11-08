@@ -266,11 +266,7 @@ class UserFundController extends Controller {
             // now user can only pay to own userFund
             userFundId = data.userFundId || ownUserFundId,
             amount = data.amount || null,
-            isCordova = data.app,
-            // null –– current amount, integer –– a percentage of your salary
-            percent = data.percent || null,
-            // null –– current amount, integer –– salary per month in cents
-            salary = data.salary || null;
+            isCordova = data.app;
 
         if (!sberUserId) { throw new errors.NotFoundError(i18n.__('SberUser'), sberUserId); }
         if (!ownUserFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), ownUserFundId); }
@@ -280,7 +276,7 @@ class UserFundController extends Controller {
         userFundService.checkEnableAnotherUserFund(ownUserFundId, userFundId);
         await(
             userFundService.setAmount({
-                sberUserId, userFundId, changer, amount, percent, salary
+                sberUserId, userFundId, changer, amount
             })
         );
 
@@ -289,7 +285,7 @@ class UserFundController extends Controller {
         );
 
         var card = await(userService.findCardBySberUserId(sberUserId));
-        var isActiveCard = (card.currentCard) ? true : false;
+        var isActiveCard = !!card.currentCard;
         var params = {
             userFundId,
             amount,
