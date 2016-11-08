@@ -5,6 +5,8 @@ const config = require('../../../../config/config.json');
 const BASE_URL = `${config.hostname.replace(/\/+$/, '')}:${config.port}`
 
 exports.renderEntity = function(entity) {
+    // console.log(entity);
+    // console.log('++++++++++++++++++++++++++++++', entity.dataValues.topicTitle);
     return {
         id: entity.id,
         type: entity.type,
@@ -17,7 +19,8 @@ exports.renderEntity = function(entity) {
         published: entity.published,
         funds: entity.fund && exports.renderEntities(entity.fund),
         directions: entity.direction && exports.renderEntities(entity.direction),
-        topics: entity.topic && exports.renderEntities(entity.topic)
+        topics: entity.topic && exports.renderEntities(entity.topic),
+        topicTitle: entity.dataValues.topicTitle || '',
     };
 };
 
