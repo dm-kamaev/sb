@@ -244,9 +244,6 @@ class EntityController extends Controller {
                 published = request.published;
             var entities =
                 await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
-            if (type === 'direction') {
-                new ExtractEntity().addTopicNameForDirections(entities);
-            }
             return entityView.renderEntities(entities);
         } catch (err) {
             if (err.message === 'Not found') {

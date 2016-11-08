@@ -108,39 +108,6 @@ module.exports = class ExtractEntity {
             return hashTree;
         }
     }
-
-
-    /**
-     * [getTopicNameFromDirections description]
-     * @param  {[array]} directions [ { id }, { id }, ... ]
-     */
-    addTopicNameForDirections(directions) {
-        // [ { entityId: 23, title: 'Дети' } ]
-        var relations = await(sequelize.sequelize.query(`
-        SELECT eoe."entityId", e.title
-            FROM "EntityOtherEntity" as eoe
-            JOIN "Entity" as e
-                ON eoe."otherEntityId"=e.id
-            WHERE
-                eoe."entityId" IN ( :ids ) AND
-                e.type= :type AND
-                published=true
-        `,{
-            type: sequelize.sequelize.QueryTypes.SELECT,
-            replacements: {
-                ids: directions.map(direction => direction.id),
-                type: TOPIC
-            }
-        }));
-        var topicName = {};
-        relations.forEach(relation => topicName[relation.entityId]= relation.title);
-        directions.forEach((direction) => {
-            var topicTitle = topicName[direction.id];
-            if (topicTitle) {
-                direction.dataValues.topicTitle = topicTitle;
-            }
-        });
-    }
 };
 
 
