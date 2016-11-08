@@ -7,6 +7,9 @@ const sequelize = require('../../../components/sequelize');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const entityTypes = require('../../entity/enums/entityTypes.js');
+const TOPIC     = entityTypes.TOPIC,
+      DIRECTION = entityTypes.DIRECTION,
+      FUND      = entityTypes.FUND;
 const tables = sequelize.models;
 
 module.exports = class ExtractEntity {
@@ -21,12 +24,12 @@ module.exports = class ExtractEntity {
      */
     constructor(params) {
         params = params || {};
-        if (!params.entityIds) {
-            throw new Error('ExtractEntity => not exist entityIds: "'+params.entityIds+'"');
-        }
-        if (!entityTypes[params.type]) {
-            throw new Error('ExtractEntity => there is no such type: "'+params.type+'"');
-        }
+        // if (!params.entityIds) {
+        //     throw new Error('ExtractEntity => not exist entityIds: "'+params.entityIds+'"');
+        // }
+        // if (!entityTypes[params.type]) {
+        //     throw new Error('ExtractEntity => there is no such type: "'+params.type+'"');
+        // }
         this.type              = params.type;
         this.entityIds         = params.entityIds;
         this.EntityOtherEntity = tables.EntityOtherEntity;
@@ -104,6 +107,39 @@ module.exports = class ExtractEntity {
             });
             return hashTree;
         }
+    }
+
+
+    /**
+     * [getTopicNameFromDirections description]
+     * @param  {[array]} directions [ { id }, { id }, ... ]
+     */
+    addTopicNameForDirections(directions) {
+        // [ { entityId: 23, title: 'Дети' } ]
+        var relations = await(sequelize.sequelize.query(`
+        SELECT eoe."entityId", e.title
+            FROM "EntityOtherEntity" as eoe
+            JOIN "Entity" as e
+                ON eoe."otherEntityId"=e.id
+            WHERE
+                eoe."entityId" IN ( :ids ) AND
+                e.type= :type AND
+                published=true
+        `,{
+            type: sequelize.sequelize.QueryTypes.SELECT,
+            replacements: {
+                ids: directions.map(direction => direction.id),
+                type: TOPIC
+            }
+        }));
+        var topicName = {};
+        relations.forEach(relation => topicName[relation.entityId]= relation.title);
+        directions.forEach((direction) => {
+            var topicTitle = topicName[direction.id];
+            if (topicTitle) {
+                direction.dataValues.topicTitle = topicTitle;
+            }
+        });
     }
 };
 

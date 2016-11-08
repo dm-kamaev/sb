@@ -4,6 +4,7 @@
 const Controller = require('nodules/controller').Controller;
 const await = require('asyncawait/await');
 const entityService = require('../services/entityService');
+const ExtractEntity = require('../services/extractEntity.js');
 const userService = require('../../user/services/userService');
 const userFundService = require('../../userFund/services/userFundService')
 const entityView = require('../views/entityView');
@@ -241,21 +242,12 @@ class EntityController extends Controller {
                 sberUserId = request.user && request.user.id;
             var userFundId = request.user && request.user.userFund.id || null,
                 published = request.published;
+            var entities =
+                await(entityService.getEntitiesByOwnerId(id, type, userFundId, published));
             if (type === 'direction') {
-                var entities =
-                    await (entityService.getEntitiesByOwnerId(id, type, userFundId, published));
-                // console.log(id, type, entities);
-                return entityView.renderEntities(entities);
-            } else if (type === 'topic') {
-                // console.log('TOPIC');
-                var directions =
-                    await(entityService.getEntitiesByOwnerId(id, 'direction', userFundId, published));
-                // console.log('DIRECTIONS=', id, type);
-                id = directions[0].id;
-                var topics = await(entityService.getEntitiesByOwnerId(id, 'topic', userFundId, published));
-                // console.log('TOPICS=', id, type, topics);
-                return entityView.renderEntities(topics);
+                new ExtractEntity().addTopicNameForDirections(entities);
             }
+            return entityView.renderEntities(entities);
         } catch (err) {
             if (err.message === 'Not found') {
                 throw new errors.NotFoundError('Entity', id);
