@@ -404,7 +404,7 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
 
     var order = createOrder(data)
 
-    order.makePayment()
+    await(order.makePayment())
     var status = order.checkStatus()
     if (status.actionCode != 0) {
       OrderService.failedReccurentPayment(order.sberAcquOrderNumber,
