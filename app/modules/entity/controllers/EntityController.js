@@ -235,15 +235,27 @@ class EntityController extends Controller {
      *
      * @apiError (Error 404) NotFoundError Entity not found
      */
-    actionGetEntitiesByAssociatedId(actionContext, id, type) {
+    actionGetEntitiesByAssociatedId(ctx, id, type) {
         try {
-            var request = actionContext.request,
+            var request = ctx.request,
                 sberUserId = request.user && request.user.id;
             var userFundId = request.user && request.user.userFund.id || null,
                 published = request.published;
-            var entities =
-                await (entityService.getEntitiesByOwnerId(id, type, userFundId, published));
-            return entityView.renderEntities(entities);
+            if (type === 'direction') {
+                var entities =
+                    await (entityService.getEntitiesByOwnerId(id, type, userFundId, published));
+                // console.log(id, type, entities);
+                return entityView.renderEntities(entities);
+            } else if (type === 'topic') {
+                // console.log('TOPIC');
+                var directions =
+                    await(entityService.getEntitiesByOwnerId(id, 'direction', userFundId, published));
+                // console.log('DIRECTIONS=', id, type);
+                id = directions[0].id;
+                var topics = await(entityService.getEntitiesByOwnerId(id, 'topic', userFundId, published));
+                // console.log('TOPICS=', id, type, topics);
+                return entityView.renderEntities(topics);
+            }
         } catch (err) {
             if (err.message === 'Not found') {
                 throw new errors.NotFoundError('Entity', id);
