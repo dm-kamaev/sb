@@ -35,28 +35,36 @@ function handleError_(response, keys, validate, handle) {
     })
 }
 
-module.exports = function createOrder(data) {
-    switch (data.type) {
+function getConstructor_(type) {
+    switch (type) {
         case orderTypes.RECURRENT:
-            return new RecurrentOrder(data)
+            return RecurrentOrder
             break;
         case orderTypes.FIRST:
-            return new FirstOrder(data)
+            return FirstOrder
             break
         default:
-            throw new Error(`Unknown order type: ${data.type}`)
+            throw new Error(`Unknown order type: ${type}`)
     }
+}
+
+module.exports = function createOrder(data) {
+    var ctor = getConstructor_(data.type)
+    return new ctor(data)
 }
 
 class Order {
     constructor(data, opts) {
+        if (this.constructor == Order) {
+            throw new Error("Can't instantiate abstract class")
+        }
+
+        //can be created new or grabbed from existing sequelize instance
         var order = data instanceof OrderModel.Instance ? data : this.createOurOrder_(data);
         Object.assign(this, data, order.dataValues, ACCOUNTS[data.type], {
             returnUrl: `${BASEURL}/#success?app=${data.isCordova}&type=payment`,
             failUrl: `${BASEURL}/#failure?app=${data.isCordova}&type=payment`,
         })
-
-        // this.makePayment = handlers[this.type].bind(this)
     }
 
     createAqOrder_() {
@@ -160,14 +168,8 @@ class Order {
         this.status = status;
     }
 
-    static getOrder(where) {
-        if (typeof where == 'number') where = {
-            sberAcquOrderNumber: where
-        }
-        var sqOrder = await (OrderModel.findOne({
-            where
-        }))
-        return new Order(sqOrder);
+    isSuccessful() {
+        return this.sberAcquActionCode === 0;
     }
 }
 
@@ -196,7 +198,7 @@ class RecurrentOrder extends Order {
                 status = orderStatus.PAID
                 break;
             default:
-                status = orderStatus.FAILED
+                status = orderStatus.PROBLEM_WITH_CARD
                 break;
         }
         this.status = status;
@@ -209,5 +211,9 @@ class FirstOrder extends Order {
             var result = this.createAqOrder_()
             resolve(result)
         })
+    }
+
+    isAvalibleForPayment() {
+        return this.status == orderStatus.WAITING_FOR_PAY
     }
 }

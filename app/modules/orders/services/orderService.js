@@ -95,21 +95,6 @@ OrderService.getSberUser = function(userFundSubscriptionId) {
 
 
 /**
- * update info in Orders(table) for order
- * @param  {[int]}  sberAcquOrderNumber
- * @param  {[obj]}  data
- * @return {[type]}
- */
-OrderService.updateInfo = function(sberAcquOrderNumber, data) {
-    return await (sequelize.models.Order.update(data, {
-        where: {
-            sberAcquOrderNumber,
-        }
-    }));
-};
-
-
-/**
  * if first pay for user
  * then create order in our system and in sberbank acquring
  * else return message
@@ -129,32 +114,33 @@ OrderService.firstPayOrSendMessage = function(params) {
         throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
     }
 
-    if (!params.isActiveCard) {
-        var data = {
-            userFundSubscriptionId: params.userFundSubscriptionId,
-            amount: params.amount,
-            userFundSnapshot: userFund,
-            isCordova: params.isCordova,
-            clientId: params.sberUserId,
-            status: orderStatus.NEW,
-            type: orderTypes.FIRST,
-        };
-        // var sberAcquOrderNumber = OrderService.createOrder(data);
-        var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
-
-        var order = createOrder(data)
-        try {
-            return await(order.makePayment())
-        } catch (err) {
-            throw new errors.AcquiringError(err.message)
-        }
-    } else {
+    if (params.isActiveCard) {
         enableSubscription_(params.userFundSubscriptionId)
 
         return {
             message: i18n.__('You changed the monthly payment amount.')
         };
     }
+
+    var data = {
+        userFundSubscriptionId: params.userFundSubscriptionId,
+        amount: params.amount,
+        userFundSnapshot: userFund,
+        isCordova: params.isCordova,
+        clientId: params.sberUserId,
+        status: orderStatus.NEW,
+        type: orderTypes.FIRST,
+    };
+
+    var payDate = createPayDate_(params.userFundSubscriptionId, new Date());
+
+    var order = createOrder(data)
+    try {
+        return await(order.makePayment())
+    } catch (err) {
+        throw new errors.AcquiringError(err.message)
+    }
+
 };
 
 /**
@@ -239,117 +225,6 @@ function countDateDifferenceFromNow_(date) {
     var differenceInSeconds = Math.ceil(timeDifference / 1000);
     return differenceInSeconds;
 }
-
-OrderService.isAvalibleForPayment = function(order) {
-    if (!order) {
-        return false;
-    } else {
-        return order.status === orderStatus.WAITING_FOR_PAY;
-    }
-};
-
-OrderService.getAcquiringOrder = function(order) {
-    var sberAcquOrderNumber = order.sberAcquOrderNumber;
-
-    await (OrderService.updateInfo(sberAcquOrderNumber, {
-        status: orderStatus.CONFIRMING_PAYMENT
-    }));
-
-    var paymentId = order.userFundSubscription.currentAmount.id,
-        userFund = order.userFundSubscription.userFund,
-        sberUser = order.userFundSubscription.sberUser;
-
-    var eqOrderStatus = getAcquiringOrderStatus_(order);
-
-    await (OrderService.updateInfo(sberAcquOrderNumber, {
-        sberAcquErrorCode: eqOrderStatus.errorCode,
-        sberAcquErrorMessage: eqOrderStatus.errorMessage,
-        sberAcquActionCode: eqOrderStatus.actionCode,
-        sberAcquActionCodeDescription: eqOrderStatus.actionCodeDescription,
-        status: eqOrderStatus.actionCode === 0 ? orderStatus.PAID : eqOrderStatus.actionCode === -100 ? orderStatus.WAITING_FOR_PAY : orderStatus.FAILED
-    }));
-
-    return eqOrderStatus;
-};
-
-OrderService.isSuccessful = function(sberAcquiringOrderStatus) {
-    return sberAcquiringOrderStatus.actionCode === 0;
-};
-
-function getAcquiringOrderStatus_(order) {
-    try {
-        return sberAcquiring.getStatusAndGetBind({
-            sberAcquOrderNumber: order.sberAcquOrderNumber,
-            orderId: order.sberAcquOrderId,
-            clientId: order.userFundSubscription.sberUser.id
-        });
-    } catch (err) {
-        await (OrderService.updateInfo(order.sberAcquOrderNumber, {
-            status: orderStatus.WAITING_FOR_PAY
-        }));
-        var textError = i18n.__(
-            'Failed connection with sberbank acquiring (get order status). {{error}}', {
-                error: JSON.stringify(err)
-            }
-        );
-        throw new errors.AcquiringError(textError);
-    }
-}
-
-
-/**
- * study responce sberbank acquiring
- * @param  {[int]}  sberAcquOrderNumber
- * @param  {[obj]}  responceSberAcqu
- * @return {[obj]}  { orderId, formUrl } || { errorCode, errorMessage }
- */
-function handlerResponceSberAcqu_(sberAcquOrderNumber, responceSberAcqu) {
-    if (responceSberAcqu.orderId && responceSberAcqu.formUrl) {
-        await (
-            OrderService.updateInfo(sberAcquOrderNumber, {
-                sberAcquOrderId: responceSberAcqu.orderId,
-                status: orderStatus.WAITING_FOR_PAY
-            })
-        );
-        return responceSberAcqu;
-    } else {
-        const ourErrorCode = '100'; // "100"(our code not sberbank) if sberbank acquiring is changed key's name in responce object
-        const ourErrorMessage = i18n.__('Unknown response from Sberbank acquiring');
-        var errorCode = responceSberAcqu.errorCode || ourErrorCode,
-            errorMessage = responceSberAcqu.errorMessage || ourErrorMessage;
-        var data = {
-            sberAcquErrorCode: errorCode,
-            sberAcquErrorMessage: errorMessage,
-            status: orderStatus.EQ_ORDER_NOT_CREATED
-        };
-        await (OrderService.updateInfo(sberAcquOrderNumber, data));
-        var textError = i18n.__(
-            'Failed create order in Sberbank acquiring. ' +
-            'errorCode: \'{{errorCode}}\', errorMessage: \'{{errorMessage}}\'', {
-                errorCode,
-                errorMessage
-            });
-        throw new errors.HttpError(textError, 503);
-    }
-}
-
-/**
- * create order in our base
- * @param  {[int]}      data.userFundSubscriptionId
- * @param  {[int]}      data.amount
- * @param  {userFund}    data.userFund  [ userFund with included entities ]
- * @return {[object]}   [ get id insert ]
- */
-OrderService.createOrder = function(data) {
-    return await (sequelize.models.Order.create({
-        userFundSubscriptionId: data.userFundSubscriptionId,
-        type: data.type,
-        amount: data.amount,
-        status: data.status,
-        userFundSnapshot: data.userFundSnapshot,
-        scheduledPayDate: data.scheduledPayDate
-    })).sberAcquOrderNumber;
-};
 
 function createPayDate_(subscriptionId, payDate) {
     return await (sequelize.models.PayDayHistory.create({
@@ -489,9 +364,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
     // await (OrderService.updateInfo(sberAcquOrderNumber, {
     //     status: orderStatus.PROBLEM_WITH_CARD
     // }));
-    var problemOrderInPreviousMonth = await (
-        findOrderWithProblemCard_(userFundSubscriptionId, nowDate)
-    );
+    var problemOrderInPreviousMonth = !!findOrderWithProblemCard_(userFundSubscriptionId, nowDate);
 
     var sberUser = await (OrderService.getSberUser(userFundSubscriptionId)),
         sberUserId = sberUser.id,
@@ -505,7 +378,7 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
 
     var data = '';
     // this is the first time the payment failed
-    if (!problemOrderInPreviousMonth.length) {
+    if (!problemOrderInPreviousMonth) {
         if (sberUser.categories == mailingCategory.ALL) {
             mail.sendFirstFailure(userEmail, {
                 userName: authUser.firstName,
@@ -540,15 +413,16 @@ OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubs
  */
 function findOrderWithProblemCard_(userFundSubscriptionId, nowDate) {
     var now = nowDate || new Date();
-    var previousMonth = moment(now).subtract(1, 'month').format('YYYY-MM');
-    return await (sequelize.models.Order.findAll({
+    var previousMonth = moment(now).subtract(1, 'month');
+    return await(sequelize.models.Order.findOne({
         where: {
             userFundSubscriptionId,
-            status: orderStatus.PROBLEM_WITH_CARD
+            status: orderStatus.PROBLEM_WITH_CARD,
+            scheduledPayDate: {
+                $between: [ previousMonth.startOf('month').toDate(),
+                            previousMonth.endOf('month').toDate() ]
+            }
         }
-    }).filter(order => {
-        var orderMonth = moment(order.scheduledPayDate).format('YYYY-MM');
-        return previousMonth === orderMonth;
     }));
 }
 
