@@ -5,20 +5,21 @@
 // EXAMPLE: node integration-tests/cleanDatabase.js --tables=Entity,EntityOtherEntity
 
 const util = require('util');
+const pgpOptions = require('../config/pgpOptions.js');
 const config_db = require('../config/db.json');
-const config_admin = require('../config/admin.json');
-const pgp = require('pg-promise')();
-const logger = require('../../app/components/logger/').getLogger('main');
+const pgp = require('pg-promise')(pgpOptions);
 const db = pgp(config_db);
+const logger = require('../../app/components/logger/').getLogger('tests');
 const argv = require('yargs').argv;
-require('../../app/components/implementPromise/')(Promise);
+const async = require('asyncawait/async');
+const await = require('asyncawait/await');
 
 // which table clean, if empty clean all
 var WHICH_TABLES = [];
 // var WHICH_TABLES = ["Entity", "EntityOtherEntity"];
 if (argv.tables) { WHICH_TABLES = argv.tables.split(','); }
 
-(function() {
+async(function() {
     logger.info('Clean table: '+((WHICH_TABLES.length > 0) ? '"'+WHICH_TABLES.join('","')+'"' : 'all'));
     var query = `
     SELECT *
@@ -27,15 +28,17 @@ if (argv.tables) { WHICH_TABLES = argv.tables.split(','); }
           schemaname != 'information_schema' AND
           tablename  != 'SequelizeMeta'
     `;
-    db.query(query)
-        .then(getTables)
-        .then(cleanTables)
-        .catch(error => {
-            logger.critical(new Error(error).stack);
-            console.log(error);
-        });
+    try {
+        var tables = await(db.query(query));
+        var queries = getTables(tables);
+        console.log(queries);
+        await(cleanTables(queries));
+        logger.info('Tables clean');
+    } catch (err) {
+        logger.critical(err);
+        console.log(err);
+    }
 })();
-
 
 
 /**
@@ -44,7 +47,7 @@ if (argv.tables) { WHICH_TABLES = argv.tables.split(','); }
  * @return {[array]}  [ 'TRUNCATE TABLE "SberUser" RESTART IDENTITY CASCADE', ... ]
  */
 function getTables(tables) {
-    var queries = [],
+    var queries         = [],
         tablesForRemove = getTablesForRemove();
     if (!Object.keys(tablesForRemove).length) {
         tables.forEach(table => {
@@ -68,23 +71,7 @@ function getTables(tables) {
  * @return {[type]}         [description]
  */
 function cleanTables(queries) {
-    console.log(queries);
-    var promiseQueries = queries.map(query => {
-        return new Promise((resolve,reject) => {
-            setTimeout(function() {
-                db.query(query)
-                  .then(res => resolve(res))
-                  .catch(err => reject(err));
-            }, 2000);
-        });
-    });
-    return Promise.series(promiseQueries)
-           .then(res => { logger.info('OK: '+res); })
-           .catch(error => {
-                logger.critical(new Error(error).stack);
-                console.log(error);
-           });
-    // console.log(queries);
+    queries.forEach(query => await(db.query(query)));
 }
 
 
