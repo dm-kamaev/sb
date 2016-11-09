@@ -3,6 +3,8 @@
 
 file_list=()
 errCode=0
+# node /scripts/cleanDatabase.js --tables=Entity,EntityOtherEntity
+# node /scripts/addedEntitesInDb.js
 while IFS= read -d $'\0' -r file ; do
     file_list=("${file_list[@]}" "$file")
 done < <(find "tests/" -type f -print0)
