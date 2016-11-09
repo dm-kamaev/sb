@@ -2,6 +2,7 @@
 
 const services = require('../../services');
 const chakram = require('chakram');
+const util = require('util');
 const expect = chakram.expect;
 
 module.exports = function(context) {
@@ -9,8 +10,8 @@ module.exports = function(context) {
         var statusCode = respObj.response.statusCode,
             body       = respObj.response.body;
         this.assert(
-            statusCode === 201,
-            'Error status ' + statusCode + '; body:' + body
+            statusCode === 200,
+            'Error status ' + statusCode + '; body:' + util.inspect(body, { depth:5 })
         );
         return chakram.wait();
     });

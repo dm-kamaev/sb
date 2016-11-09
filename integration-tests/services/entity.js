@@ -21,7 +21,6 @@ service.generateEntities = function(number, type) {
         var entity = {};
         entity.title = chance.word();
         entity.description = chance.sentence();
-        if (!entityTypes[type]) { throw new Error('generateEntities => Not valid type "'+type+'"'); }
         if(type !== undefined) {
             entity.type = type;
         } else {
@@ -48,5 +47,5 @@ service.generateEntities = function(number, type) {
 
 service.getRandomType = function() {
     var index = Math.floor(Math.random() * 2);
-    return Object.keys(entityTypes[index]);
+    return Object.keys(entityTypes).map(key => key.toLowerCase())[index];
 }

@@ -91,6 +91,7 @@ module.exports = class EntitiesApi {
         return db.one(query).then(entity => {
             context.set(type, entity);
             expect(entity).checkSearchRandomEntity();
+            return chakram.wait();
         });
     }
 
