@@ -13,31 +13,35 @@ const mail = require('../../mail')
 const sberConfig = require('../../../../config/config-sberAcquiring.json');
 const moment = require('moment');
 const mailingCategory = require('../../mail/enum/mailingCategory')
+const createOrder = require('../../orders/Order');
+const UserApi = require('../../micro/services/microService').UserApi;
 
 module.exports = class CallbackController extends Controller {
     actionCallback(ctx) {
         // callback data
         var sberAcquOrderNumber = ctx.request.query.orderNumber;
 
-        var order = await(orderService.getOrderWithInludes(sberAcquOrderNumber));
-
+        var sqOrder = orderService.getOrderWithInludes(sberAcquOrderNumber);
+        var order = createOrder(sqOrder)
         if (!order) {
             // panic, order not found!!!
         }
 
-        if (!orderService.isAvalibleForPayment(order)) return;
+        if (!order.isAvalibleForPayment()) return;
 
-        var sberAcquiringOrderStatus = orderService.getAcquiringOrder(order);
+        var sberAcquiringOrderStatus = order.checkStatus()
+        console.log(sberAcquiringOrderStatus);
 
-        if (orderService.isSuccessful(sberAcquiringOrderStatus)) {
+        if (order.isSuccessful()) {
             // create new card for user and set pay date
+
             var userFundSubscription = order.userFundSubscription,
                 sberUser = userFundSubscription.sberUser,
                 userFund = userFundSubscription.userFund,
                 ownUserFund = sberUser.userFund,
-                authUser = userService.findAuthUserByAuthId(sberUser.authId);
+                authUser = new UserApi().getUserData(sberUser.authId);
 
-            console.log(sberAcquiringOrderStatus);
+            // console.log(sberAcquiringOrderStatus);
             var cardAuthInfo = sberAcquiringOrderStatus.cardAuthInfo,
                 expiration = cardAuthInfo && cardAuthInfo.expiration,
                 PAN = cardAuthInfo && cardAuthInfo.pan,
