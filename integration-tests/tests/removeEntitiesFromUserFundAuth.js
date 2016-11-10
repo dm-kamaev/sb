@@ -22,7 +22,6 @@ const getUserInfo = require('../modules/user/getUserInfo.js');
 const EntitiesApi = require('../modules/entity/entitiesApi.js');
 const UserFundApi = require('../modules/userFund/userFundApi.js');
 const UserFundApiDb = require('../modules/userFund/userFundApiDb.js');
-const CheckEntityInUserFund = require('../modules/userFund/CheckEntityInUserFund.js');
 const FUND      = entityTypes.FUND,
       DIRECTION = entityTypes.DIRECTION,
       TOPIC     = entityTypes.TOPIC;
