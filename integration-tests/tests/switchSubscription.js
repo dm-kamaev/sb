@@ -1,11 +1,16 @@
 'use strict'
 
+// author: dm-kamaev
+// swaitch subscription on userFund
+
 const chakram = require('chakram');
 const expect = chakram.expect;
 const services = require('../services');
 const config_db = require('../config/db.json');
 const config_admin = require('../config/admin.json');
-const db = require('pg-promise')()(config_db);
+const pgpOptions = require('../config/pgpOptions.js');
+const pgp = require('pg-promise')(pgpOptions);
+const db = pgp(config_db);
 const util = require('util');
 const log = console.log;
 
@@ -21,12 +26,7 @@ const userFund    = require('../modules/userFund/userFund.js');
 chakram.setRequestDefaults(config_admin);
 
 describe('Switch subscription =>', function() {
-    var context = {
-        chakram,
-        expect,
-        listEntities: [],
-        db
-    };
+    var context = { listEntities: [], db };
 
     before('Logout',   logout(context));
     before('Register', register(context));
@@ -45,11 +45,8 @@ describe('Switch subscription =>', function() {
     it('Turn off subscribtion',                     userFund.switchSubscription(context));
     it('Check field enable the subscribtion in db', userFund.checkStatusSubscription(context));
 
-   /*it('debug', function (done) {
-        log('listEntities=', context.listEntities);
-        log('user = ', context.user);
-        log('userFundId = ', context.userFundId);
-        done();
-    });*/
+
+    // --------------------------------------------------------------------------
     after('Logout', logout(context));
+    after('Terminate db connection pool', () => pgp.end());
 });

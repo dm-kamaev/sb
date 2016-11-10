@@ -11,7 +11,7 @@ module.exports = function(context) {
         var statusCode = respObj.response.statusCode,
             body       = respObj.response.body;
         this.assert(
-            statusCode === 201,
+            statusCode === 200,
             'Error status ' + statusCode + '; body:' + body
         );
         return chakram.wait();
