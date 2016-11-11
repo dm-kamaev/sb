@@ -8,6 +8,7 @@ const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
 const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
+const i18n   = require('../../../components/i18n');
 const userFundService = require('../services/userFundService');
 const entityTypes = require('../../entity/enums/entityTypes.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
@@ -23,6 +24,7 @@ module.exports = class UserFundApi {
      */
     constructor(params) {
         this.userFundId = params.userFundId || null;
+        this.sberUserId = params.sberUserId || null;
         this.UserFundEntity = sequelize.models.UserFundEntity;
     }
 
@@ -211,6 +213,24 @@ module.exports = class UserFundApi {
         return entityIdsForRemove;
     }
 
+
+    /**
+     * if not own userfund then check exist and enable another userfund
+     * @param  {[int]} userFundId // optional
+     * @return {[type]}
+     */
+    checkEnableIfNotOwn(userFundId) {
+        userFundId = userFundId || this.userFundId;
+        var userFund = await(userFundService.getUserFund(userFundId));
+        if (!userFund) {
+            throw new errors.NotFoundError(i18n.__('UserFund'), userFundId);
+        }
+        if (userFundId !== userFund.id) {
+            if (!userFund.enabled) {
+                throw new errors.HttpError(i18n.__('UserFund disabled'), 400);
+            }
+        }
+    }
 }
 
 /**
