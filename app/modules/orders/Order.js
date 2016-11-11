@@ -104,8 +104,8 @@ class Order {
 
     checkStatus() {
         var result = aqService.getStatusAndGetBind(this)
-        if (result.actionCode == this.actionCode) return result;
-        this.updateStatus_(result.actionCode)
+        if (result.actionCode == this.sberAcquActionCode) return result;
+        this.updateStatus_(result.actionCode);
         this.updateOrder_({
             sberAcquOrderId: result.orderId,
             sberAcquErrorCode: result.errorCode,
@@ -113,7 +113,7 @@ class Order {
             sberAcquActionCode: result.actionCode,
             sberAcquActionCodeDescription: result.actionCodeDescription,
             status: this.status
-        })
+        });
         return result;
     }
 
@@ -130,6 +130,7 @@ class Order {
                 sberAcquOrderNumber: this.sberAcquOrderNumber
             }
         }))
+        Object.assign(this, data)
     }
 
     getAqStatus_() {

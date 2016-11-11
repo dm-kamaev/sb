@@ -151,11 +151,7 @@ class OrderController extends Controller {
     }
 
     actionFailOrders(actionContext, fail) {
-        if(fail == true){
-            failOrders = true;
-        } else {
-            failOrders = false
-        }
+        failOrders = !!fail
         return {fail: failOrders}
     }
 
@@ -163,11 +159,7 @@ class OrderController extends Controller {
      *
      */
     actionFailBoundPayments(actionContext, fail) {
-        if(fail == true){
-            failBindings = true;
-        } else {
-            failBindings = false
-        }
+        failBindings = !!fail
         return {fail: failBindings}
     }
 }

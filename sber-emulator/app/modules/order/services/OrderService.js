@@ -54,8 +54,7 @@ OrderService.setPaid = async(function(orderId, binding) {
 OrderService.getData = async(function(clientId, orderId) {
     var order = await(models.Order.findOne({
         where: {
-            orderId: orderId,
-            clientId: clientId
+            orderId: orderId
         }
     }));
     return order;

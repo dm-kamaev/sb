@@ -302,10 +302,16 @@ OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
     var order = createOrder(data)
 
     await(order.makePayment())
-    var status = order.checkStatus()
-    if (status.actionCode != 0) {
-      OrderService.failedReccurentPayment(order.sberAcquOrderNumber,
-        userFundSubscription.userFundSubscriptionId, sberAcquPayment.errorMessage, nowDate, userFundSubscription.amount);
+    var status = order.checkStatus();
+    if (status.actionCode !== 0) {
+      var params = {
+        sberAcquOrderNumber: order.sberAcquOrderNumber,
+        userFundSubscriptionId: userFundSubscription.userFundSubscriptionId,
+        errorMessage: status.errorMessage,
+        nowDate,
+        amount: userFundSubscription.amount
+      }
+      OrderService.failedReccurentPayment(params);
     }
 };
 
@@ -360,10 +366,13 @@ OrderService.getOrderComposition = function(sberAcquOrderNumber) {
  * @param  {Object} [nowDate]
  * @return {[type]}
  */
-OrderService.failedReccurentPayment = function(sberAcquOrderNumber, userFundSubscriptionId, error, nowDate, amount) {
-    // await (OrderService.updateInfo(sberAcquOrderNumber, {
-    //     status: orderStatus.PROBLEM_WITH_CARD
-    // }));
+OrderService.failedReccurentPayment = function(params) {
+    var sberAcquOrderNumber = params.sberAcquOrderNumber,
+        userFundSubscriptionId = params.userFundSubscriptionId,
+        errorMessage = params.errorMessage,
+        nowDate = params.nowDate,
+        amount = params.amount;
+
     var problemOrderInPreviousMonth = !!findOrderWithProblemCard_(userFundSubscriptionId, nowDate);
 
     var sberUser = await (OrderService.getSberUser(userFundSubscriptionId)),

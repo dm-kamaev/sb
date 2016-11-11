@@ -128,9 +128,9 @@ MicroServices.UserApi = class {
     updateAuthUser(userData) {
         try {
             return await (axiosUser.patch(`/user/${userData.authId}`, {
-                firstName: userData.firstName || '',
-                lastName: userData.lastName || '',
-                email:    userData.email || ''
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email:    userData.email 
             })).data || {};
         } catch (err) {
            handlerForError_(err, loggerUser);

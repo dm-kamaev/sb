@@ -17,6 +17,8 @@ const addEntity   = require('../modules/entity/addEntity.js');
 const firstPay    = require('../modules/userFund/firstPay.js');
 const userFund    = require('../modules/userFund/userFund.js');
 const statement = require('../modules/statement/statement')
+const checkCb = require('../modules/order/waitForCallback')
+const payOrder = require('../modules/order/payOrder')
 
 chakram.setRequestDefaults(config_admin);
 
@@ -38,36 +40,13 @@ describe('Statement =>', function() {
   it('Add enity to userFund',           addEntity(context));
   it('Get user info',                   getUserInfo(context));
   it('set amount', firstPay.withOutCheck(context));
-  it('pay order', function() {
-      return chakram.get(context.formUrl)
-  })
+  it('pay order', payOrder(context))
 
-  it('wait for cb', function checkStatus() {
-      var deferred = Promise.defer()
-
-      db.one("SELECT * FROM \"Order\" WHERE \"sberAcquOrderId\" = ${sberOrderId}", context)
-      .then(order => {
-
-          context.sberAcquOrderNumber = order.sberAcquOrderNumber
-          context.orderAmount = order.amount
-
-          if (order.status == orderStatus.WAITING_FOR_PAY
-           || order.status == orderStatus.CONFIRMING_PAYMENT) {
-              setTimeout(() => {
-                  checkStatus()
-                  .then(deferred.resolve)
-              }, 500)
-          } else {
-              deferred.resolve()
-          }
-      })
-
-      return deferred.promise;
-  })
-
+  it('wait for cb', checkCb(context))
   it('should upload statement',         statement.upload(context))
   it('waits for handling statement', function checkStatement() {
       var deferred = Promise.defer()
+      setTimeout(deferred.reject, 10000)
 
       db.one("SELECT FROM \"StatementOrder\" WHERE \"sberAcquOrderNumber\" = ${sberAcquOrderNumber}", context)
       .then(deferred.resolve)
@@ -75,7 +54,7 @@ describe('Statement =>', function() {
           setTimeout(() => {
             checkStatement()
             .then(deferred.resolve)
-          })
+          }, 500)
       })
 
       return deferred.promise;

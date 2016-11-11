@@ -295,6 +295,8 @@ describe('Unsuccess first payment test', function() {
     });
 });
 
+process.exit()
+
 describe('Payment with inactive user fund test', function() {
     var userFundId,
         orderId,

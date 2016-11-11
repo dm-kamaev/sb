@@ -17,7 +17,7 @@ exports.upload = function(ctx) {
         orderRow[14] = ctx.sberAcquOrderNumber;
         orderRow[7] = moment(ctx.chargeDate).format('DD.MM.YYYY');
         orderRow[6] = moment(ctx.supplyDate).format('DD.MM.YYYY');
-        orderRow[9] = ctx.orderAmount * 0.0097;
+        orderRow[9] = ctx.amount * 0.0097;
         var data = [Array(15).fill(''), orderRow];
         var opts = {
             delimiter: ';',

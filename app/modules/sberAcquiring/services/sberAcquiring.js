@@ -127,8 +127,7 @@ sberAcquiring.getStatusAndGetBind = function(params) {
               password: params.password || configSberAcquiring.password,
               language: 'ru',
               orderNumber: params.orderNumber || params.sberAcquOrderNumber,
-              orderId: params.orderId || params.sberAcquOrderId,
-              clientId: params.clientId,
+              orderId: params.orderId || params.sberAcquOrderId
           }
       })).data;
     } catch (err) {

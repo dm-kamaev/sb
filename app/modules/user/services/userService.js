@@ -188,11 +188,12 @@ UserService.setAuthId = function(id, authId) {
 */
 
 UserService.updateAuthUser = function(authId, userData) {
+    console.log(userData);
     return new UserApi().updateAuthUser({
         authId,
-        firstName:userData.firstName || '',
-        lastName: userData.lastName  || '',
-        email:    userData.email     || ''
+        firstName:userData.firstName,
+        lastName: userData.lastName,
+        email:    userData.email
     });
 };
 
@@ -337,7 +338,7 @@ UserService.changeMailSubscription = function(userData, categories) {
 
         sberUserId = UserService.findSberUserByAuthId(authUser.id)
     }
-    
+
     return await(sequelize.models.SberUser.update({
         categories
     },{
