@@ -54,6 +54,12 @@ module.exports =
         'monthlyPayments': {
             'handlers': ['terminal'],
             'level': 'INFO'
+        },
+        "tests": {
+            "handlers": [
+                "terminal"
+            ],
+            "level": "INFO"
         }
     }
 };

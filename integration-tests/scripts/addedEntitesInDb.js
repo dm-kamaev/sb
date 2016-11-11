@@ -25,6 +25,8 @@ async(function () {
     } catch (err) {
         logger.critical(err);
     }
+    pgp.end();
+    logger.info('Terminate db connection pool');
 })();
 
 function readSql(fileName) { return new QueryFile('../migrations/'+fileName, {minify: true}); }

@@ -38,6 +38,8 @@ async(function() {
         logger.critical(err);
         console.log(err);
     }
+    pgp.end();
+    logger.info('Terminate db connection pool');
 })();
 
 
