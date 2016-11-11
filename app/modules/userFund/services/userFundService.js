@@ -196,58 +196,6 @@ UserFundService.toggleEnabled = function(id, isEnabled) {
 };
 
 
-/**
- * create record in UserFundSubscription and DesiredAmountHistory,
- * then update UserFundSubscription (insert currentAmountId  from DesiredAmountHistory)
- * @param {[obj]} params {
- *    sberUserId [int],
- *    userFundId [int],
- *    changer    [str] –– 'user' || 'admin',
- *    amount     [int] –– in cents,
- * }
- */
-UserFundService.setAmount = function(params) {
-    var sberUserId = params.sberUserId,
-        userFundId = params.userFundId,
-        changer = params.changer,
-        amount = params.amount;
-
-    function createTransaction(transact) {
-        return sequelize.models.UserFundSubscription.findOrCreate({
-            where: {
-                userFundId,
-                sberUserId
-            }
-        }).spread(subscription => subscription)
-              .then(createRecordAmount)
-              .then(setCurrentAmountId)
-              .catch(err => { throw err; });
-    }
-
-    function createRecordAmount(subscription) {
-        var recordAmount = {
-            subscriptionId: subscription.id,
-            changer,
-            amount,
-        };
-
-        return sequelize.models.DesiredAmountHistory.create(recordAmount);
-    }
-
-    function setCurrentAmountId(desiredAmount) {
-        return sequelize.models.UserFundSubscription.update({
-            currentAmountId: desiredAmount.id
-        }, {
-            where: {
-                userFundId,
-                sberUserId
-            }
-        });
-    }
-
-    return await(sequelize.sequelize_.transaction(createTransaction));
-};
-
 UserFundService.changeAmount = function(sberUserId, subscriptionId, changer, amount) {
     return await(sequelize.sequelize.transaction(t => {
         return sequelize.models.DesiredAmountHistory.create({
@@ -283,16 +231,6 @@ UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
         }]
     }));
     return suuf.currentAmount;
-};
-
-
-UserFundService.getUserFundSubscriptionId = function(sberUserId, userFundId) {
-    return await(sequelize.models.UserFundSubscription.findOne({
-        where: {
-            sberUserId,
-            userFundId
-        }
-    }));
 };
 
 
@@ -388,24 +326,6 @@ UserFundService.searchActiveSubscription = function(listUserFundId) {
 };
 
 
-/**
- * if not own userfund then check exist and enable another userfund
- * @param  {[int]} ownUserFundId
- * @param  {[int]} userFundId
- * @return {[type]}
- */
-UserFundService.checkEnableAnotherUserFund = function(ownUserFundId, userFundId) {
-    // check whether userFund enabled if he is not the owner
-    if (ownUserFundId !== userFundId) {
-        var userFund = await(UserFundService.getUserFund(userFundId));
-        if (!userFund) {
-            throw new errors.NotFoundError(i18n.__('UserFund'), userFundId);
-        }
-        if (!userFund.enabled) {
-            throw new errors.HttpError(i18n.__('UserFund disabled'), 400);
-        }
-    }
-};
 /**
  * return unhandled subscriptions in this month
  * @param {int[]} allDates dates need to handle
