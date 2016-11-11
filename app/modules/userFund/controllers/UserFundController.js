@@ -11,9 +11,11 @@ const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
 const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
-const UserFundApi  = require('../services/userFundApi.js');
+const UserFundApi = require('../services/userFundApi.js');
+const CardApi     = require('../../user/services/cardApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
+const SubscriptionApi = require('../services/subscriptionApi.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
 const userService = require('../../user/services/userService');
@@ -251,49 +253,36 @@ class UserFundController extends Controller {
      * {
      *   "userFundId": "1",
      *   "amount": "20000",
-     *   "app": true,
-     *   "percent": null,
-     *   "salary":  null
+     *   "app": true
      * }
      */
-    actionSetAmount(actionContext) {
-        var request = actionContext.request,
-            user = request.user || {};
-        var sberUserId = user.id || null,
-            changer = 'user',
-            ownUserFundId = (user.userFund) ? user.userFund.id : null,
-            data = actionContext.data || {},
-            // now user can only pay to own userFund
-            userFundId = data.userFundId || ownUserFundId,
-            amount = data.amount || null,
-            isCordova = data.app;
+    actionSetAmount(ctx) {
+        var passwordAuth = new PasswordAuth({ ctx });
+        var sberUserId    = passwordAuth.getUser('id'),
+            changer       = 'user',
+            userFundId    = passwordAuth.getUserFundIdFromPostOrOwn(),
+            amount        = passwordAuth.getPostData('amount'),
+            isCordova     = passwordAuth.getPostData('app', { required: false }) || false;
 
-        if (!sberUserId) { throw new errors.NotFoundError(i18n.__('SberUser'), sberUserId); }
-        if (!ownUserFundId) { throw new errors.NotFoundError(i18n.__('UserFund'), ownUserFundId); }
         // check whether userFund enabled if he is not the owner
-        // if now first pay then user's userfund is always disabled, but for another userfund
-        // must enable
-        userFundService.checkEnableAnotherUserFund(ownUserFundId, userFundId);
-        await(
-            userFundService.setAmount({
-                sberUserId, userFundId, changer, amount
-            })
-        );
+        // if now first pay
+        // then user's userfund is always disabled, but for another userfund must enable
+        const subscriptionApi = new SubscriptionApi({ sberUserId, userFundId })
+        subscriptionApi.checkEnableIfNotOwn();
+        subscriptionApi.setAmount({ changer, amount });
+        var userFundSubscriptionId = subscriptionApi.getSubscriptionId();
 
-        var subscription = await(
-            userFundService.getUserFundSubscriptionId(sberUserId, userFundId)
-        );
+        const isActiveCard = new CardApi({ sberUserId }).isActiveCard();
 
-        var card = await(userService.findCardBySberUserId(sberUserId));
-        var isActiveCard = !!card.currentCard;
         var params = {
             userFundId,
             amount,
-            userFundSubscriptionId: subscription.id,
+            userFundSubscriptionId,
             isActiveCard,
             sberUserId,
             isCordova
         };
+
         return orderService.firstPayOrSendMessage(params);
     }
 
@@ -421,8 +410,8 @@ class UserFundController extends Controller {
             // if don't get from the request UserFundId, then this is user's UserFund
             userFundId = id || ownUserFundId;
 
-        var res = await(userFundService.getUserFundSubscriptionId(sberUserId, userFundId));
-        if (!res) {
+        var subscription = new SubscriptionApi({ sberUserId, userFundId }).getSubscription();
+        if (!subscription) {
             var message = i18n.__(
                 'Not found the subscription for user with id: {{sberUserId}} and userFundId: {{userFundId}}', {
                     sberUserId,
@@ -430,7 +419,7 @@ class UserFundController extends Controller {
                 });
             return { message };
         }
-        return { enabled: res.enabled };
+        return { enabled: subscription.enabled };
     }
 
     actionTestGetSubscribedUsers(actionContext) {

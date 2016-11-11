@@ -79,15 +79,20 @@ module.exports = class PasswordAuth {
     /**
      * getPostData post data from request
      * @param  {[str]} key from request.body
+     * @param  {[obj]} option {
+     *     required: true || false, // default: true
+     * }
      * @return {[any]}
      */
-    getPostData(key) {
+    getPostData(key, option) {
         var body = this.request.body || {};
+        option = option || {};
+        var required = (option.required !== false) ? true : false;
         if (!key) {
             return body;
         } else {
             var postEl = body[key] || null;
-            if (!postEl && postEl !== 0 && postEl !== '') {
+            if (!postEl && required && postEl !== 0 && postEl !== '' && postEl !== false) {
                 throw new errors.NotFoundError(
                     i18n.__('Not found field "{{key}}" in POST data {{postEl}}', {
                         key: [key],
@@ -157,5 +162,19 @@ module.exports = class PasswordAuth {
     isNotDraftUserFund() {
         var userFund = this.getUserFund() || {};
         return Boolean(userFund.enabled);
+    }
+
+    /**
+     * get userFundId from post data owner
+     * @return {[int]}
+     */
+    getUserFundIdFromPostOrOwn() {
+        var ownUserFundId         = this.getUserFund().id,
+            transferredUserFundId = this.getPostData().userFundId;
+        var userFundId = transferredUserFundId || ownUserFundId;
+        if (!userFundId) {
+            throw new errors.NotFoundError(i18n.__('UserFund'), userFundId);
+        }
+        return userFundId;
     }
 };

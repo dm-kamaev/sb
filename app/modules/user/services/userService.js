@@ -88,24 +88,6 @@ UserService.getOrders = function(sberUserId, orderStatus) {
 };
 
 
-/**
- * if verify card user then exist data else null
- * @param  {[int]} sberUserId [description]
- * @return {[type]}           [description]
- */
-UserService.findCardBySberUserId = function(sberUserId) {
-    return await(sequelize.models.SberUser.findOne({
-        where: {
-            id: sberUserId
-        },
-        include: {
-            model: sequelize.models.Card,
-            as: 'currentCard',
-            required: false
-        }
-    }));
-};
-
 UserService.findSberUserByAuthId = function(authId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
@@ -333,11 +315,11 @@ UserService.changeMailSubscription = function(userData, categories) {
     if (!sberUserId) {
         var authUser = UserService.findAuthUserByEmail(email)
 
-        if (!authUser) throw new Error('User not Found')
+        if (!authUser) { throw new Error('User not Found'); }
 
         sberUserId = UserService.findSberUserByAuthId(authUser.id)
     }
-    
+
     return await(sequelize.models.SberUser.update({
         categories
     },{
