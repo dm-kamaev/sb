@@ -231,7 +231,6 @@ class UserController extends Controller {
      * @apiGroup User
      * @apiHeader (AdminToken) {String} Token-Header Authorization value
      * @apiParam {Number} amount amount in kopeck
-     * @apiSampleRequest http://www58.lan:3000/user/1/subscription/2/amount
      * @apiHeaderExample {json} Header-Example:
      *    {
      *      "Token-Header": "superSecretTokenString"

@@ -26,6 +26,8 @@ const EntitiesApi = require('../modules/entity/entitiesApi.js');
 const Context = require('./../../app/components/context');
 
 
+process.exit()
+
 describe('Payment with inactive user fund test', function() {
     var userFundId,
         orderId,

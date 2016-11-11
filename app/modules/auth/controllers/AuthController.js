@@ -34,6 +34,7 @@ class AuthController extends Controller {
      * @apiGroup Auth
      */
     actionTest(actionContext) {
+        //TODO: remove
         return actionContext.request.user;
     }
     /**

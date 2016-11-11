@@ -31,7 +31,6 @@ module.exports = class CallbackController extends Controller {
 
         var sberAcquiringOrderStatus = order.checkStatus()
         console.log(sberAcquiringOrderStatus);
-
         if (order.isSuccessful()) {
             // create new card for user and set pay date
 
