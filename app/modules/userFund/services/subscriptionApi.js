@@ -22,10 +22,16 @@ module.exports = class SubscriptionApi extends UserFundApi {
      */
     constructor(params) {
         super(params);
+        this.subscriptionId       = params.subscriptionId || null;
         this.UserFundSubscription = sequelize.models.UserFundSubscription;
         this.DesiredAmountHistory = sequelize.models.DesiredAmountHistory;
+        this.PayDayHistory        = sequelize.models.PayDayHistory;
     }
 
+    setSubscription(subscription) {
+        this.subscription = subscription;
+        return subscription;
+    }
 
     /**
      * get subscription
@@ -33,12 +39,13 @@ module.exports = class SubscriptionApi extends UserFundApi {
      */
     getSubscription() {
         var sberUserId = this.sberUserId, userFundId = this.userFundId;
-        return await(sequelize.models.UserFundSubscription.findOne({
+        var subscription = await(sequelize.models.UserFundSubscription.findOne({
             where: {
                 sberUserId,
                 userFundId
             }
         }));
+        return this.setSubscription(subscription);
     }
 
 
@@ -46,7 +53,7 @@ module.exports = class SubscriptionApi extends UserFundApi {
      * get subscription id
      * @return {[type]} [description]
      */
-    getSubscriptionId () {
+    getId () {
         var subscription = this.getSubscription() || {};
         return subscription.id;
     }
@@ -100,5 +107,47 @@ module.exports = class SubscriptionApi extends UserFundApi {
             });
         }
         return await(sequelize.sequelize_.transaction(createTransaction));
+    }
+
+
+    /**
+     * enable subscription and set new pay date
+     * @return {[type]} [description]
+     */
+    enableAndSetNewPayDate() {
+        var subscriptionId = this.subscription.id,
+            self           = this;
+        function transaction(t) {
+            return self.UserFundSubscription.update({
+                    enabled: true
+                }, {
+                    where: {
+                        id: subscriptionId
+                    }
+                })
+                .then(() => {
+                    return self.PayDayHistory.findOrCreate({
+                        where: { subscriptionId },
+                        defaults: {
+                            payDate: new Date()
+                        }
+                    })
+                });
+        }
+        return await(sequelize.sequelize.transaction(transaction));
+    }
+
+
+    /**
+     * create pay date
+     * @param  {[Date]} payDate
+     * @return {[type]}         [description]
+     */
+    createPayDate(payDate) {
+        var subscriptionId = this.subscriptionId;
+        await(this.PayDayHistory.create({
+            subscriptionId,
+            payDate
+        }));
     }
 }

@@ -3,6 +3,7 @@
 // work with userFund
 // author: dmitrii kamaev
 
+const util  = require('util');
 const await = require('asyncawait/await');
 const async = require('asyncawait/async');
 const sequelize = require('../../../components/sequelize');
@@ -230,6 +231,25 @@ module.exports = class UserFundApi {
                 throw new errors.HttpError(i18n.__('UserFund disabled'), 400);
             }
         }
+    }
+
+
+    /**
+     * сheckEmpty userFund: throw error if empty or return userFund
+     * @return {obj}
+     * {
+     *   id,
+     *   topic: [{ id, title, description }],
+     *   direction: [{ id, title, description }],
+     *   fund: [{ id, title, description }]
+     * }
+     */
+    checkEmpty() {
+        var userFund = userFundService.getUserFundWithIncludes(this.userFundId);
+        if (userFund && !userFund.fund.length) {
+          throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
+        }
+        return userFund;
     }
 }
 

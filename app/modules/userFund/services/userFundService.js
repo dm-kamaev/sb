@@ -398,18 +398,55 @@ UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
   }));
 };
 
-/**
- * @param {int} subscriptionId id of subscription
- * @param {Object} payDate Date object, desired payDate
- * @return {Object} PayDate sequelize object
- */
-UserFundService.setPayDate = function(subscriptionId, payDate) {
-    return await(sequelize.models.PayDayHistory.create({
-        subscriptionId,
-        payDate
-    }));
-};
 
+/**
+ * getUserFundWithIncludes
+ * @param  {[int]} id
+ * @return {[obj]}
+ * { id: 1,
+  fund:
+   [ { id: 132,
+       type: 'fund',
+       title: 'Старость в радость',
+       imgUrl: 'entities/entity-1477476253012.png',
+       createdAt: '2016-10-26T10:04:13.023Z',
+       deletedAt: null,
+       published: true,
+       updatedAt: '2016-10-26T10:05:48.600Z',
+       description: 'Благотворительный фонд «Старость в радость» оказывает комплексную помощь пожилым людям и инвалидам, живущим в государственных домах престарелых.
+       UserFundEntity: [Object] }, ...
+     ],
+  title: null,
+  topic:
+   [ { id: 20,
+       type: 'topic',
+       title: 'Пожилые люди',
+       imgUrl: 'entities/entity-1474628677277.png',
+       createdAt: '2016-09-23T09:42:34.274Z',
+       deletedAt: null,
+       published: true,
+       updatedAt: '2016-09-24T12:13:54.668Z',
+       description: 'Нажимая кнопку "Помогать", вы равномерно распределяете своё пожертвование между всеми фондами, которые помогают лицам пожилого возраста',
+       UserFundEntity: [Object] } ],
+  enabled: false,
+  createdAt: '2016-11-11T09:58:08.221Z',
+  creatorId: 1,
+  deletedAt: null,
+  direction:
+   [ { id: 32,
+       type: 'direction',
+       title: 'Помощь ветеранам ВОВ',
+       imgUrl: 'entities/entity-1477574251162.png',
+       createdAt: '2016-09-23T09:53:44.413Z',
+       deletedAt: null,
+       published: true,
+       updatedAt: '2016-10-27T13:17:31.167Z',
+       description: 'Помощь ветеранам ВОВ',
+       UserFundEntity: [Object] }, ...
+    ],
+  updatedAt: '2016-11-11T09:58:08.221Z',
+  description: null }
+ */
 UserFundService.getUserFundWithIncludes = function(id) {
     return await(sequelize.models.UserFund.findOne({
         where: {
@@ -478,7 +515,7 @@ UserFundService.getSubscribers = function(params) {
     var include = params.include,
         exclude = params.exclude;
 
-    if (typeof exclude == 'undefined' || !exclude.length) {
+    if (typeof exclude === 'undefined' || !exclude.length) {
         exclude = null;
     }
 
