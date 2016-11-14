@@ -3,6 +3,7 @@
 const await = require('asyncawait/await')
 const async = require('asyncawait/async')
 const sequelize = require('../../components/sequelize')
+const errors    = require('../../components/errors');
 const OrderModel = sequelize.models.Order
 const orderStatus = require('./enums/orderStatus')
 const orderTypes = require('./enums/orderTypes')
@@ -49,8 +50,8 @@ function getConstructor_(type) {
 }
 
 module.exports = function createOrder(data) {
-    var ctor = getConstructor_(data.type)
-    return new ctor(data)
+    var Ctor = getConstructor_(data.type)
+    return new Ctor(data)
 }
 
 class Order {
@@ -97,8 +98,8 @@ class Order {
         } catch (err) {
             this.updateOrder_({
                 status: orderStatus.EQ_ORDER_NOT_CREATED
-            })
-            throw err;
+            });
+            throw new errors.AcquiringError(err.message);
         }
     }
 
@@ -120,7 +121,7 @@ class Order {
     createOurOrder_(data) {
         Object.assign(data, {
             status: orderStatus.NEW
-        })
+        });
         return await (OrderModel.create(data))
     }
 

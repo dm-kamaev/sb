@@ -2,6 +2,7 @@
 'use strict';
 
 const Controller = require('nodules/controller').Controller;
+const util  = require('util');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 const errors = require('../../../components/errors');
@@ -13,6 +14,7 @@ const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
 const UserFundApi = require('../services/userFundApi.js');
 const CardApi     = require('../../user/services/cardApi.js');
+const OrderApi    = require('../../orders/services/orderApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const SubscriptionApi = require('../services/subscriptionApi.js');
@@ -257,7 +259,7 @@ class UserFundController extends Controller {
      * }
      */
     actionSetAmount(ctx) {
-        var passwordAuth = new PasswordAuth({ ctx });
+        const passwordAuth = new PasswordAuth({ ctx });
         var sberUserId    = passwordAuth.getUser('id'),
             changer       = 'user',
             userFundId    = passwordAuth.getUserFundIdFromPostOrOwn(),
@@ -267,23 +269,31 @@ class UserFundController extends Controller {
         // check whether userFund enabled if he is not the owner
         // if now first pay
         // then user's userfund is always disabled, but for another userfund must enable
-        const subscriptionApi = new SubscriptionApi({ sberUserId, userFundId })
-        subscriptionApi.checkEnableIfNotOwn();
+        const userFundApi = new UserFundApi({ sberUserId, userFundId });
+        userFundApi.checkEnableIfNotOwn();
+        var userFund = userFundApi.checkEmpty();
+
+        const subscriptionApi = new SubscriptionApi({ sberUserId, userFundId });
         subscriptionApi.setAmount({ changer, amount });
-        var userFundSubscriptionId = subscriptionApi.getSubscriptionId();
+        var userFundSubscriptionId = subscriptionApi.getId();
 
         const isActiveCard = new CardApi({ sberUserId }).isActiveCard();
+        if (isActiveCard) {
+            subscriptionApi.enableAndSetNewPayDate();
+            return { message: i18n.__('You changed the monthly payment amount.') };
+        }
+        const orderApi = new OrderApi({ subscriptionId: userFundSubscriptionId });
+        orderApi.checkOnePayPerMinute();
 
-        var params = {
+        return orderApi.firstPay({
             userFundId,
             amount,
             userFundSubscriptionId,
             isActiveCard,
+            userFundSnapshot: userFund,
             sberUserId,
             isCordova
-        };
-
-        return orderService.firstPayOrSendMessage(params);
+        });
     }
 
 
