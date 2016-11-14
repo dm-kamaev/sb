@@ -1,81 +1,135 @@
-<!DOCTYPE html>
-<html lang="en">
+  
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="UTF-8">
-    <title>Document</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    body { margin:0; }
+    @media only screen and (min-width: 600px) {
+      .wrapper { width:600px !important; margin: 0 auto !important; }
+      p { font-size: 18px !important; 
+          line-height: 26px !important;
+      }
+    }
+    @media only screen and (max-width: 599px) {
+      .wrapper { width: 100% !important; margin: 0 auto !important; }
+      p { font-size: 16px !important;
+          line-height: 22px !important;
+      }
+    }
+    html, body {
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }    
+  </style>
+  <!--[if gte mso 9]>
+    <style>
+      .wrapper { width:600px !important !important; }  
+      .flex-item { width:100% !important !important; }
+    </style>
+  <![endif]-->
+  <!--[if lte mso 9]>
+      <style type="text/css">
+          .wrapper { width:600px !important !important; } 
+      </style>
+  <![endif]-->    
 </head>
-<body style="width: 100%; height: 100%; padding: 0; margin: 0;">
-    <div class="wrap" style="background: #f6f5f3; padding: 0 2%;">
-        <div class="main" style="max-width: 768px; margin: auto; font-family: Tahoma, sans-serif;">
-            <div class="main__header" style="padding: 30px 0 20px 0;">
-                <div class="main__header-logo" style="text-align: center;">
-                    <img src="<%= linkToStatic %>/sber-logo.png" alt="" style="width: 172px; height: 43px;" width="172" height="43">
-                </div>
-            </div>
-            <div class="main__content" style="background: #fff; border-radius: 6px;">
-                <div class="main__content-image" style="text-align: center;">
-                    <img src="<%= linkToStatic %>/main.png" alt="" style="width: 100%;">
-                </div>
-                <div class="main__content-body" style="padding: 7% 5%;">
-                    <div class="main__content-title" style="text-align: center; font-size: 24px; padding-bottom: 3%;">Здравствуйте, <%= userName %>!</div>
-                    <div class="main__content-text" style="font-size: 18px;">
-                        <p style="line-height: 1.44;">
-                            Вы настроили ежемесячный платёж на сайте <a href="http://www.sberbankvmeste.ru" style="color: #2a911f; word-wrap: break-word; text-decoration: none;">sberbankvmeste.ru</a><br>
-                        </p>
-                        <p style="line-height: 1.44;">
-                            Мы очень рады, что Вы присоединились к тем, кто поддерживает благотворительные организации в России!
-                        </p>
-                        <p style="line-height: 1.44;">
-                            В этом месяце мы попытались списать <%= amount %> с Вашего счёта, как Вы и настроили это когда-то. Но уже второй месяц подряд нам не удаётся это сделать.
-                        </p>
-                        <p style="line-height: 1.44;">
-                            Это молго произойти потому, что срок действия банковской карты истёк или на ней кончлись деньги. <br>
-                            Будем благодарны, если Вы проверите, что могло случиться с картой. <br>
-                            Пока мы останавливаем перечисления в благотворительные организации от вашего имени, но вы всегда можете
-                        </p>
-                        <div class="main__button-wrap" style="text-align: center; padding: 30px 0;">
-                            <a href="http://www.sberbankvmeste.ru" style="color: #2a911f; word-wrap: break-word; text-decoration: none;">
-                                <span class="main__content-button" style="display: inline-block; width: 198px; height: 44px; line-height: 44px; border-radius: 26px; background-color: #e7f038; font-size: 17px; color: #414141;">Платить снова</span>
-                            </a>
-                        </div>
-                        <p style="line-height: 1.44;">
-                            Надеемся, Вы продолжите Вместе с нами делать благотворительность в России осознанной и прозрачной.
-                        </p>
-                        <p style="line-height: 1.44;">
-                            Спасибо, что Вы с нами!
-                        </p>
-                        <p style="line-height: 1.44;">
-                          С уважением,<br>
-                          команда Сбербанк Вместе
-                        </p>
+
+<body bgcolor="#eeeeee" style="margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;background-color:#eeeeee" >
+<!--[if gte mso 9]>
+    <style>
+      table { width:600px !important; }  
+    </style>
+<![endif]-->
+<center>
+<table bgcolor="#eeeeee" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;" >
+<center>
+<tr>
+  <td style="padding:8px;"> 
+    <table width="600" class="wrapper" align="center" bgcolor="#ffffff" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:auto;margin-bottom:auto;margin-right:auto;margin-left:auto;width:auto;max-width:600px;" >
+      <tr>
+        <td>
+          <center>         
+            <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              <tr>
+                  <th bgcolor="#eeeeee" style="padding: 30px 0 20px 0;">
+                    <a href="http://sberbank.ru/">
+                          <img src="<%= linkToStatic %>/sber-main-logo.png" alt="Сбербанк" style="max-width:100%">
+                    </a>
+                  </th>
+                </tr>
+              <tr>
+                <th>
+                  <img src="<%= linkToStatic %>/main.png" alt="Сбербанк Вместе" style="max-width:100%">
+                  <div style="margin-top:45px;margin-bottom:60px;margin-right:30px;margin-left:30px;" >
+                    <div style="font-family:Tahoma;font-size:24px;color:#262626;line-height:1.2em;margin-bottom:24px;text-align:center;word-wrap:break-word;" >
+                      <b>Здравствуйте, <%= userName %>!</b>
                     </div>
-                </div>
-            </div>
-            <div class="main__footer" style="padding-top: 40px; padding-bottom: 30px;">
-                <div class="main__footer-text" style="font-size: 12px; color: #a1a1a0;">
-                    <p>
-                        Убедиться, что сообщение действительно отправлено ПАО Сбербанк и не содержит вредоносных ссылок, Вы можете, позвонив по телефонам ПАО Сбербанк 900 и 8 800 555 55 50.
+                    <p style="font-family:Tahoma;font-size:16px;color:#262626;line-height:22px; text-align:left;font-weight:normal;word-wrap:break-word;" >  
+                      Вы настроили ежемесячный платёж на сайте <a href="http://sberbankvmeste.ru/" style="word-wrap:break-word;color:#2a911f !important;">sberbankvmeste.ru</a>
+                      <br>
+                      Мы очень рады, что вы присоединились к тем, кто поддерживает благотворительные организации в России!
+                      <br><br>
+                      Мы пытались списать <%= amount %> с вашего счёта, как вы и настроили это когда-то. Но два месяца подряд нам этого не удалсь.
+                      <br>
+                      Это молго произойти потому, что срок действия банковской карты истёк или на ней кончились деньги. Будем благодарны, если вы проверите, что могло случиться с картой.
+                      <br>
+                      Пока мы останавливаем перечисления в благотворительные организации от вашего имени, но вы всегда можете
                     </p>
-                    <p>
-                        Организатор проекта — ПАО Сбербанк. Генеральная лицензия Банка России № 1481 от 11.08.2015. Организатор площадки — «ФОМ». Реквизиты: полное наименование фирмы (в соответствии с учредительными документами): общество с ограниченной ответственностью «Институт фонда Общественное мнение»; краткое наименование фирмы: ООО «ИНФОМ»; адрес местонахождения: 125047, г. Москва, ул. 4-я Тверская-Ямская, д. 2/11, стр. 1, почтовый адрес: 123022, г. Москва, ул. Рочдельская, д. 15, стр. 16а; телефон:(495) 620-62-32, (495) 620-62-33.
-                    </p>
-                    <p>
-                        ПАО Сбербанк. Генеральная лицензия Банка России № 1481 от 11.08.2015.
-                    </p>
-                </div>
-                <div class="main__footer-logos" style="padding-top: 36px; text-align: center;">
-                    <div class="main__footer-logo-sber" style="display: inline-block; margin: 0 5px;">
-                        <img src="<%= linkToStatic %>/sber-logo.png" alt="" style="max-height: 41px;">
-                    </div>
-                    <div class="main__footer-logo-mastercard" style="display: inline-block; margin: 0 5px;">
-                        <img src="<%= linkToStatic %>/master-logo.png" alt="" style="max-height: 41px;">
-                    </div>
-                </div>
-                <div class="main__footer-cancel-subscription" style="padding-top: 25px; text-align: center;">
-                    <a class="main__footer-cancel-subscription-link" href="<%= cancelSubscriptionLink %>" style="font-size: 14px; color: #a1a1a0;">Отписаться от рассылки</a>
-                </div>
-            </div>
-        </div>
-    </div>
+                   <div style="padding:12px 0;">
+                      <!--[if mso]>
+                        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://sberbankvmeste.ru/" style="height:44px;v-text-anchor:middle;width:270px;" arcsize="60%" stroke="f" fillcolor="#e7f038">
+                          <w:anchorlock/>
+                          <center>
+                        <![endif]-->
+                            <a href="https://sberbankvmeste.ru/"
+                      style="background-color:#e7f038;border-radius:26px;color:#414141;display:inline-block;font-family:sans-serif;font-size:17px;font-weight:bold;line-height:44px;text-align:center;text-decoration:none;width:270px;-webkit-text-size-adjust:none;">Платить снова</a>
+                        <!--[if mso]>
+                          </center>
+                        </v:roundrect>
+                      <![endif]-->
+                    </div> 
+                    <p style="font-family:Tahoma;font-size:16px;color:#262626;line-height:22px; text-align:left;font-weight:normal;word-wrap:break-word;" >                   
+                      Надеемся, вы продолжите Вместе с нами делать благотворительность в России осознанной и прозрачной.
+                    </p>                       
+                    <p style="font-family:Tahoma;font-size:16px;color:#262626;line-height:22px; text-align:left;font-weight:normal;word-wrap:break-word;" >                   
+                      Спасибо, что вы с нами!
+                      <br><br>
+                      С уважением,<br>
+                      команда Сбербанк «Вместе»
+                    </p>                                    
+                  </div>
+                </th>
+              </tr>
+              <tr>
+                <th bgcolor="#eeeeee" style="padding: 40px 0 30px 0;">
+                  <a href="http://sberbank.ru/" style="text-decoration: none;">
+                      <img src="<%= linkToStatic %>/sber-footer-logo.png" alt="Сбербанк" style="max-width:100%;padding-right:2.5px;">
+                  </a>
+                  <!--[if mso]>
+                    &nbsp;
+                  <![endif]-->                     
+                  <a href="https://www.mastercard.ru/" style="text-decoration: none;">
+                      <img src="<%= linkToStatic %>/logomaster.png" alt="MasterCard" style="max-width:100%">
+                  </a>
+<!--                   <a href="#">
+                    <p style="font-family:Tahoma;font-size:14px !important;color:#a1a1a0; margin:25px 0 0 0; text-decoration:underline;" >  
+                      Отписаться от рассылки 
+                    </p>                    
+                  </a>    -->               
+                </th>
+              </tr>
+            </table> 
+          </center>        
+        </td>
+      </tr>
+    </table>          
+  </td>
+</tr>
+</center>
+</table>
+</center>
 </body>
 </html>
