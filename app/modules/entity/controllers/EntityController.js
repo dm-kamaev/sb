@@ -9,6 +9,7 @@ const userService = require('../../user/services/userService');
 const userFundService = require('../../userFund/services/userFundService')
 const entityView = require('../views/entityView');
 const userFundView = require('../../userFund/views/userFundView');
+const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
 const mail = require('../../mail')
@@ -251,24 +252,49 @@ class EntityController extends Controller {
             }
             throw err;
         }
-    };
+    }
+
 
     /**
      * @api {get} /entity get all entities
      * @apiName All Entities
      * @apiGroup Entity
      *
-     * @apiSuccess {Object[]} Entities array of all entities
-     *
+     * @apiSuccessExample {json} Example response:
+     * [
+            {
+                "id": 98,
+                "type": "fund",
+                "title": "Бюро добрых дел",
+                "description": "Благотворительный фонд «БЮРО ДОБРЫХ ДЕЛ» оказывает материальную и социальную помощь детям, оставшимся без попечения родителей. Фонд занимается благоустройством детских домов и приютов, а также закупает товары, необходимые для жизни и творчества их подопечных. Помимо этого мы помогаем детям с выбором будущей профессии, открываем «социальные гостиницы», где дети осваивают все необходимые для будущей взрослой жизни навыки, устраиваем культурно-просветительские и спортивные мероприятия. <br/> <a href=\"http://burodd.ru\">www.burodd.ru</a> ",
+                "createdAt": "2016-09-23T10:50:13.934Z",
+                "updatedAt": "2016-10-21T11:23:34.493Z",
+                "imgUrl": "http://sbervm.ru:80/entities/entity-1477048900308.png",
+                "checked": false,
+                "published": true
+            },
+            {
+                "id": 32,
+                "type": "direction",
+                "title": "Помощь ветеранам ВОВ",
+                "description": "Помощь ветеранам ВОВ",
+                "createdAt": "2016-09-23T09:53:44.413Z",
+                "updatedAt": "2016-10-27T13:17:31.167Z",
+                "imgUrl": "http://sbervm.ru:80/entities/entity-1477574251162.png",
+                "checked": true,
+                "published": true
+            },
+        ]
      */
-    actionGetAllEntities(actionContext) {
-        var request = actionContext.request,
-            user = request.user || {};
-        var userFundId = (user.userFund) ? user.userFund.id : null,
-            published = request.published;
+    actionGetAllEntities(ctx) {
+        const passwordAuth = new PasswordAuth({ ctx });
+        var userFundId = passwordAuth.getUserFund('id'),
+            published  = ctx.request.published;
+        console.log(userFundId, published);
         var entities = await (entityService.getAllEntities(userFundId, published));
         return entityView.renderEntities(entities);
-    };
+    }
+
     /**
      * @api {get} /entity/fund/today get today created Funds
      * @apiName get today created funds
