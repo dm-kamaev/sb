@@ -88,6 +88,27 @@ UserService.getOrders = function(sberUserId, orderStatus) {
 };
 
 
+/**
+ * if verify card user then exist data else null
+ * @param  {[int]} sberUserId [description]
+ * @return {[type]}           [description]
+ */
+UserService.findCardBySberUserId = function(sberUserId) {
+    return await(sequelize.models.SberUser.findOne({
+        where: {
+            id: sberUserId
+        },
+        include: {
+            model: sequelize.models.Card,
+            as: 'currentCard',
+            required: false,
+            where: {
+                deletedAt: null
+            }
+        }
+    }));
+};
+
 UserService.findSberUserByAuthId = function(authId) {
     return await(sequelize.models.SberUser.findOne({
         where: {
@@ -239,13 +260,24 @@ UserService.createCard = function(sberUserId, data) {
  * @return {[type]}            [description]
  */
 UserService.removeCard = function(sberUserId) {
-    return await(sequelize.models.Card.update({
-        deletedAt: new Date()
-    }, {
-        where: {
-            sberUserId
-        }
-    }));
+    return await(sequelize.sequelize.transaction(t => {
+        return sequelize.models.SberUser.update({
+            currentCardId: null
+        }, {
+            where: {
+              id: sberUserId
+            }
+        })
+        .then(sberUser => {
+            return sequelize.models.Card.update({
+                deletedAt: new Date()
+            }, {
+                where: {
+                    sberUserId
+                }
+            })
+        })
+    }))
 };
 
 

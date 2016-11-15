@@ -9,6 +9,7 @@ public/*
 !public/meta_templates
 !public/mail_templates
 !public/mail_static
+!public/share
 /app/public/*
 !app/public/admin/
 /doc
@@ -38,3 +39,5 @@ clean_log.sh
 # test
 test.js
 test.sql
+entities.sql
+entityOtherEntity.sql
