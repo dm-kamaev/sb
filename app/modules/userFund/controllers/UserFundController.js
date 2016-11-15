@@ -134,7 +134,6 @@ class UserFundController extends Controller {
 
         var sberUserId = userFundApi.getCreatorId();
         const userApi = new UserApi({ sberUserId, userFundId });
-        console.log('FLAG= ', isNotFund, IsNotTD, isNotFund && IsNotTD);
         userApi.turnOnPopUp(isNotFund && IsNotTD);
 
         userFundApi.addEntities({ entityIds });
