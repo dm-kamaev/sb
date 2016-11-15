@@ -53,6 +53,10 @@ module.exports = function(sequelize, DataTypes) {
                 model: 'Card',
                 key: 'id'
             }
+        },
+        popUpAboutAddTopicDirection: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
     }, {
         tableName: 'SberUser',

@@ -76,6 +76,36 @@ module.exports = class PasswordAuth {
         response.redirect(url);
     }
 
+
+    /**
+     * getRequest data from request
+     * @param  {[str]} key from request.body
+     * @param  {[obj]} option {
+     *     required: true || false, // default: true
+     * }
+     * @return {[any]}
+     */
+    getRequest(key, option) {
+        var request = this.request;
+        option = option || {};
+        var required = (option.required !== false) ? true : false;
+        if (!key) {
+            return request;
+        } else {
+            var requestEl = request[key] || null;
+            if (!requestEl && required) {
+                throw new errors.NotFoundError(
+                    i18n.__('Not found field "{{key}}" in REQUEST data {{requestEl}}', {
+                        key: [key],
+                        requestEl,
+                    })
+                );
+            }
+            return requestEl;
+        }
+    }
+
+
     /**
      * getPostData post data from request
      * @param  {[str]} key from request.body

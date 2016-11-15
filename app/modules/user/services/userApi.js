@@ -15,13 +15,35 @@ module.exports = class UserApi {
      * constructor
      * @param  {[obj]} params {
      *    sberUserId // optional
+     *    userFundId // optional
      * }
      * @return {[type]}        [description]
      */
     constructor(params) {
         this.sberUserId = params.sberUserId || null;
+        this.userFundId = params.userFundId || null;
 
         this.SberUser   = sequelize.models.SberUser;
+    }
+
+
+    /**
+     * turnOnPopUp if user first time add topic or direction
+     * turn on popUpAboutAddTopicDirection
+     * @param  {[Boolean]} flag
+     * @return {[type]}      [description]
+     */
+    turnOnPopUp(flag) {
+        const id = this.sberUserId;
+        if (flag) {
+            await (this.SberUser.update({
+                popUpAboutAddTopicDirection: true
+            },{
+                where: {
+                    id,
+                }
+            }));
+        }
     }
 
 }
