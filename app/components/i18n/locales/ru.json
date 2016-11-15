@@ -48,5 +48,6 @@
 	"Not found field \"{{key}}\" in UserFund: {{userFundEl}}": "Не найдено поле \"{{key}}\" в Юзер фонде: {{userFundEl}}",
 	"Not found field \"{{key}}\" in User {{userEl}}": "Не найдено поле \"{{key}}\" в User: {{userEl}}",
 	"Not found field \"{{key}}\" in POST data {{postEl}}": "Не найдено поле \"{{key}}\" в данных POST запроса {{postEl}}",
-	"One order per 60 seconds": "Нельзя проводить больше одного платежа в минуту"
+	"One order per 60 seconds": "Нельзя проводить больше одного платежа в минуту",
+	"Not found field \"{{key}}\" in REQUEST data {{requestEl}}": "Не найдено поле \"{{requestEl}}\" в данных REQUEST {{requestEl}}"
 }

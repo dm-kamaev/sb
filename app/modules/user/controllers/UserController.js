@@ -113,16 +113,18 @@ class UserController extends Controller {
      *        "createdAt": "2016-07-15T11:57:13.909Z",
      *        "updatedAt": "2016-07-15T11:57:13.909Z"
      *     },
-     *     "loggedIn": true
+     *     "loggedIn": true,
+     *      "popUpAboutAddTopicDirection": false
      * }
      */
-    actionFindUser(actionContext) {
-        var sberUser = actionContext.request.user,
-            email = actionContext.request.query.email
-                    && actionContext.request.query.email.toLowerCase()
+    actionFindUser(ctx) {
+        var sberUser = ctx.request.user,
+            email = ctx.request.query.email
+                    && ctx.request.query.email.toLowerCase()
+        var authUser;
         if (email) {
-            var authUser = await(userService.findAuthUserByEmail(email));
-            if (!authUser || authUser.email != email) {
+            authUser = await(userService.findAuthUserByEmail(email));
+            if (!authUser || authUser.email !== email) {
                 return {
                     status: 'NOT_FOUND'
                 }
@@ -136,12 +138,12 @@ class UserController extends Controller {
               }
             }
         } else {
-            if (!sberUser) return null;
+            if (!sberUser) { return null ; }
             var authId = sberUser.authId;
-            var authUser = await(userService.findAuthUserByAuthId(authId));
+            authUser = await(userService.findAuthUserByAuthId(authId));
             return userView.renderUser(authUser, sberUser);
         }
-    };
+    }
 
     /**
      * @api {get} /user/all get all users
