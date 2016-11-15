@@ -22,6 +22,24 @@ EntityService.getAllEntities = function(userFundId, published) {
     }));
 };
 
+
+EntityService.getTopicWithDirection = function(topics, published) {
+    return await(sequelize.models.Entity.findAll({
+        where: {
+          id: {
+            $in: topics.map(topic => topic.id)
+          },
+          published
+        },
+        include: {
+            model: sequelize.models.Entity,
+            as: 'direction',
+            required: false
+        }
+    }));
+};
+
+
 EntityService.getEntity = function(id, userFundId, published, includes) {
     if (published === undefined) published = true;
     includes = includes || [];

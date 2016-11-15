@@ -14,7 +14,8 @@ const errors = require('../../../components/errors');
 const logger = require('../../../components/logger').getLogger('main');
 const mail = require('../../mail')
 const _ = require('lodash');
-const entityTypes = require('../enums/entityTypes')
+const entityTypes = require('../enums/entityTypes');
+const TOPIC = entityTypes.TOPIC;
 const EntityExtractor = require('../services/extractEntity');
 
 class EntityController extends Controller {
@@ -290,8 +291,15 @@ class EntityController extends Controller {
         const passwordAuth = new PasswordAuth({ ctx });
         var userFundId = passwordAuth.getUserFund('id'),
             published  = ctx.request.published;
-        console.log(userFundId, published);
-        var entities = await (entityService.getAllEntities(userFundId, published));
+
+        var entities = await(entityService.getAllEntities(userFundId, published));
+        var otherEntites = [];
+        var topics = entities.filter(entity => {
+            if (entity.type !== TOPIC) { otherEntites.push(entity); }
+            return entity.type === TOPIC;
+        });
+        var topicsAssociateDirections = entityService.getTopicWithDirection(topics, published);
+        entities = topicsAssociateDirections.concat(otherEntites);
         return entityView.renderEntities(entities);
     }
 
