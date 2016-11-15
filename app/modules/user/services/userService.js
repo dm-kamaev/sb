@@ -191,7 +191,6 @@ UserService.setAuthId = function(id, authId) {
 */
 
 UserService.updateAuthUser = function(authId, userData) {
-    console.log(userData);
     return new UserApi().updateAuthUser({
         authId,
         firstName:userData.firstName,

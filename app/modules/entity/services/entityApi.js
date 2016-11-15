@@ -9,6 +9,9 @@ const async = require('asyncawait/async');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const entityTypes = require('../../entity/enums/entityTypes.js');
+const FUND      = entityTypes.FUND,
+      DIRECTION = entityTypes.DIRECTION,
+      TOPIC     = entityTypes.TOPIC;
 const ExtractEntity = require('../../entity/services/extractEntity.js');
 
 
@@ -70,6 +73,16 @@ module.exports = class EntityApi {
             }), entity.id);
         }
         return true;
+    }
+
+
+    /**
+     * isTopicOrDirection entity type is topic or direction
+     * @return {Boolean} [description]
+     */
+    isTopicOrDirection() {
+        var entity = this.entity;
+        if (entity.type === TOPIC || entity.type === DIRECTION) { return true; }
     }
 
     /**
