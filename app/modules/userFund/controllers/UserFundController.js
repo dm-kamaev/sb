@@ -10,6 +10,7 @@ const i18n = require('../../../components/i18n');
 const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
+const UserApi = require('../../user/services/userApi.js');
 const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
 const UserFundApi = require('../services/userFundApi.js');
@@ -124,10 +125,18 @@ class UserFundController extends Controller {
 
         entityApi.checkExist();
         entityApi.checkType();
+        const isNotFund = entityApi.isTopicOrDirection();
         var entityIds = entityApi.getNestedEntityIds();
 
-        var userFundApi = new UserFundApi({ userFundId });
+        const userFundApi = new UserFundApi({ userFundId });
+        const IsNotTD = userFundApi.hasNotTopicDirection();
         entityIds = userFundApi.filterExistRelations({ entityIds });
+
+        var sberUserId = userFundApi.getCreatorId();
+        const userApi = new UserApi({ sberUserId, userFundId });
+        console.log('FLAG= ', isNotFund, IsNotTD, isNotFund && IsNotTD);
+        userApi.turnOnPopUp(isNotFund && IsNotTD);
+
         userFundApi.addEntities({ entityIds });
 
         // return entities from userFund

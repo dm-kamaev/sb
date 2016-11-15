@@ -26,7 +26,32 @@ module.exports = class UserFundApi {
     constructor(params) {
         this.userFundId = params.userFundId || null;
         this.sberUserId = params.sberUserId || null;
+
         this.UserFundEntity = sequelize.models.UserFundEntity;
+        this.UserFund       = sequelize.models.UserFund;
+    }
+
+
+    /**
+     * get get userFund
+     * @return {[type]} [description]
+     */
+    get() {
+        var userFundId = this.userFundId
+        return await(this.UserFund.findOne({
+            where: {
+                id: userFundId
+            }
+        }));
+    }
+
+
+    /**
+     * getCreatorId get author(user) id
+     * @return {[int]}
+     */
+    getCreatorId() {
+        return this.get().creatorId;
     }
 
 
@@ -234,6 +259,10 @@ module.exports = class UserFundApi {
     }
 
 
+    getUserFundEntities() {
+        return userFundService.getUserFundWithIncludes(this.userFundId);
+    }
+
     /**
      * сheckEmpty userFund: throw error if empty or return userFund
      * @return {obj}
@@ -245,11 +274,23 @@ module.exports = class UserFundApi {
      * }
      */
     checkEmpty() {
-        var userFund = userFundService.getUserFundWithIncludes(this.userFundId);
-        if (userFund && !userFund.fund.length) {
+        var userFundEntities = this.getUserFundEntities();
+        if (userFundEntities && !userFundEntities.fund.length) {
           throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
         }
-        return userFund;
+        return userFundEntities;
+    }
+
+
+    /**
+     * hasNotTopicDirection exist one topic or direction in userFund
+     * @return {Boolean} [description]
+     */
+    hasNotTopicDirection() {
+        var userFundEntities = this.getUserFundEntities();
+        var topic     = userFundEntities.topic     || [],
+            direction = userFundEntities.direction || [];
+        if (!topic.length || !direction.length) { return true; }
     }
 }
 
