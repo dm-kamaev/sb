@@ -104,6 +104,10 @@ MicroServices.UserApi = class {
     }
 
 
+    getUsersData(authIds) {
+        return authIds.map(authId => this.getUserData(authId));
+    }
+
     /**
      * get users by params
      * @param  {[obj]} params: { email: 'test@example.ru', id: '1,2' }
@@ -130,7 +134,7 @@ MicroServices.UserApi = class {
             return await (axiosUser.patch(`/user/${userData.authId}`, {
                 firstName: userData.firstName,
                 lastName: userData.lastName,
-                email:    userData.email 
+                email:    userData.email
             })).data || {};
         } catch (err) {
            handlerForError_(err, loggerUser);

@@ -15,14 +15,6 @@ const axios = require('axios').create({
 
 var UserFundService = {};
 
-UserFundService.createUserFund = function(data) {
-    return await(sequelize.models.UserFund.create({
-        title: data.title,
-        description: data.description,
-        creatorId: data.creatorId,
-        enabled: data.enabled,
-    }));
-};
 
 UserFundService.updateUserFund = function(id, data) {
     return await(sequelize.models.UserFund.update(data, {
@@ -130,23 +122,6 @@ UserFundService.getTodayCreatedUserFunds = function() {
 };
 
 
-/**
-* remove user fund by userFundId
-* @param  {[int]}  userFundId
-* @return {[type]}
-*/
-UserFundService.removeUserFund = function(userFundId) {
-    return await(sequelize.models.UserFund.update({
-        deletedAt: new Date(),
-        enabled: false, // hide for another user
-    }, {
-        where: {
-            id: userFundId,
-        },
-    }));
-};
-
-
 UserFundService.getEntities = function(id, includes) {
     var userFund = await(sequelize.models.UserFund.findOne({
         where: {
@@ -233,28 +208,6 @@ UserFundService.getCurrentAmount = function(sberUserId, userFundId) {
     return suuf.currentAmount;
 };
 
-
-/**
- * get user subscriptions by sberUserId
- * @param  {[int]}  sberUserId
- * @return {[type]}
- */
-UserFundService.getUserFundSubscriptionsBySberUserId = function(sberUserId) {
-    return await(sequelize.models.UserFundSubscription.findAll({
-        where: {
-            sberUserId,
-        }
-    }));
-};
-
-
-UserFundService.updateDesiredAmountHistory = function(id, data) {
-    return await(sequelize.models.DesiredAmountHistory.update(data, {
-        where: {
-            id
-        }
-    }));
-};
 
 UserFundService.updateUserFundSubscription = function(id, data) {
     return await(sequelize.models.UserFundSubscription.update(data, {
@@ -467,14 +420,6 @@ UserFundService.getUserFundWithIncludes = function(id) {
             as: 'fund',
             required: false
         }]
-    }));
-};
-
-UserFundService.getUserFundSubscriptionById = function(subscriptionId) {
-    return await(sequelize.models.UserFundSubscription.findOne({
-        where: {
-            id: subscriptionId
-        }
     }));
 };
 
