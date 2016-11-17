@@ -253,6 +253,26 @@ EntityService.getFundsCount = function() {
     }));
 };
 
+EntityService.getDonateSum = function(ids) {
+    if (typeof ids == 'number') ids = [ids]
+
+    return await(sequelize.sequelize.query(`SELECT
+  "Entity".id as "fundId",
+  coalesce("a".sum, 0)
+FROM "Entity"
+  LEFT JOIN (SELECT
+               jsonb_array_elements("userFundSnapshot" -> 'fund') ->> 'id' AS "fundId",
+               sum(amount / jsonb_array_length("userFundSnapshot" -> 'fund'))::INTEGER AS sum
+             FROM "Order"
+             GROUP BY "fundId") AS "a" ON "Entity".id = "a"."fundId"::INTEGER
+WHERE type = 'fund'`,{
+      type: sequelize.sequelize.QueryTypes.SELECT,
+      replacements: {
+        fundId: ids
+      }
+    }))[0].sum;
+}
+
 EntityService.getUserFunds = function(id, published) {
     return await(sequelize.models.Entity.findOne({
         where: {
@@ -304,6 +324,80 @@ EntityService.getAssociated = function(id) {
             entityId: id
         }
     })).map(e => e.otherEntityId);
+}
+
+EntityService.calculateTopicSum = function() {
+    return await(sequelize.sequelize.query(`
+  SELECT
+  "Entity".id                           AS "topicId",
+  array_agg(DISTINCT "x"."directionId") AS "directionIds",
+  array_agg(DISTINCT "z"."fundId")      AS "fundIds",
+  coalesce(sum(DISTINCT "y"."sum"), 0)  AS "sum"
+FROM "Entity"
+  LEFT JOIN (SELECT
+          "entityId"      AS "topicId",
+          "otherEntityId" AS "directionId"
+        FROM "EntityOtherEntity"
+          JOIN "Entity" ON "Entity".id = "EntityOtherEntity"."otherEntityId"
+        WHERE type = 'direction' AND "Entity".published = true) "x" ON "Entity".id = x."topicId"
+  LEFT JOIN (SELECT
+          n.id                AS "directionId",
+          "x"."otherEntityId" AS "fundId"
+        FROM "Entity" n
+          JOIN (SELECT
+                  "entityId",
+                  "otherEntityId"
+                FROM "EntityOtherEntity"
+                  JOIN "Entity" ON "EntityOtherEntity"."otherEntityId" = "Entity".id
+                WHERE type IN ('fund') AND "Entity".published = true) "x" ON "n".id = "x"."entityId"
+        WHERE n.type = 'direction') z ON x."directionId" = z."directionId"
+  LEFT JOIN (SELECT
+               jsonb_array_elements("Order"."userFundSnapshot" -> 'fund') ->> 'id'                     AS id,
+               sum("Order".amount / jsonb_array_length("Order"."userFundSnapshot" -> 'fund'))::INTEGER AS sum
+             FROM "Order"
+             GROUP BY id) y ON "z"."fundId" = "y".id::INTEGER
+WHERE type = 'topic'
+GROUP BY "Entity".id`, {
+      type: sequelize.sequelize.QueryTypes.SELECT
+  }))
+}
+
+EntityService.calculateDirectionSum = function() {
+    return await(sequelize.sequelize.query(`
+      SELECT
+  n.id AS "directionId",
+  array_agg(DISTINCT "x"."otherEntityId") AS "fundIds",
+  coalesce(sum(DISTINCT "y".sum), 0) AS "sum"
+FROM "Entity" n
+  LEFT JOIN (SELECT "entityId", "otherEntityId"
+        FROM "EntityOtherEntity"
+          JOIN "Entity" ON "EntityOtherEntity"."otherEntityId" = "Entity".id
+        WHERE type IN ('fund')) "x" ON "n".id = "x"."entityId"
+  LEFT JOIN (SELECT
+               jsonb_array_elements("Order"."userFundSnapshot" -> 'fund') ->> 'id'                     AS id,
+               sum("Order".amount / jsonb_array_length("Order"."userFundSnapshot" -> 'fund'))::INTEGER AS sum
+             FROM "Order"
+             GROUP BY id) y ON "x"."otherEntityId" = "y".id::INTEGER
+WHERE n.type = 'direction'
+GROUP BY "n".id`, {
+  type: sequelize.sequelize.QueryTypes.SELECT
+}))
+}
+
+EntityService.calculateFundsSum = function() {
+    return await(sequelize.sequelize.query(`
+      SELECT
+  "Entity".id as "fundId",
+  coalesce("a".sum, 0) AS "sum"
+FROM "Entity"
+  LEFT JOIN (SELECT
+               jsonb_array_elements("userFundSnapshot" -> 'fund') ->> 'id' AS "fundId",
+               sum(amount / jsonb_array_length("userFundSnapshot" -> 'fund'))::INTEGER AS sum
+             FROM "Order"
+             GROUP BY "fundId") AS "a" ON "Entity".id = "a"."fundId"::INTEGER
+WHERE type = 'fund'`, {
+    type: sequelize.sequelize.QueryTypes.SELECT
+}))
 }
 
 module.exports = EntityService;

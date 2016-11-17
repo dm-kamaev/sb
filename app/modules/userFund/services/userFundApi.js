@@ -260,7 +260,7 @@ module.exports = class UserFundApi {
 
 
     getUserFundEntities() {
-        return userFundService.getUserFundWithIncludes(this.userFundId);
+        return userFundService.getUserFundSnapshot(this.userFundId);
     }
 
     /**
@@ -273,7 +273,7 @@ module.exports = class UserFundApi {
      *   fund: [{ id, title, description }]
      * }
      */
-    checkEmpty() {
+    getSnapshot() {
         var userFundEntities = this.getUserFundEntities();
         if (userFundEntities && !userFundEntities.fund.length) {
           throw new errors.HttpError(i18n.__('UserFund is empty'), 400);
@@ -324,4 +324,3 @@ function addEmptyDirectionsTopics_ (hashRemaning, relationEntities) {
     }
     return emptyDirectionsTopics;
 }
-

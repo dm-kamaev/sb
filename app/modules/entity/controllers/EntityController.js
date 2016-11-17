@@ -17,6 +17,7 @@ const _ = require('lodash');
 const entityTypes = require('../enums/entityTypes');
 const TOPIC = entityTypes.TOPIC;
 const EntityExtractor = require('../services/extractEntity');
+const EntityApi = require('../services/entityApi');
 
 class EntityController extends Controller {
     /**
@@ -147,13 +148,15 @@ class EntityController extends Controller {
      */
     actionGetEntity(actionContext, id) {
         var request = actionContext.request,
-            user = request.user || {};
-        var userFundId = (user.userFund) ? user.userFund.id : null,
+            user = request.user || {},
+            userFundId = (user.userFund) ? user.userFund.id : null,
             published = request.published,
             include = request.query.include;
 
-        var entity = await (entityService.getEntity(id, userFundId, published, include));
+        var entity = await(entityService.getEntity(id, userFundId, published, include));
         if (!entity) throw new errors.NotFoundError('Entity', id);
+        var sum = new EntityApi({entityId: id}).getDonateSum();
+        entity.sum = sum;
         return entityView.renderEntity(entity);
     };
     /**
@@ -340,7 +343,7 @@ class EntityController extends Controller {
      * @apiGroup Admin
      */
     actionPublishAll(actionContext) {
-        return await (entityService.publishAll());
+        return await(entityService.publishAll());
     };
     /**
      * @api {get} /entity/all get entities with include

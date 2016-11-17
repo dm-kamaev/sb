@@ -30,6 +30,23 @@ exports.renderEntities = function(entities) {
     return entities.map(renderEntity_);
 };
 
+exports.renderUserFundSnapshot = function(snapshot) {
+    var entities = snapshot.entity || [],
+        initialValue = {
+            id: snapshot.id,
+            creatorId: snapshot.creatorId,
+            enabled: snapshot.enabled,
+            fund: snapshot.fund || [],
+            topic: snapshot.topic || [],
+            direction: snapshot.direction || []
+        }
+
+    return entities.reduce((obj, e) => {
+        obj[e.type].push(renderEntity_(e));
+        return obj;
+    }, initialValue)
+}
+
 
 function renderEntity_ (entity) {
     return {

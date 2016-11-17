@@ -65,7 +65,10 @@ const logger = require('../components/logger').getLogger('main');
         authUsers = searchStr ? userService.getAuthUsersByIds(searchStr) : [];
 
     subscriptions
-    .filter(sub => userService.findSberUserById(sub.sberUserId).paymentNotified)
+    .filter(sub => {
+        var sberUser = userService.findSberUserById(sub.sberUserId);
+        return !sberUser.paymentNotified;
+    })
     .forEach(subscription => {
         var authUser = authUsers.find(authUser => {
             return authUser.id == subscription.sberUserAuthId
