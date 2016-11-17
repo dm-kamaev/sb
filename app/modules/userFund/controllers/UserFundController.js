@@ -377,8 +377,6 @@ class UserFundController extends Controller {
               userFundId = passwordAuth.getUserFund('id'),
               message    = passwordAuth.getPostData('message');
 
-        new UserFundApi({ sberUserId }).createEmpty();
-        // console.log(sberUserId, userFundId, message);
         new ReasonOffUserFund({ sberUserId, userFundId }).create({ message });
         const userFundApi      = new UserFundApi({ sberUserId, userFundId });
         const subscriptionsApi = new SubscriptionsApi({ userFundId });
@@ -390,41 +388,37 @@ class UserFundController extends Controller {
         userFundApi.remove();
         new CardApi({ sberUserId }).remove();
 
-        // disable subcriptions on UF, send email to subscribers
+        // disable subcriptions on UF
         var subscriptions = subscriptionsApi.get();
         var sberUserIds = subscriptions.map(subscription => subscription.SberUserId);
         var sberUsers = new UsersApi({ sberUserIds }).get();
         var authIds = sberUsers.map(sberUser => sberUser.authId);
 
+        // send email to subscribers
         var usersData = new MicroUserApi().getUsersData(authIds);
-        // usersData.forEach(authUser => {
-        //     // send email owner
-        //     if (authUser.id === authIdUserFund) {
-        //         console.log('My userFund');
-        //         console.log(authUser.firstName, authUser.email, title);
-        //         mail.sendRemoveYourUserFund(authUser.email, {
-        //                 userName: authUser.firstName,
-        //                 userFundName: title
-        //         });
-        //     // send email the subscriber
-        //     } else {
-        //         console.log(authUser.firstName, authUser.email, title);
-        //         mail.sendRemoveNotYourUserFund(authUser.email, {
-        //                 userName: authUser.firstName,
-        //                 userFundName: title
-        //         });
-        //     }
-        // });
-        // return 100;
+        usersData.forEach(authUser => {
+            // send email owner
+            if (authUser.id === authIdUserFund) {
+                console.log('My userFund');
+                console.log(authUser.firstName, authUser.email, title);
+                mail.sendRemoveYourUserFund(authUser.email, {
+                        userName: authUser.firstName,
+                        userFundName: title
+                });
+            // send email the subscriber
+            } else {
+                console.log(authUser.firstName, authUser.email, title);
+                mail.sendRemoveNotYourUserFund(authUser.email, {
+                        userName: authUser.firstName,
+                        userFundName: title
+                });
+            }
+        });
 
         subscriptionsApi.turnOff();
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund
-        console.log('HERE');
-        // global.process.exit();
         userFundApi.createEmpty();
-        console.log('BEFORE RETURN HERE');
-        return 1;
         return { message: i18n.__('User Fund was removed') };
     }
 
