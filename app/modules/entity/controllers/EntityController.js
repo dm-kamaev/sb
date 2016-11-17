@@ -298,7 +298,9 @@ class EntityController extends Controller {
             if (entity.type !== TOPIC) { otherEntites.push(entity); }
             return entity.type === TOPIC;
         });
-        var topicsAssociateDirections = entityService.getTopicWithDirection(topics, published);
+        var topicsAssociateDirections = entityService.getTopicWithDirection(
+            topics, userFundId, published
+        );
         entities = topicsAssociateDirections.concat(otherEntites);
         return entityView.renderEntities(entities);
     }

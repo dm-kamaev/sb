@@ -23,19 +23,33 @@ EntityService.getAllEntities = function(userFundId, published) {
 };
 
 
-EntityService.getTopicWithDirection = function(topics, published) {
-    return await(sequelize.models.Entity.findAll({
+/**
+ * getTopicWithDirection
+ * @param  {[object]} topics   [ { id }, { id }, ... ]
+ * @param  {[int]} userFundId
+ * @param  {[boolean]} published
+ * @return {[type]}
+ */
+EntityService.getTopicWithDirection = function(topics, userFundId, published) {
+    return await (sequelize.models.Entity.findAll({
         where: {
-          id: {
-            $in: topics.map(topic => topic.id)
-          },
-          published
+            id: {
+                $in: topics.map(topic => topic.id)
+            },
+            published
         },
-        include: {
+        include: [{
             model: sequelize.models.Entity,
             as: 'direction',
             required: false
-        }
+        },{
+            model: sequelize.models.UserFund,
+            as: 'userFund',
+            where: {
+                id: userFundId
+            },
+            required: false
+        }],
     }));
 };
 
@@ -143,45 +157,6 @@ EntityService.deleteEntity = function(id) {
         }
     }));
 };
-
-
-/**
- * get list Funds's name from Direction or Topic
- * @param  {[int]} entityId  [id Direction or Topic]
- * @return {[type]}          [ 'МОЙ ФОНД', 'ПОДАРИ ЖИЗНь', 'МОЙ ФОНД' ]
- */
-EntityService.getListFundsName = function(entityId) {
-    var listFunds = await(sequelize.models.EntityOtherEntity.findAll({
-        where: { entityId }
-    }));
-    var res = [];
-    for (var i = 0, l = listFunds.length; i < l; i++) {
-        var record = listFunds[i].dataValues,
-            otherEntityId = record.otherEntityId;
-        var entity = await(getEntityByEntityId_(otherEntityId, 'fund', true));
-        if (entity) { res.push(entity.title); }
-    }
-    return res;
-};
-
-
-
-/**
- * get entity by id, type, published
- * @param  {[int]}     id
- * @param  {[string]}  type       [ direction || topic || fund ]
- * @param  {[boolean]} published
- * @return {[type]}                [description]
- */
-function getEntityByEntityId_(id, type, published) {
-    return await(sequelize.models.Entity.findOne({
-        where: {
-            id,
-            type,
-            published,
-        }
-    }));
-}
 
 
 EntityService.associateEntity = function(id, otherId) {
