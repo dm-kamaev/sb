@@ -13,8 +13,7 @@ const FUND      = entityTypes.FUND,
       DIRECTION = entityTypes.DIRECTION,
       TOPIC     = entityTypes.TOPIC;
 const ExtractEntity = require('../../entity/services/extractEntity.js');
-
-
+const entityCache = require('./entityCache')
 
 module.exports = class EntityApi {
     /**
@@ -115,6 +114,13 @@ module.exports = class EntityApi {
             entityIds = uniqueIds_(entityIds);
         }
         return entityIds;
+    }
+    /**
+     * get summary donation for this entity
+     * @return {Number} donation sum
+     */ 
+    getDonateSum() {
+        return entityCache.get(this.entityId)
     }
 };
 

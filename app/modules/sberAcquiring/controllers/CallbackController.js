@@ -41,18 +41,13 @@ module.exports = class CallbackController extends Controller {
                 authUser = new UserApi().getUserData(sberUser.authId);
 
             // console.log(sberAcquiringOrderStatus);
-            var cardAuthInfo = sberAcquiringOrderStatus.cardAuthInfo,
-                expiration = cardAuthInfo && cardAuthInfo.expiration,
-                PAN = cardAuthInfo && cardAuthInfo.pan,
-                cardHolderName = cardAuthInfo && cardAuthInfo.cardholderName,
-                year = expiration && parseInt(expiration.substring(0, 4)),
-                month = expiration && parseInt(expiration.substring(4, 6));
+            var cardAuthInfo = getCardInfo_(sberAcquiringOrderStatus.cardAuthInfo);
 
             await(userService.createCard(sberUser.id, {
                 bindingId: sberAcquiringOrderStatus.bindingInfo.bindingId,
-                PAN,
-                expiration: expiration ? new Date(year, month) : undefined,
-                cardHolderName
+                PAN: cardAuthInfo.PAN,
+                expiration: cardAuthInfo.expiration,
+                cardHolderName: cardAuthInfo.cardHolderName
             }));
 
             var subscriptionId = userFundSubscription.id;
@@ -75,3 +70,17 @@ module.exports = class CallbackController extends Controller {
         return null;
     }
 };
+
+function getCardInfo_(cardInfo) {
+  if (!cardInfo) return {}
+  
+  var expiration = cardInfo.expiration,
+      year = parseInt(expiration.substring(0,4)),
+      month = parseInt(expiration.substring(4,6))
+
+  return {
+      PAN: cardInfo.pan,
+      cardHolderName: cardInfo.cardholderName,
+      expiration: new Date(year, month)
+  }
+}

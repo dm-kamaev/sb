@@ -12,6 +12,7 @@ const userConfig = require('../../../../config/user-config/config');
 const axios = require('axios').create({
     baseURL: `http://${userConfig.host}:${userConfig.port}`
 });
+const userFundView = require('../views/userFundView')
 
 var UserFundService = {};
 
@@ -447,27 +448,51 @@ UserFundService.getUnhandledSubscriptions = function(allDates, nowDate) {
   updatedAt: '2016-11-11T09:58:08.221Z',
   description: null }
  */
-UserFundService.getUserFundWithIncludes = function(id) {
-    return await(sequelize.models.UserFund.findOne({
+ UserFundService.getUserFundWithIncludes = function(id) {
+     return await(sequelize.models.UserFund.findOne({
+         where: {
+             id
+         },
+         include: [
+           {
+             model: sequelize.models.Entity,
+             as: 'topic',
+             required: false,
+         }, {
+             model: sequelize.models.Entity,
+             as: 'direction',
+             required: false,
+         },
+         {
+             model: sequelize.models.Entity,
+             as: 'fund',
+             required: false
+         }]
+     }));
+ };
+ 
+UserFundService.setPayDate = function(subscriptionId, payDate) {
+    return await(sequelize.models.PayDayHistory.create({
+        subscriptionId,
+        payDate
+    }));
+};
+
+UserFundService.getUserFundSnapshot = function(id) {
+    var userFund = await(sequelize.models.UserFund.findOne({
+        attributes: ['id', 'creatorId', 'enabled'],
         where: {
             id
         },
-        include: [
-          {
+        include: {
+            attributes: ['id', 'title', 'type'],
             model: sequelize.models.Entity,
-            as: 'topic',
-            required: false,
-        }, {
-            model: sequelize.models.Entity,
-            as: 'direction',
-            required: false,
-        },
-        {
-            model: sequelize.models.Entity,
-            as: 'fund',
+            as: 'entity',
             required: false
-        }]
+        }
     }));
+
+    return userFundView.renderUserFundSnapshot(userFund)
 };
 
 UserFundService.getUserFundSubscriptionById = function(subscriptionId) {

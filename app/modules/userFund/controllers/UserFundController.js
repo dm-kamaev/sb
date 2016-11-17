@@ -279,7 +279,7 @@ class UserFundController extends Controller {
         // then user's userfund is always disabled, but for another userfund must enable
         const userFundApi = new UserFundApi({ sberUserId, userFundId });
         userFundApi.checkEnableIfNotOwn();
-        var userFund = userFundApi.checkEmpty();
+        var userFund = userFundApi.getSnapshot();
 
         const subscriptionApi = new SubscriptionApi({ sberUserId, userFundId });
         subscriptionApi.setAmount({ changer, amount });

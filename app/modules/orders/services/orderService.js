@@ -114,7 +114,7 @@ OrderService.getListDatesBefore = function(NumberDays, date) {
 
 
 OrderService.makeMonthlyPayment = function(userFundSubscription, nowDate) {
-    var userFund = userFundService.getUserFundWithIncludes(userFundSubscription.userFundId);
+    var userFund = userFundService.getUserFundSnapshot(userFundSubscription.userFundId);
 
     if (isEmptyUserFund_(userFund)) {
         // this should never happened
