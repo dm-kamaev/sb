@@ -399,15 +399,12 @@ class UserFundController extends Controller {
         usersData.forEach(authUser => {
             // send email owner
             if (authUser.id === authIdUserFund) {
-                console.log('My userFund');
-                console.log(authUser.firstName, authUser.email, title);
                 mail.sendRemoveYourUserFund(authUser.email, {
                         userName: authUser.firstName,
                         userFundName: title
                 });
             // send email the subscriber
             } else {
-                console.log(authUser.firstName, authUser.email, title);
                 mail.sendRemoveNotYourUserFund(authUser.email, {
                         userName: authUser.firstName,
                         userFundName: title
