@@ -11,6 +11,7 @@ const logger = require('../../../components/logger').getLogger('main');
 const orderService = require('../../orders/services/orderService.js');
 const entityService = require('../../entity/services/entityService.js');
 const UserApi = require('../../user/services/userApi.js');
+const UsersApi = require('../../user/services/usersApi.js');
 const EntityApi   = require('../../entity/services/entityApi.js');
 const EntitiesApi = require('../../entity/services/entitiesApi.js');
 const UserFundApi = require('../services/userFundApi.js');
@@ -19,10 +20,14 @@ const OrderApi    = require('../../orders/services/orderApi.js');
 const PasswordAuth = require('../../auth/services/passwordAuth.js');
 const ReasonOffUserFund = require('../services/reasonOffUserFund.js');
 const SubscriptionApi = require('../services/subscriptionApi.js');
+const SubscriptionsApi = require('../services/subscriptionsApi.js');
 const entityView = require('../../entity/views/entityView');
 const userFundService = require('../services/userFundService');
 const userService = require('../../user/services/userService');
 const userFundView = require('../views/userFundView');
+const mail = require('../../mail');
+const MicroUserApi = require('../../micro/services/microService.js').UserApi;
+// getUsersData
 const subscriptionExtractionService =
     require('../services/subscriptionExtractionService');
 const _ = require('lodash');
@@ -367,46 +372,50 @@ class UserFundController extends Controller {
      * }
      */
     actionRemoveUserFund(ctx) {
-        var request    = ctx.request  || {},
-            user       = request.user || {},
-            message    = (ctx.data) ? ctx.data.message : '',
-            sberUserId = user.id || null,
-            userFundId = (user.userFund) ? user.userFund.id : null;
+        const passwordAuth = new PasswordAuth({ ctx });
+        const sberUserId = passwordAuth.getUser('id'),
+              userFundId = passwordAuth.getUserFund('id'),
+              message    = passwordAuth.getPostData('message');
 
-        await(new ReasonOffUserFund({ sberUserId, userFundId }).create({ message }));
-        var userFund = await(userFundService.getUserFund(userFundId)) || {};
-        var sberUser = userService.findSberUserById(sberUserId) || {};
+        new ReasonOffUserFund({ sberUserId, userFundId }).create({ message });
+        const userFundApi      = new UserFundApi({ sberUserId, userFundId });
+        const subscriptionsApi = new SubscriptionsApi({ userFundId });
+        // owner
+        const authIdUserFund = new UserApi({ sberUserId }).getAuthId();
+        const title = userFundApi.getTitle();
 
-        // removed UF, card and send email owner
-        await(userFundService.removeUserFund(userFundId));
-        await(userService.removeCard(sberUserId));
+        // removed UF, card
+        userFundApi.remove();
+        new CardApi({ sberUserId }).remove();
 
-        // disable subcriptions on UF, send email to subscribers
-        var subscriptions = userFundService.getSubscriptions({ userFundId }) || [];
+        // disable subcriptions on UF
+        var subscriptions = subscriptionsApi.get();
         var sberUserIds = subscriptions.map(subscription => subscription.SberUserId);
-        var sberUsers = await(userService.getSberUsers({
-            id: {
-                $in: sberUserIds,
+        var sberUsers = new UsersApi({ sberUserIds }).get();
+        var authIds = sberUsers.map(sberUser => sberUser.authId);
+
+        // send email to subscribers
+        var usersData = new MicroUserApi().getUsersData(authIds);
+        usersData.forEach(authUser => {
+            // send email owner
+            if (authUser.id === authIdUserFund) {
+                mail.sendRemoveYourUserFund(authUser.email, {
+                        userName: authUser.firstName,
+                        userFundName: title
+                });
+            // send email the subscriber
+            } else {
+                mail.sendRemoveNotYourUserFund(authUser.email, {
+                        userName: authUser.firstName,
+                        userFundName: title
+                });
             }
-        })) || [];
-        var dataForMail = sberUsers.map(sberUser => {
-            return { authId: sberUser.authId, userFundName: userFund.title };
         });
 
-        await(userFundService.updateSubscriptions(
-            { userFundId },
-            { enabled: false }
-        ));
-
+        subscriptionsApi.turnOff();
         // create new empty userFund for user, because frontend could add/edit
         // funds in userFund
-        await(userFundService.createUserFund({
-            title: '',
-            description: '',
-            creatorId: sberUserId,
-            enabled: false
-        }));
-
+        userFundApi.createEmpty();
         return { message: i18n.__('User Fund was removed') };
     }
 

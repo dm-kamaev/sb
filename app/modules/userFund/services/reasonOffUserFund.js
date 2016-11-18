@@ -22,6 +22,8 @@ module.exports = class ReasonOffUserFund {
   constructor (params) {
     this.sberUserId = params.sberUserId || null;
     this.userFundId = params.userFundId || null;
+
+    this.ReasonOffUserFund = sequelize.models.ReasonOffUserFund;
   }
 
 
@@ -37,7 +39,7 @@ module.exports = class ReasonOffUserFund {
   create(params) {
     var sberUserId = this.sberUserId || params.sberUserId;
     var userFundId = this.userFundId || params.userFundId;
-    return await(sequelize.models.ReasonOffUserFund.create({
+    return await(this.ReasonOffUserFund.create({
         sberUserId,
         userFundId,
         message:  params.message,

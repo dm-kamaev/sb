@@ -53,4 +53,31 @@ module.exports = class CardApi extends UserApi {
         return !!card.currentCard;
     }
 
+
+    /**
+     * remove card
+     * @return {[type]}            [description]
+     */
+    remove() {
+        var self = this;
+        return await(sequelize.sequelize.transaction(t => {
+            return self.SberUser.update({
+                currentCardId: null
+            }, {
+                where: {
+                    id: self.sberUserId
+                }
+            }).then(dropCard);
+        }));
+
+        function dropCard(sberUser) {
+            return self.Card.update({
+                deletedAt: new Date()
+            }, {
+                where: {
+                    sberUserId: self.sberUserId
+                }
+            });
+        }
+    }
 };

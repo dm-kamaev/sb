@@ -28,6 +28,21 @@ module.exports = class UserApi {
 
 
     /**
+     * get sberUser by field
+     * @return {[type]} [description]
+     */
+    get() {
+        var sberUserId = this.sberUserId;
+        return await(this.SberUser.findOne({
+            where: {
+                id: sberUserId
+            },
+        }));
+    }
+
+    getAuthId() { return this.get().authId; }
+
+    /**
      * turnOnPopUp if user first time add topic or direction
      * turn on popUpAboutAddTopicDirection
      * @param  {[Boolean]} flag
@@ -45,5 +60,4 @@ module.exports = class UserApi {
             }));
         }
     }
-
 }

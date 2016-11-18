@@ -56,6 +56,15 @@ module.exports = class UserFundApi {
 
 
     /**
+     * getCreatorId get author(user) id
+     * @return {[int]}
+     */
+    getTitle() {
+        return this.get().title || '';
+    }
+
+
+    /**
      * get Entity from userFund
      * @param  {[obj]} data {
      *   userFundId, // optional
@@ -291,6 +300,55 @@ module.exports = class UserFundApi {
         var topic     = userFundEntities.topic     || [],
             direction = userFundEntities.direction || [];
         if (!topic.length || !direction.length) { return true; }
+    }
+
+
+    /**
+     * create userFund
+     * @param  {[obj]} data {
+     *  title,
+     *  description,
+     *  creatorId,
+     * }
+     * @return {[type]}      [description]
+     */
+    create(data) {
+        await(this.UserFund.create({
+            title: data.title,
+            description: data.description,
+            creatorId: this.sberUserId,
+            enabled: false,
+        }));
+    }
+
+
+    /**
+     * create empty userFund
+     * @return {[type]}      [description]
+     */
+    createEmpty() {
+        this.create({
+            title: '',
+            description: '',
+            enabled: false,
+        });
+    }
+
+
+    /**
+     * remove  remove userFund
+     * @return {[type]}
+     */
+    remove() {
+        var id = this.userFundId;
+        await(this.UserFund.update({
+            deletedAt: new Date(),
+            enabled: false, // hide for another user
+        }, {
+            where: {
+                id,
+            },
+        }));
     }
 }
 
