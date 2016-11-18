@@ -29,10 +29,9 @@ StatementService.getAll = function(where) {
         "dateEnd",
         "recommendation",
         "status",
-        (SELECT id FROM "StatementOrder"
+        ARRAY((SELECT DISTINCT "statementId" FROM "StatementOrder"
             WHERE "StatementOrder"."statementId" != "Statement".id
-            AND "StatementOrder"."deletedAt" IS NULL
-            LIMIT 1)::BOOLEAN AS "conflict"
+            AND "StatementOrder"."deletedAt" IS NULL)) AS "conflicts"
     FROM "Statement"
           WHERE "Statement"."deletedAt" IS NULL`, {
             type: sequelize.sequelize.QueryTypes.SELECT
@@ -42,14 +41,14 @@ StatementService.getAll = function(where) {
 
 StatementService.parseStatement = function(file) {
     if (file instanceof Buffer) file = file.toString()
-    return await (new Promise((resolve, reject) => {
+    return await(new Promise((resolve, reject) => {
         var opts = { delimiter: ';' }
         parse(file, opts, function(err, output) {
             if (err) reject(err);
             output.splice(0, 1);
             resolve(output.map(row => {
-                var chargeDate = parseDotDate_(row[7]),
-                    supplyDate = parseDotDate_(row[6]);
+                var chargeDate = moment.utc(row[6], 'DD.MM.YYYY').toDate(),
+                    supplyDate = moment.utc(row[7], 'DD.MM.YYYY').toDate();
 
                 return {
                     sberAcquOrderNumber: row[14],
@@ -61,11 +60,6 @@ StatementService.parseStatement = function(file) {
         })
     }))
 };
-
-function parseDotDate_(date) {
-    var dates = date.split('.');
-    return new Date(dates[2].substring(0,4), dates[1] - 1, dates[0]);
-}
 
 StatementService.createStatement = function(data) {
     return await(sequelize.models.Statement.create(data))
@@ -97,7 +91,7 @@ StatementService.writeInExcel = function(countPayments) {
             value: dataForSheet,
         }]
     );
-    var fileName = `recommendation/Рекомендация_${Date.now()}.xlsx`
+    var fileName = `recommendation/recommendation_${Date.now()}.xlsx`
     excel.write(
         path.join(__dirname, `../../../../public/uploads/${fileName}`),
         sheet

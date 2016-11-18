@@ -19,6 +19,7 @@ function renderStatement_ (statement) {
         dateStart: statement.dateStart, // statement range
         dateEnd:   statement.dateEnd,
         status:    statement.status,
-        recommendation: `${BASE_URL}/${statement.recommendation}`
+        recommendation: `${BASE_URL}/${statement.recommendation}`,
+        conflicts: statement.conflicts
     };
 }
