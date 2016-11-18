@@ -9,8 +9,9 @@ const async = require('asyncawait/async');
 const errors = require('../../../components/errors');
 const i18n = require('../../../components/i18n');
 const entityTypes = require('../../entity/enums/entityTypes.js');
+const FUND      = entityTypes.FUND;
 const ExtractEntity = require('../../entity/services/extractEntity.js');
-
+const entityService = require('./entityService.js');
 
 
 module.exports = class EntitiesApi {
@@ -22,7 +23,9 @@ module.exports = class EntitiesApi {
      * @return {[type]}        [description]
      */
     constructor(params) {
+        params = params || {};
         this.entityIds = params.entityIds || null;
+
         this.Entity = sequelize.models.Entity;
     }
 
@@ -45,6 +48,24 @@ module.exports = class EntitiesApi {
                 }
             }));
         }
+    }
+
+
+    /**
+     * addCountDirectionsForFund add for funds count associated directions
+     * @param {[array]} funds [ { id, type }, ... ]
+     */
+    addCountDirectionsForFund(funds) {
+        var numberDirections = {};
+        var fundsWithNumber = entityService.fundContainNumberDirections();
+        // { '37': '1', '38': '1', '39': '1', '40': '2' }
+        fundsWithNumber.map(fund => numberDirections[fund.fundId] = fund.count);
+        funds.forEach(fund => {
+            var count = numberDirections[fund.id];
+            if (fund.type === FUND && count) {
+                fund.associatedDirections = parseInt(count, 10);
+            }
+        });
     }
 
 };

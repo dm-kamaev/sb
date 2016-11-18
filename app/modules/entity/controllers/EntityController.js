@@ -15,9 +15,13 @@ const logger = require('../../../components/logger').getLogger('main');
 const mail = require('../../mail')
 const _ = require('lodash');
 const entityTypes = require('../enums/entityTypes');
-const TOPIC = entityTypes.TOPIC;
-const EntityExtractor = require('../services/extractEntity');
-const EntityApi = require('../services/entityApi');
+const FUND      = entityTypes.FUND,
+      DIRECTION = entityTypes.DIRECTION,
+      TOPIC     = entityTypes.TOPIC;
+const EntityExtractor = require('../services/extractEntity.js');
+const EntityApi = require('../services/entityApi.js');
+const EntitiesApi = require('../services/entitiesApi.js');
+const EntitiesAndUserFund = require('../services/entitiesAndUserFund.js');
 
 class EntityController extends Controller {
     /**
@@ -292,19 +296,14 @@ class EntityController extends Controller {
      */
     actionGetAllEntities(ctx) {
         const passwordAuth = new PasswordAuth({ ctx });
-        var userFundId = passwordAuth.getUserFund('id'),
-            published  = ctx.request.published;
+        const userFundId = passwordAuth.getUserFund('id'),
+              published  = passwordAuth.getRequest('published');
 
-        var entities = await(entityService.getAllEntities(userFundId, published));
-        var otherEntites = [];
-        var topics = entities.filter(entity => {
-            if (entity.type !== TOPIC) { otherEntites.push(entity); }
-            return entity.type === TOPIC;
-        });
-        var topicsAssociateDirections = entityService.getTopicWithDirection(
-            topics, userFundId, published
-        );
-        entities = topicsAssociateDirections.concat(otherEntites);
+        const entitiesAndUF = new EntitiesAndUserFund({ userFundId, published });
+        var topics          = entitiesAndUF.getTopicsContainDirections();
+        var directionsFunds = entitiesAndUF.getByType([ DIRECTION, FUND ]);
+        new EntitiesApi().addCountDirectionsForFund(directionsFunds);
+        var entities = topics.concat(directionsFunds);
         return entityView.renderEntities(entities);
     }
 

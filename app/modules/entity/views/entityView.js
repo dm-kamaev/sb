@@ -20,7 +20,8 @@ exports.renderEntity = function(entity) {
         funds: entity.fund && exports.renderEntities(entity.fund),
         directions: entity.direction && exports.renderEntities(entity.direction),
         topics: entity.topic && exports.renderEntities(entity.topic),
-        sum: entity.sum
+        associatedDirections: entity.associatedDirections,
+        sum: entity.sum,
     };
 };
 

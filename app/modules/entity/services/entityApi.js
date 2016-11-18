@@ -25,6 +25,7 @@ module.exports = class EntityApi {
      */
     constructor(params) {
         this.entityId = params.entityId || null;
+
         this.Entity = sequelize.models.Entity;
     }
     /**
@@ -115,10 +116,12 @@ module.exports = class EntityApi {
         }
         return entityIds;
     }
+
+
     /**
      * get summary donation for this entity
      * @return {Number} donation sum
-     */ 
+     */
     getDonateSum() {
         return entityCache.get(this.entityId)
     }

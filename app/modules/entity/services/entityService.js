@@ -6,52 +6,25 @@ const _ = require('lodash');
 
 var EntityService = {};
 
-EntityService.getAllEntities = function(userFundId, published) {
-    return await(sequelize.models.Entity.findAll({
-        where: {
-            published
-        },
-        include: userFundId ? {
-            model: sequelize.models.UserFund,
-            as: 'userFund',
-            where: {
-                id: userFundId
-            },
-            required: false
-        } : undefined
-    }));
-};
-
-
 /**
- * getTopicWithDirection
- * @param  {[object]} topics   [ { id }, { id }, ... ]
- * @param  {[int]} userFundId
- * @param  {[boolean]} published
- * @return {[type]}
+ * calculated count directions associated with every fund
+ * @return {[type]} [description]
  */
-EntityService.getTopicWithDirection = function(topics, userFundId, published) {
-    return await (sequelize.models.Entity.findAll({
-        where: {
-            id: {
-                $in: topics.map(topic => topic.id)
-            },
-            published
-        },
-        include: [{
-            model: sequelize.models.Entity,
-            as: 'direction',
-            required: false
-        },{
-            model: sequelize.models.UserFund,
-            as: 'userFund',
-            where: {
-                id: userFundId
-            },
-            required: false
-        }],
+EntityService.fundContainNumberDirections = function() {
+    return await (sequelize.sequelize.query(
+    `
+    SELECT
+        eoe."otherEntityId" as "fundId",
+        COUNT(*)
+    FROM "Entity" AS e
+    JOIN "EntityOtherEntity" AS eoe
+        ON e.id = eoe."otherEntityId"
+    WHERE e.type='fund'
+    GROUP BY "fundId"
+    `, {
+        type: sequelize.sequelize.QueryTypes.SELECT
     }));
-};
+}
 
 
 EntityService.getEntity = function(id, userFundId, published, includes) {
